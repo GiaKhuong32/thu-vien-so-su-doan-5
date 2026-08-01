@@ -1,5 +1,6 @@
 import banner from "../../assets/images/banner.png";
 import Container from "../Container/Container";
+import "./Header.css";
 
 const Header = () => {
   return (
