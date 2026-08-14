@@ -1,4 +1,16 @@
 import type { CategoryNode, TopicTag } from '../components/Sidebar/Sidebar';
+
+const bannerImages = import.meta.glob('../assets/banner/*', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+}) as Record<string, string>;
+
+const bannerAsset = (filename: string) => {
+  const path = `../assets/banner/${filename}`;
+  return bannerImages[path] || '';
+};
+
 export const bookCategories: CategoryNode[] = [
   { label: 'Địa lý', href: '/sach/dia-ly/' },
   { label: 'Giáo dục', href: '/sach/giao-duc/' },
@@ -71,4 +83,4 @@ export const bookTopics: TopicTag[] = [
   { label: 'Văn hóa dân gian', href: '/tags/van-hoa-dan-gian.html' },
 ];
 
-export const libraryBanner = '/assets/banner/full_sach-0-2023925182051.jpeg';
+export const libraryBanner = bannerAsset('full_sach-0-2023925182051.jpeg');

@@ -1,6 +1,6 @@
 import './AboutSection.css';
 import bgAbout from '../../assets/skin/bg-about.png';
-const YOUTUBE_ID = 'SiK2vgmMvPc';
+const YOUTUBE_ID = 'IrnW4-kJUg4';
 
 export default function AboutSection() {
   return (

@@ -141,7 +141,7 @@ export default function Sidebar({
   activeHref,
   activeTopicHref,
   categoryTitle = 'Danh mục sách',
-  topicTitle = 'Chủ đề',
+  topicTitle = 'Chủ đề & Tác giả',
 }: Props) {
   return (
     <aside className="sidebar">
