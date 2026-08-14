@@ -1,0 +1,120 @@
+
+.footer {
+  position: relative;
+  color: var(--c-dark);
+  font-size: 15px;
+  background: #efe3cd url('/assets/skin/bg-footer.jpg') center / cover no-repeat;
+}
+
+.footer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 253, 247, 0.55);
+}
+
+.footer__inner {
+  position: relative;
+  display: grid;
+  grid-template-columns: 3fr 3fr 2fr 2fr;
+  gap: 32px;
+  padding-block: 44px 32px;
+}
+
+.footer .logo-full .logo {
+  height: 62px;
+  margin-bottom: 14px;
+}
+
+.footer__brand {
+  font-size: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--c-primary);
+  margin-bottom: 10px;
+}
+
+.footer__row {
+  margin-bottom: 4px;
+  line-height: 1.6;
+}
+
+.footer__row strong {
+  font-weight: 700;
+}
+
+.footer-tt {
+  display: flex;
+  align-items: center;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--c-primary);
+  margin-bottom: 14px;
+}
+
+.footer__contact li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+
+.footer__contact .picon {
+  flex: 0 0 auto;
+  margin-top: 3px;
+  color: var(--c-secondary);
+}
+
+.footer__contact a:hover {
+  color: var(--c-primary);
+  text-decoration: underline;
+}
+
+.footer__links li {
+  margin-bottom: 8px;
+}
+
+.footer__links a {
+  position: relative;
+  display: inline-block;
+  padding-left: 15px;
+  line-height: 1.5;
+  transition: color 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+.footer__links a::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: var(--c-secondary);
+}
+
+.footer__links a:hover {
+  color: var(--c-primary);
+  transform: translateX(3px);
+}
+
+.footer__bottom {
+  position: relative;
+  background: var(--c-sand);
+  color: var(--c-brown);
+  font-size: 14px;
+  text-align: center;
+  padding-block: 12px;
+}
+
+@media (max-width: 991px) {
+  .footer__inner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 575px) {
+  .footer__inner {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    padding-block: 34px 26px;
+  }
+}

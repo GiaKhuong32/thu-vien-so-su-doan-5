@@ -1,0 +1,36 @@
+.section-ads {
+  background: var(--c-white);
+}
+
+.section-ads .container {
+  padding-block: 32px;
+}
+
+.thumb-ad {
+  display: block;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.35s var(--ease), transform 0.35s var(--ease);
+}
+
+.thumb-ad img {
+  width: 100%;
+  margin-inline: auto;
+  transition: transform 0.5s var(--ease);
+}
+
+.thumb-ad:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+}
+
+.thumb-ad:hover img {
+  transform: scale(1.02);
+}
+
+@media (min-width: 1200px) {
+  .section-ads .container {
+    padding-block: 44px;
+  }
+}

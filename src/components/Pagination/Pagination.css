@@ -1,0 +1,60 @@
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-block: 2rem;
+  padding: 1rem 0 0;
+  border-top: 1px solid #f1e2cf;
+  line-height: 1.5;
+  list-style: none;
+}
+
+.page-item {
+  color: var(--c-brown);
+}
+
+.pagination .prev a,
+.pagination .next a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 33px;
+  height: 33px;
+  background: #fffff8;
+  color: var(--c-brown);
+  border: 1px solid var(--c-brown);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s var(--ease);
+}
+
+.pagination .prev a svg,
+.pagination .next a svg {
+  width: 16px;
+  height: 16px;
+}
+
+.pagination .prev a:hover,
+.pagination .next a:hover {
+  background-color: var(--c-primary);
+  border-color: var(--c-primary);
+  color: var(--c-white);
+}
+
+.page-item.is-disabled a {
+  cursor: not-allowed;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.pagination .text {
+  font-size: 15px;
+}
+
+.pagination .number {
+  display: inline-block;
+  margin-inline: 0.5rem;
+  font-weight: 600;
+  color: var(--c-primary);
+}
