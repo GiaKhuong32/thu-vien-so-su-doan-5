@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useState } from 'react';
+import { useMemo,  } from 'react';
 import { useSearchParams, useParams } from 'react-router-dom';
 import BookGrid from '../components/BookGrid/BookGrid';
 import PageBanner from '../components/PageBanner/PageBanner';
@@ -27,9 +27,7 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
   const page = parseInt(searchParams.get('page') || '1', 10);
   const type = searchParams.get('type');
 
-  useLayoutEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-  }, [type, category]);
+  
 
   const displayTitle = useMemo(() => {
     if (type === 'ebooks') return 'Sách số';
@@ -43,13 +41,12 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
     return title;
   }, [type, category, title]);
 
-  // Filter books based on type
   const filteredBooks = useMemo(() => {
     if (type === 'ebooks') return eBooks;
     if (type === 'paperbooks') return paperBooks;
     if (type === 'audiobooks') return audioBooks;
     if (type === 'videobooks') return videoBooks;
-    return ebookListing; // Default to ebookListing if no type specified
+    return ebookListing; 
   }, [type]);
 
   const totalPages = Math.max(1, Math.ceil(filteredBooks.length / PER_PAGE));

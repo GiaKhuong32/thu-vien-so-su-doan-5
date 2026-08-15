@@ -1,3 +1,4 @@
+import { useLayoutEffect } from 'react';
 import AboutSection from './components/AboutSection';
 import AdsBanner from './components/AdsBanner';
 import BookSection from './components/BookSection';
@@ -10,7 +11,23 @@ import { audioBooks, eBooks, newBooks, paperBooks, suggestBooks, videoBooks } fr
 import useReveal from './hooks/useReveal';
 import adsBanner from './assets/ads/sd5.png';
 
+function jumpToTop() {
+  const html = document.documentElement;
+  const prev = html.style.scrollBehavior;
+
+  html.style.scrollBehavior = 'auto';
+  window.scrollTo(0, 0);
+  html.style.scrollBehavior = prev;
+}
+
 export default function App() {
+  useLayoutEffect(() => {
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    jumpToTop();
+  }, []);
+
   useReveal();
 
   return (
