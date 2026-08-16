@@ -1,6 +1,6 @@
 .section-about {
   position: relative;
-  background: var(--c-cream-2) url('/assets/skin/bg-about.png') center / cover no-repeat;
+  background: var(--c-cream-2) url('../../assets/skin/bg-about.png') center / cover no-repeat;
 }
 
 .section-about__inner {

@@ -1,26 +1,27 @@
-import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App';
 import BookListPage from './pages/BookListPage';
 import BookDetailPage from './pages/BookDetailPage';
+import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 import ScrollToTop from './components/ScrollToTop';
 
-function RootLayout() {
+function RootRoute() {
   return (
     <>
       <ScrollToTop />
-      <Outlet />
+      <App />
     </>
   );
 }
 
 const router = createBrowserRouter([
   {
-    element: <RootLayout />,
+    element: <RootRoute />,
     children: [
       {
         path: '/',
-        element: <App />,
+        element: <HomePage />,
       },
       {
         path: '/sach',

@@ -128,7 +128,7 @@ ul {
   inset: 100% 0 auto 0;
   height: 22px;
   margin-top: 10px;
-  background: url('/assets/skin/books.png') center / 22px 22px no-repeat;
+  background: url('../assets/skin/books.png') center / 22px 22px no-repeat;
 }
 
 .tt-row {
@@ -147,7 +147,7 @@ ul {
   width: 32px;
   height: 32px;
   flex: 0 0 auto;
-  background: url('/assets/skin/books.png') center / 100% 100% no-repeat;
+  background: url('../assets/skin/books.png') center / 100% 100% no-repeat;
 }
 
 .tt-row::after {

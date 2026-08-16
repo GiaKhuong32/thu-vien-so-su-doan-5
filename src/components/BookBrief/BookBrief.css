@@ -114,9 +114,21 @@
   color: var(--c-secondary);
 }
 
-/* ---- action button ---- */
+/* ---- action buttons ---- */
 .group-button {
   margin-bottom: 1rem;
+}
+
+.list-button {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.brief .btn {
+  cursor: pointer;
+  font: inherit;
 }
 
 .btn-outline-primary {
@@ -200,5 +212,5 @@
 
   .brief__info {
     width: calc(58.333% - 0.75rem);
-  }
+      }
 }

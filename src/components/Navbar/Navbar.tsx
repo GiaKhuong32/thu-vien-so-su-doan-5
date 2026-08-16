@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { mainMenu, type MenuItem } from '../../data/navigation';
 import './Navbar.css';
 import logo from '../../assets/skin/logo.png';
@@ -9,25 +10,25 @@ function DesktopItem({ item }: { item: MenuItem }) {
   const hasChildren = !!item.children?.length;
   return (
     <li className={`nav-item${hasChildren ? ' has-sub' : ''}`}>
-      <a href={item.href} title={item.label}>
+      <Link to={item.href} title={item.label}>
         <span>{item.label}</span>
         {hasChildren && <i className="caret" aria-hidden="true" />}
-      </a>
+      </Link>
       {hasChildren && (
         <ul className="nav-sub">
           {item.children!.map((child) => (
             <li key={child.href} className={child.children?.length ? 'has-sub' : ''}>
-              <a href={child.href} title={child.label}>
+              <Link to={child.href} title={child.label}>
                 <span>{child.label}</span>
                 {!!child.children?.length && <i className="caret caret-right" aria-hidden="true" />}
-              </a>
+              </Link>
               {!!child.children?.length && (
                 <ul className="nav-sub nav-sub--deep">
                   {child.children.map((leaf) => (
                     <li key={leaf.href}>
-                      <a href={leaf.href} title={leaf.label}>
+                      <Link to={leaf.href} title={leaf.label}>
                         <span>{leaf.label}</span>
-                      </a>
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -47,9 +48,9 @@ function MobileItem({ item }: { item: MenuItem }) {
   return (
     <li className={open ? 'is-open' : ''}>
       <div className="m-row">
-        <a href={item.href} title={item.label}>
+        <Link to={item.href} title={item.label}>
           {item.label}
-        </a>
+        </Link>
         {hasChildren && (
           <button
             type="button"
@@ -122,9 +123,9 @@ export default function Navbar() {
           <span className="line" />
         </button>
 
-        <a className="logo-full" href="/" title="Trang chủ">
+        <Link className="logo-full" to="/" title="Trang chủ">
           <img className="logo" src={LOGO} alt="Thư viện số Nguyễn An Ninh" />
-        </a>
+        </Link>
 
         <nav className="nav-desktop" aria-label="Menu chính">
           <ul className="nav-list">

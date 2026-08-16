@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import './BookCard.css';
 
 export type Book = {
@@ -38,7 +39,7 @@ export default function BookCard({ book, variant = 'grid', reserveAuthor = true 
 
   return (
     <article className={`book-card book-card--${variant}`}>
-      <a className="book-card__link" href={book.href} title={book.title} aria-label={book.title} />
+      <Link className="book-card__link" to={book.href} title={book.title} aria-label={book.title} />
       <div className="book-card__thumb">
         <img src={book.img} alt={book.title} loading="lazy" />
       </div>

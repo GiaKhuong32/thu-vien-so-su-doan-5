@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import './Sidebar.css';
 
 export type CategoryNode = {
@@ -103,8 +104,8 @@ function CategoryRow({
 
   return (
     <li className={`${open ? 'is-open ' : ''}${isActive || containsActive ? 'is-active' : ''}`}>
-      <a
-        href={node.href}
+      <Link
+        to={node.href}
         title={node.label}
         onClick={
           hasKids
@@ -118,15 +119,15 @@ function CategoryRow({
       >
         <span>{node.label}</span>
         {hasKids && <Chevron />}
-      </a>
+      </Link>
 
       {hasKids && (
         <ul className={open ? 'is-open' : undefined}>
           {node.children!.map((kid) => (
             <li key={kid.href} className={kid.href === activeHref ? 'is-active' : undefined}>
-              <a href={kid.href} title={kid.label}>
+              <Link to={kid.href} title={kid.label}>
                 <span>{kid.label}</span>
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
@@ -158,13 +159,13 @@ export default function Sidebar({
           <ul className="list-filter">
             {topics.map((t) => (
               <li className="filter-item" key={t.href}>
-                <a
+                <Link
                   className={`filter-link${t.href === activeTopicHref ? ' is-active' : ''}`}
-                  href={t.href}
+                  to={t.href}
                   title={t.label.trim()}
                 >
                   {t.label.trim()}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

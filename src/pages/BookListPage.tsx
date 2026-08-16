@@ -1,16 +1,13 @@
-import { useMemo,  } from 'react';
-import { useSearchParams, useParams } from 'react-router-dom';
+import { useLayoutEffect, useMemo } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import BookGrid from '../components/BookGrid/BookGrid';
 import PageBanner from '../components/PageBanner/PageBanner';
 import PageLayout from '../components/PageLayout/PageLayout';
 import Pagination from '../components/Pagination/Pagination';
 import Sidebar from '../components/Sidebar/Sidebar';
-import Navbar from '../components/Navbar/Navbar';
-import Footer from '../components/Footer/Footer';
-import FloatingActions from '../components/FloatingActions/FloatingActions';
+import { audioBooks, eBooks, paperBooks, videoBooks } from '../data/books';
 import { bookCategories, bookTopics, libraryBanner } from '../data/library';
 import { ebookListing } from '../data/listing';
-import { eBooks, paperBooks, audioBooks, videoBooks } from '../data/books';
 import useReveal from '../hooks/useReveal';
 
 const PER_PAGE = 12;
@@ -23,11 +20,13 @@ type Props = {
 export default function BookListPage({ title = 'Sách số', activeHref }: Props) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { category } = useParams();
-  
+
   const page = parseInt(searchParams.get('page') || '1', 10);
   const type = searchParams.get('type');
 
-  
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [type, category]);
 
   const displayTitle = useMemo(() => {
     if (type === 'ebooks') return 'Sách số';
@@ -35,7 +34,7 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
     if (type === 'audiobooks') return 'Sách nói';
     if (type === 'videobooks') return 'Phim tài liệu';
     if (category) {
-      const cat = bookCategories.find(c => c.href.includes(category));
+      const cat = bookCategories.find((c) => c.href.includes(category));
       if (cat) return cat.label;
     }
     return title;
@@ -46,7 +45,7 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
     if (type === 'paperbooks') return paperBooks;
     if (type === 'audiobooks') return audioBooks;
     if (type === 'videobooks') return videoBooks;
-    return ebookListing; 
+    return ebookListing;
   }, [type]);
 
   const totalPages = Math.max(1, Math.ceil(filteredBooks.length / PER_PAGE));
@@ -66,14 +65,12 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
   useReveal();
 
   return (
-    <div className="wrapper">
-      <Navbar />
-      
+    <>
       <PageBanner
         img={libraryBanner}
         crumbs={[
           { label: 'Trang chủ', href: '/' },
-          { label: 'Thư viện', href: '/sach' },
+          { label: 'Thư viện', href: '/sach/' },
           { label: displayTitle },
         ]}
       />
@@ -104,9 +101,6 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
           />
         </PageLayout>
       </main>
-
-      <Footer />
-      <FloatingActions />
-    </div>
+    </>
   );
 }
