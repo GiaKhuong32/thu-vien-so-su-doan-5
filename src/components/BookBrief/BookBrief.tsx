@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import type { BookAction, BookDetail } from '../../data/detail';
-import { FORMAT_HREF } from '../../data/detail';
+import { audioBookBySlug } from '../../data/audio.js';
+import type { BookAction, BookDetail } from '../../data/detail.js';
+import { FORMAT_HREF } from '../../data/detail.js';
 import './BookBrief.css';
 
 const SITE = 'https://thuviennguyenanninh.vn';
@@ -18,7 +19,6 @@ function Stars({ value = 0 }: { value?: number }) {
   );
 }
 
-/** one "label: value" metadata row */
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="brief-row">
@@ -28,7 +28,6 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-/** per-action glyph, mirroring the Font Awesome icons on the original */
 function ActionIcon({ kind }: { kind: BookAction['kind'] }) {
   const common = {
     fill: 'none',
@@ -74,7 +73,6 @@ function ActionIcon({ kind }: { kind: BookAction['kind'] }) {
     );
   }
 
-  // fa-book — closed book (Sách giấy)
   return (
     <svg className="btn__icon" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M3 5.2A1.7 1.7 0 0 1 4.7 3.5h4.4c1 0 1.9.5 2.4 1.3.5-.8 1.4-1.3 2.4-1.3h4.4a1.7 1.7 0 0 1 1.7 1.7v12.1a1.2 1.2 0 0 1-1.2 1.2h-4.4c-1 0-1.9.6-2.4 1.4h-1c-.5-.8-1.4-1.4-2.4-1.4H4.7a1.2 1.2 0 0 1-1.2-1.2V5.2Z" {...common} />
@@ -85,11 +83,9 @@ function ActionIcon({ kind }: { kind: BookAction['kind'] }) {
 
 type Props = {
   book: BookDetail;
-  /** called when an action has no working target in this clone */
   onUnavailable: (action: BookAction) => void;
 };
 
-/** Cover + metadata block at the top of the book detail page. */
 export default function BookBrief({ book, onUnavailable }: Props) {
   const shareUrl = `${SITE}/sach/${book.slug}.html`;
 
@@ -142,18 +138,35 @@ export default function BookBrief({ book, onUnavailable }: Props) {
         {!!book.actions.length && (
           <div className="group-button">
             <div className="list-button">
-              {book.actions.map((a) => (
-                <button
-                  key={a.label}
-                  type="button"
-                  className={`btn ${a.primary ? 'btn-primary' : 'btn-outline-primary'}`}
-                  title={book.title}
-                  onClick={() => onUnavailable(a)}
-                >
-                  <ActionIcon kind={a.kind} />
-                  {a.label}
-                </button>
-              ))}
+              {book.actions.map((a) => {
+                const cls = `btn ${a.primary ? 'btn-primary' : 'btn-outline-primary'}`;
+                if (a.kind === 'audio' && audioBookBySlug[book.slug]) {
+                  return (
+                    <Link
+                      key={a.label}
+                      className={cls}
+                      to={`/sach/${book.slug}/Audio.html`}
+                      title={book.title}
+                    >
+                      <ActionIcon kind={a.kind} />
+                      {a.label}
+                    </Link>
+                  );
+                }
+
+                return (
+                  <button
+                    key={a.label}
+                    type="button"
+                    className={cls}
+                    title={book.title}
+                    onClick={() => onUnavailable(a)}
+                  >
+                    <ActionIcon kind={a.kind} />
+                    {a.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}

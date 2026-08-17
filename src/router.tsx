@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App';
 import BookListPage from './pages/BookListPage';
+import BookAudioPage from './pages/BookAudioPage';
 import BookDetailPage from './pages/BookDetailPage';
 import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -34,6 +35,10 @@ const router = createBrowserRouter([
       {
         path: '/sach/:slug.html',
         element: <BookDetailPage />,
+      },
+      {
+        path: '/sach/:slug/Audio.html',
+        element: <BookAudioPage />,
       },
       {
         path: '/sach/:category',
