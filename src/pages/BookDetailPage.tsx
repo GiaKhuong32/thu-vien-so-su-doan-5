@@ -12,22 +12,37 @@ import type { BookAction } from '../data/detail';
 import { bookBySlug, relatedBooks } from '../data/detail';
 import { bookCategories, bookTopics, libraryBanner } from '../data/library';
 import NotFoundPage from './NotFoundPage';
+import { useBookDetail, useRelatedBooks } from '../hooks/useBooks';
 
 export default function BookDetailPage() {
   const { slug } = useParams();
-  const book = slug ? bookBySlug[slug] : undefined;
-  const [notice, setNotice] = useState<string | null>(null);
 
-  const onUnavailable = useCallback((_action: BookAction) => {
-    setNotice('Dự án đang được triển khai');
-  }, []);
+const { data: bookData, loading: bookLoading, error: bookError } = useBookDetail(slug || '');
+const { data: relatedData } = useRelatedBooks(slug || '', 5);
 
-  if (!book) {
-    return <NotFoundPage />;
+const staticBook = slug ? bookBySlug[slug] : undefined;
+const book = bookData || staticBook;
+const related = relatedData || (book ? relatedBooks(book, 5) : []);
+
+const [notice, setNotice] = useState<string | null>(null);
+
+const onUnavailable = useCallback((_action: BookAction) => {
+  setNotice('Dự án đang được triển khai');
+}, []);
+
+if (bookLoading && !book) {
+  return <div>Loading...</div>;
+}
+
+if (!book || bookError) {
+  return <NotFoundPage />;
+}
+
+const relatedMoreHref = book.category ? book.category.href : '/sach/';
+
+  if (bookLoading) {
+    return <div>Loading...</div>;
   }
-
-  const related = relatedBooks(book, 5);
-  const relatedMoreHref = book.category ? book.category.href : '/sach/';
 
   return (
     <>
@@ -62,7 +77,7 @@ export default function BookDetailPage() {
               </ul>
             </InfoPane>
           )}
-// 
+
           {!!book.summary.length && (
             <InfoPane title="Nội dung sách">
               {book.summary.map((p, i) => (

@@ -4,9 +4,34 @@ import BookSection from '../components/BookSection';
 import HeroSlider from '../components/HeroSlider';
 import SuggestSection from '../components/SuggestSection';
 import { assetImage } from '../data/assets';
-import { audioBooks, eBooks, newBooks, paperBooks, suggestBooks, videoBooks } from '../data/books';
+import { useNewBooks, useSuggestedBooks, useBooksByType } from '../hooks/useBooks';
+import useReveal from '../hooks/useReveal';
+import { newBooks, suggestBooks, audioBooks, eBooks, paperBooks, videoBooks } from '../data/books';
 
 export default function HomePage() {
+  const { data: newBooksData } = useNewBooks(10);
+  const { data: suggestedBooksData } = useSuggestedBooks(6);
+  const { data: ebooksData } = useBooksByType('ebooks');
+  const { data: paperbooksData } = useBooksByType('paperbooks');
+  const { data: audiobooksData } = useBooksByType('audiobooks');
+  const { data: videobooksData } = useBooksByType('videobooks');
+
+  useReveal([
+    newBooksData?.length,
+    suggestedBooksData?.length,
+    ebooksData?.length,
+    paperbooksData?.length,
+    audiobooksData?.length,
+    videobooksData?.length,
+  ]);
+
+  const displayNewBooks = newBooksData && newBooksData.length > 0 ? newBooksData : newBooks;
+  const displaySuggestedBooks = suggestedBooksData && suggestedBooksData.length > 0 ? suggestedBooksData : suggestBooks;
+  const displayEbooks = ebooksData && ebooksData.length > 0 ? ebooksData : eBooks;
+  const displayPaperbooks = paperbooksData && paperbooksData.length > 0 ? paperbooksData : paperBooks;
+  const displayAudiobooks = audiobooksData && audiobooksData.length > 0 ? audiobooksData : audioBooks;
+  const displayVideobooks = videobooksData && videobooksData.length > 0 ? videobooksData : videoBooks;
+
   return (
     <>
       <HeroSlider />
@@ -18,37 +43,37 @@ export default function HomePage() {
           id="new-books"
           title="Sách/ Tài liệu mới"
           titleStyle="center"
-          books={newBooks}
+          books={displayNewBooks}
         />
 
-        <SuggestSection books={suggestBooks} />
+        <SuggestSection books={displaySuggestedBooks} />
 
-        <BookSection id="ebooks" title="Sách số" books={eBooks} moreHref="/sach/?type=ebooks" />
+        <BookSection id="ebooks" title="Sách số" books={displayEbooks} moreHref="/sach/?type=ebooks" />
 
         <BookSection
           id="paperbooks"
           title="Sách giấy"
-          books={paperBooks}
+          books={displayPaperbooks}
           moreHref="/sach/?type=paperbooks"
         />
 
         <AdsBanner
           img={assetImage('ads/sd5.png')}
-          href="/sach/tham-quan-thuc-te-ao-vr/"
-          alt="Tham quan nhà tưởng niệm VR các danh nhân Nam Bộ"
+          href="/banner/sd5"
+          alt="Banner su doan 5"
         />
 
         <BookSection
           id="audiobooks"
           title="Sách nói"
-          books={audioBooks}
+          books={displayAudiobooks}
           moreHref="/sach/?type=audiobooks"
         />
 
         <BookSection
           id="videobooks"
           title="Phim tài liệu"
-          books={videoBooks}
+          books={displayVideobooks}
           moreHref="/sach/?type=videobooks"
         />
       </main>
