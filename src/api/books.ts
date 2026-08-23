@@ -84,6 +84,10 @@ function mapApiBookToBookDetail(apiBook: ApiBookDetail): BookDetail {
   const slug = slugify(apiBook.title);
   const rawImage = apiBook.thumbnail || apiBook.document?.thumbnail;
 
+  // Kiểm tra xem có phải sách nói không
+  const isAudiobook = apiBook.document?.typeDocument?.toUpperCase() === 'AUDIO' || 
+                      (apiBook.thumbnail && apiBook.thumbnail.toLowerCase().includes('audio'));
+
   return {
     slug,
     title: apiBook.title,
@@ -96,7 +100,14 @@ function mapApiBookToBookDetail(apiBook: ApiBookDetail): BookDetail {
       label: apiBook.categoryEntity?.categoryName || 'Sách',
       href: '/sach/',
     },
-    actions: [],
+    actions: isAudiobook ? [
+      {
+        label: 'Audio',
+        kind: 'audio',
+        primary: true,
+        href: `/sach/${slug}/Audio.html`,
+      }
+    ] : [],
     catalog: [
       `Mã sách: ${apiBook.bookCode}`,
       `Năm xuất bản: ${apiBook.publishYear}`,

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { api } from '../api/client';
+
 import BookBrief from '../components/BookBrief/BookBrief';
 import BookSection from '../components/BookSection';
 import InfoPane from '../components/InfoPane/InfoPane';
@@ -125,12 +125,16 @@ const response = await fetch(
 
 
   const onUnavailable = useCallback(
-    (_action: BookAction) => {
+    (action: BookAction) => {
+      // Nếu là action Audio, redirect thay vì hiển thị thông báo
+      if (action.kind === 'audio') {
+        window.location.href = action.href;
+        return;
+      }
 
       setNotice(
         'Dự án đang được triển khai'
       );
-
     },
     []
   );
