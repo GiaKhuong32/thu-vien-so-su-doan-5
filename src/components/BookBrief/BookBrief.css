@@ -5,7 +5,6 @@
   margin-bottom: 2rem;
 }
 
-/* ---- cover ---- */
 .brief__media {
   width: 100%;
   flex: 0 0 auto;
@@ -28,7 +27,6 @@
   padding: 32px 40px;
 }
 
-/* ---- text column ---- */
 .brief__info {
   width: 100%;
   flex: 1 1 auto;
@@ -49,7 +47,6 @@
   margin-bottom: 1.5rem;
 }
 
-/* ---- label / value rows ---- */
 .brief-row {
   display: flex;
   align-items: center;

@@ -1,7 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { AudioTrack } from '../../data/audio.js';
-import { audioUrl } from '../../data/audio.js';
+
 import './AudioPlayer.css';
+
+export type AudioTrack = {
+  title: string;
+  url: string;
+  time: string;
+};
+
+const AUDIO_HOST = 'https://thuviennguyenanninh.vn';
+
+export function audioUrl(path: string): string {
+  return path.startsWith('http') ? path : `${AUDIO_HOST}${path}`;
+}
 
 function formatTime(duration: number) {
   if (!Number.isFinite(duration) || duration < 0) return '00:00';

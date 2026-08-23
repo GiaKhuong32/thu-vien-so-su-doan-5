@@ -83,36 +83,20 @@ function mapApiBookToBook(apiBook: ApiBook): Book {
 function mapApiBookToBookDetail(apiBook: ApiBookDetail): BookDetail {
   const slug = slugify(apiBook.title);
   const rawImage = apiBook.thumbnail || apiBook.document?.thumbnail;
-  
-  const formats: string[] = [];
-  if (apiBook.categoryEntity?.categoryName) {
-    formats.push(apiBook.categoryEntity.categoryName);
-  } else {
-    if (apiBook.document?.typeDocument === 'BOOK') {
-      formats.push('Sách giấy');
-    }
-    if (apiBook.document?.content) {
-      formats.push('Sách số');
-    }
-  }
-  
+
   return {
     slug,
     title: apiBook.title,
     author: apiBook.author,
+    idDocument: apiBook.document?.idDocument,
     img: toImageUrl(rawImage),
     rating: 0,
-    formats,
+    formats: [],
     category: {
       label: apiBook.categoryEntity?.categoryName || 'Sách',
       href: '/sach/',
     },
-    actions: formats.map((format) => ({
-      label: format.toLowerCase().includes('pdf') || format.toLowerCase().includes('số') ? 'Mượn sách' : format,
-      kind: format.toLowerCase().includes('pdf') || format.toLowerCase().includes('số') ? 'pdf' : 'paper',
-      primary: true,
-      href: '',
-    })),
+    actions: [],
     catalog: [
       `Mã sách: ${apiBook.bookCode}`,
       `Năm xuất bản: ${apiBook.publishYear}`,
@@ -164,5 +148,36 @@ export const booksApi = {
   getSuggested: async (limit = 6): Promise<Book[]> => {
     const allBooks = await booksApi.getAll();
     return allBooks.slice(0, limit);
+  },
+
+  getByType: async (
+    type: 'ebooks' | 'paperbooks' | 'audiobooks' | 'videobooks'
+  ): Promise<Book[]> => {
+    const allBooks = await api.get<ApiBook[]>('/books/getAll');
+
+    return allBooks
+      .filter((book) => {
+        const documentType = book.document?.typeDocument?.toUpperCase();
+        const thumbnail = book.thumbnail || book.document?.thumbnail || '';
+
+        if (type === 'paperbooks') {
+          return documentType === 'BOOK';
+        }
+
+        if (type === 'ebooks') {
+          return thumbnail.toLowerCase().includes('.pdf');
+        }
+
+        if (type === 'audiobooks') {
+          return thumbnail.toLowerCase().includes('audio');
+        }
+
+        if (type === 'videobooks') {
+          return documentType === 'VIDEO';
+        }
+
+        return true;
+      })
+      .map(mapApiBookToBook);
   },
 };

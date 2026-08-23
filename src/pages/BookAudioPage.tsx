@@ -1,22 +1,21 @@
-import AudioPlayer from '../components/AudioPlayer/AudioPlayer';
 import BookSection from '../components/BookSection';
 import PageBanner from '../components/PageBanner/PageBanner';
-import { audioBookBySlug } from '../data/audio';
-import { bookBySlug, relatedBooks } from '../data/detail';
-import { libraryBanner } from '../data/library';
 import NotFoundPage from './NotFoundPage';
 import { useParams } from 'react-router-dom';
+import { useBookDetail, useRelatedBooks } from '../hooks/useBooks';
+import { libraryBanner } from '../data/library';
 
 export default function BookAudioPage() {
   const { slug } = useParams();
-  const book = slug ? bookBySlug[slug] : undefined;
-  const audio = slug ? audioBookBySlug[slug] : undefined;
+  const { data: bookData } = useBookDetail(slug || '');
+  const { data: relatedData } = useRelatedBooks(slug || '', 5);
 
-  if (!book || !audio) {
+  if (!bookData) {
     return <NotFoundPage />;
   }
 
-  const related = relatedBooks(book, 5);
+  const book = bookData;
+  const related = relatedData || [];
   const relatedMoreHref = book.category ? book.category.href : '/sach/';
 
   return (
@@ -34,7 +33,8 @@ export default function BookAudioPage() {
 
       <main>
         <div className="container audio-page">
-          <AudioPlayer title={book.title} img={audio.img || book.img} tracks={audio.tracks} />
+          <h1>Tính năng Audio đang được phát triển</h1>
+          <p>Chức năng nghe sách đang được cập nhật. Vui lòng quay lại sau.</p>
         </div>
 
         {!!related.length && (

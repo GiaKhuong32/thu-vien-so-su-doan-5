@@ -1,7 +1,5 @@
 import { Link } from 'react-router-dom';
-import { audioBookBySlug } from '../../data/audio.js';
 import type { BookAction, BookDetail } from '../../data/detail.js';
-import { FORMAT_HREF } from '../../data/detail.js';
 import './BookBrief.css';
 
 const SITE = 'https://thuviennguyenanninh.vn';
@@ -64,7 +62,6 @@ function ActionIcon({ kind }: { kind: BookAction['kind'] }) {
   }
 
   if (kind === 'pdf') {
-    
     return (
       <svg className="btn__icon" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 6.5c-1.8-1.4-4.2-2-7-2v12c2.8 0 5.2.6 7 2 1.8-1.4 4.2-2 7-2v-12c-2.8 0-5.2.6-7 2Z" {...common} />
@@ -112,18 +109,6 @@ export default function BookBrief({ book, onUnavailable }: Props) {
             <span className="rate-point text-desc">{book.rating}/5</span>
           </Row>
 
-          {!!book.formats.length && (
-            <Row label="Định dạng:">
-              <div className="list-category">
-                {book.formats.map((f) => (
-                  <Link key={f} to={FORMAT_HREF[f] ?? '/sach/'} title={f}>
-                    {f}
-                  </Link>
-                ))}
-              </div>
-            </Row>
-          )}
-
           {book.category && (
             <Row label="Thể loại:">
               <div className="list-category">
@@ -133,6 +118,12 @@ export default function BookBrief({ book, onUnavailable }: Props) {
               </div>
             </Row>
           )}
+
+       {!!book.formats.length && (
+  <Row label="Định dạng:">
+    <span>{book.formats.join(', ')}</span>
+  </Row>
+)}
         </div>
 
         {!!book.actions.length && (
@@ -140,20 +131,6 @@ export default function BookBrief({ book, onUnavailable }: Props) {
             <div className="list-button">
               {book.actions.map((a) => {
                 const cls = `btn ${a.primary ? 'btn-primary' : 'btn-outline-primary'}`;
-                if (a.kind === 'audio' && audioBookBySlug[book.slug]) {
-                  return (
-                    <Link
-                      key={a.label}
-                      className={cls}
-                      to={`/sach/${book.slug}/Audio.html`}
-                      title={book.title}
-                    >
-                      <ActionIcon kind={a.kind} />
-                      {a.label}
-                    </Link>
-                  );
-                }
-
                 return (
                   <button
                     key={a.label}
@@ -201,5 +178,5 @@ export default function BookBrief({ book, onUnavailable }: Props) {
         </div>
       </div>
     </div>
-        );
+  );
 }

@@ -5,9 +5,8 @@ import PageBanner from '../components/PageBanner/PageBanner';
 import PageLayout from '../components/PageLayout/PageLayout';
 import Pagination from '../components/Pagination/Pagination';
 import Sidebar from '../components/Sidebar/Sidebar';
-import { audioBooks, eBooks, paperBooks, videoBooks } from '../data/books';
 import { bookCategories, bookTopics, libraryBanner } from '../data/library';
-import { ebookListing } from '../data/listing';
+import { useBooks, useBooksByType } from '../hooks/useBooks';
 import useReveal from '../hooks/useReveal';
 
 const PER_PAGE = 12;
@@ -23,6 +22,12 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
 
   const page = parseInt(searchParams.get('page') || '1', 10);
   const type = searchParams.get('type');
+
+  const { data: allBooks } = useBooks();
+  const { data: ebooksData } = useBooksByType('ebooks');
+  const { data: paperbooksData } = useBooksByType('paperbooks');
+  const { data: audiobooksData } = useBooksByType('audiobooks');
+  const { data: videobooksData } = useBooksByType('videobooks');
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
@@ -41,12 +46,12 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
   }, [type, category, title]);
 
   const filteredBooks = useMemo(() => {
-    if (type === 'ebooks') return eBooks;
-    if (type === 'paperbooks') return paperBooks;
-    if (type === 'audiobooks') return audioBooks;
-    if (type === 'videobooks') return videoBooks;
-    return ebookListing;
-  }, [type]);
+    if (type === 'ebooks') return ebooksData || [];
+    if (type === 'paperbooks') return paperbooksData || [];
+    if (type === 'audiobooks') return audiobooksData || [];
+    if (type === 'videobooks') return videobooksData || [];
+    return allBooks || [];
+  }, [type, allBooks, ebooksData, paperbooksData, audiobooksData, videobooksData]);
 
   const totalPages = Math.max(1, Math.ceil(filteredBooks.length / PER_PAGE));
 

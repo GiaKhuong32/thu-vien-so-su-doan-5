@@ -7,7 +7,7 @@ export type Crumb = {
 };
 
 type Props = {
-  img: string;
+  img?: string;
   crumbs: Crumb[];
   title?: string;
 };

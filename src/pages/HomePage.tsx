@@ -6,13 +6,11 @@ import SuggestSection from '../components/SuggestSection';
 import { assetImage } from '../data/assets';
 import { useNewBooks, useSuggestedBooks, useBooksByType } from '../hooks/useBooks';
 import useReveal from '../hooks/useReveal';
-import { newBooks, suggestBooks, audioBooks, eBooks, paperBooks, videoBooks } from '../data/books';
 
 export default function HomePage() {
   const { data: newBooksData } = useNewBooks(10);
   const { data: suggestedBooksData } = useSuggestedBooks(6);
   const { data: ebooksData } = useBooksByType('ebooks');
-  const { data: paperbooksData } = useBooksByType('paperbooks');
   const { data: audiobooksData } = useBooksByType('audiobooks');
   const { data: videobooksData } = useBooksByType('videobooks');
 
@@ -20,17 +18,15 @@ export default function HomePage() {
     newBooksData?.length,
     suggestedBooksData?.length,
     ebooksData?.length,
-    paperbooksData?.length,
     audiobooksData?.length,
     videobooksData?.length,
   ]);
 
-  const displayNewBooks = newBooksData && newBooksData.length > 0 ? newBooksData : newBooks;
-  const displaySuggestedBooks = suggestedBooksData && suggestedBooksData.length > 0 ? suggestedBooksData : suggestBooks;
-  const displayEbooks = ebooksData && ebooksData.length > 0 ? ebooksData : eBooks;
-  const displayPaperbooks = paperbooksData && paperbooksData.length > 0 ? paperbooksData : paperBooks;
-  const displayAudiobooks = audiobooksData && audiobooksData.length > 0 ? audiobooksData : audioBooks;
-  const displayVideobooks = videobooksData && videobooksData.length > 0 ? videobooksData : videoBooks;
+  const displayNewBooks = newBooksData || [];
+  const displaySuggestedBooks = suggestedBooksData || [];
+  const displayEbooks = ebooksData || [];
+  const displayAudiobooks = audiobooksData || [];
+  const displayVideobooks = videobooksData || [];
 
   return (
     <>
@@ -48,19 +44,11 @@ export default function HomePage() {
 
         <SuggestSection books={displaySuggestedBooks} />
 
-        <BookSection id="ebooks" title="Sách số" books={displayEbooks} moreHref="/sach/?type=ebooks" />
-
         <BookSection
-          id="paperbooks"
-          title="Sách giấy"
-          books={displayPaperbooks}
-          moreHref="/sach/?type=paperbooks"
-        />
-
-        <AdsBanner
-          img={assetImage('ads/sd5.png')}
-          href="/banner/sd5"
-          alt="Banner su doan 5"
+          id="ebooks"
+          title="Sách số"
+          books={displayEbooks}
+          moreHref="/sach/?type=ebooks"
         />
 
         <BookSection
@@ -68,6 +56,12 @@ export default function HomePage() {
           title="Sách nói"
           books={displayAudiobooks}
           moreHref="/sach/?type=audiobooks"
+        />
+
+        <AdsBanner
+          img={assetImage('ads/sd5.png')}
+          href="/banner/sd5"
+          alt="Banner su doan 5"
         />
 
         <BookSection
