@@ -35,6 +35,15 @@ export interface ApiBookDetail extends ApiBook {
   formats?: string[];
 }
 
+interface ApiBookFile {
+  bookFile?: string;
+  fileName?: string;
+  idFile?: string;
+  partFile?: string;
+  thumbnail?: string;
+  typeFile?: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   code: number;
@@ -120,6 +129,67 @@ function mapApiBookToBookDetail(apiBook: ApiBookDetail): BookDetail {
   };
 }
 
+async function getBookFiles(idDocument?: string): Promise<ApiBookFile[]> {
+  if (!idDocument) return [];
+
+  const response = await fetch(`${API_ORIGIN}/files/document/${idDocument}`, {
+    method: 'GET',
+    headers: {
+      Accept: '*/*',
+    },
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = await response.json();
+
+  return Array.isArray(data?.Result)
+    ? data.Result
+    : Array.isArray(data?.result)
+      ? data.result
+      : [];
+}
+
+function normalizeBookFile(value?: string): string {
+  return (value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replaceAll('_', ' ');
+}
+
+function isDigitalFile(file: ApiBookFile): boolean {
+  const bookFile = normalizeBookFile(file.bookFile);
+  const typeFile = (file.typeFile || '').toLowerCase();
+  const fileName = (file.fileName || '').toLowerCase();
+
+  return (
+    bookFile.includes('sach so') ||
+    typeFile === 'pdf' ||
+    fileName.endsWith('.pdf')
+  );
+}
+
+function isAudioFile(file: ApiBookFile): boolean {
+  const bookFile = normalizeBookFile(file.bookFile);
+  const typeFile = (file.typeFile || '').toLowerCase();
+  const fileName = (file.fileName || '').toLowerCase();
+
+  return (
+    bookFile.includes('sach noi') ||
+    typeFile === 'mp3' ||
+    typeFile.includes('audio') ||
+    fileName.endsWith('.mp3') ||
+    fileName.endsWith('.wav')
+  );
+}
+
+function isThumbnailFile(file: ApiBookFile): boolean {
+  return normalizeBookFile(file.bookFile).includes('thumbnail');
+}
+
 export const booksApi = {
   getAll: async (): Promise<Book[]> => {
     const response = await api.get<ApiBook[]>('/books/getAll');
@@ -166,29 +236,34 @@ export const booksApi = {
   ): Promise<Book[]> => {
     const allBooks = await api.get<ApiBook[]>('/books/getAll');
 
-    return allBooks
-      .filter((book) => {
+    const matchedBooks = await Promise.all(
+      allBooks.map(async (book) => {
         const documentType = book.document?.typeDocument?.toUpperCase();
-        const thumbnail = book.thumbnail || book.document?.thumbnail || '';
+        const files = await getBookFiles(book.document?.idDocument);
+        const contentFiles = files.filter((file) => !isThumbnailFile(file));
 
         if (type === 'paperbooks') {
-          return documentType === 'BOOK';
+          return documentType === 'BOOK' ? book : null;
         }
 
         if (type === 'ebooks') {
-          return thumbnail.toLowerCase().includes('.pdf');
+          return contentFiles.some(isDigitalFile) ? book : null;
         }
 
         if (type === 'audiobooks') {
-          return thumbnail.toLowerCase().includes('audio');
+          return contentFiles.some(isAudioFile) ? book : null;
         }
 
         if (type === 'videobooks') {
-          return documentType === 'VIDEO';
+          return documentType === 'VIDEO' ? book : null;
         }
 
-        return true;
+        return null;
       })
+    );
+
+    return matchedBooks
+      .filter((book): book is ApiBook => Boolean(book))
       .map(mapApiBookToBook);
   },
 };

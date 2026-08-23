@@ -109,7 +109,11 @@ const response = await fetch(
         new Set(
           files
             .map((file) => normalizeBookFormat(file.bookFile))
-            .filter((format): format is string => Boolean(format))
+            .filter((format): format is string => {
+              // Chỉ giữ lại "Sách số" hoặc "Sách nói", loại bỏ THUMBNAIL và các định dạng khác
+              return Boolean(format) && 
+                     (format === 'Sách số' || format === 'Sách nói');
+            })
         )
       );
 
