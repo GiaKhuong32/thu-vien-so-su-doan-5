@@ -13,13 +13,21 @@ export type TopicTag = {
   href: string;
 };
 
+export type AuthorTag = {
+  label: string;
+  href: string;
+};
+
 type Props = {
   categories: CategoryNode[];
   topics: TopicTag[];
+  authors?: AuthorTag[];
   activeHref?: string;
   activeTopicHref?: string;
+  activeAuthorHref?: string;
   categoryTitle?: string;
   topicTitle?: string;
+  authorTitle?: string;
 };
 
 function PaneIcon() {
@@ -139,10 +147,13 @@ function CategoryRow({
 export default function Sidebar({
   categories,
   topics,
+  authors,
   activeHref,
   activeTopicHref,
+  activeAuthorHref,
   categoryTitle = 'Danh mục sách',
-  topicTitle = 'Chủ đề & Tác giả',
+  topicTitle = 'Định dạng',
+  authorTitle = 'Tác giả',
 }: Props) {
   return (
     <aside className="sidebar">
@@ -170,6 +181,24 @@ export default function Sidebar({
             ))}
           </ul>
         </Pane>
+
+        {authors && authors.length > 0 && (
+          <Pane title={authorTitle}>
+            <ul className="list-filter">
+              {authors.map((a) => (
+                <li className="filter-item" key={a.href}>
+                  <Link
+                    className={`filter-link${a.href === activeAuthorHref ? ' is-active' : ''}`}
+                    to={a.href}
+                    title={a.label.trim()}
+                  >
+                    {a.label.trim()}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Pane>
+        )}
       </div>
     </aside>
   );

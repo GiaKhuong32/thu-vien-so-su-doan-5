@@ -8,17 +8,20 @@ import Modal from '../components/Modal/Modal';
 import PageBanner from '../components/PageBanner/PageBanner';
 import PageLayout from '../components/PageLayout/PageLayout';
 import ReviewForm from '../components/ReviewForm/ReviewForm';
+import Sidebar from '../components/Sidebar/Sidebar';
 
 
 import type { BookAction } from '../data/detail';
+import type { Author } from '../data/library';
 
-import { libraryBanner } from '../data/library';
+import { bookCategories, bookTopics, libraryBanner } from '../data/library';
 
 import NotFoundPage from './NotFoundPage';
 
 import {
   useBookDetail,
   useRelatedBooks,
+  useBooks,
 } from '../hooks/useBooks';
 
 
@@ -63,11 +66,15 @@ export default function BookDetailPage() {
     data: relatedData,
   } = useRelatedBooks(slug || '', 5);
 
+  const { data: allBooks } = useBooks();
+
 
   const book = bookData;
   const related = relatedData || [];
 
   const [bookFormats, setBookFormats] = useState<string[]>([]);
+  const [bookActions, setBookActions] = useState<BookAction[]>([]);
+  const [authors, setAuthors] = useState<Author[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
 
 
@@ -77,6 +84,7 @@ useEffect(() => {
 
     if (!idDocument) {
       setBookFormats([]);
+      setBookActions([]);
       return;
     }
 
@@ -118,27 +126,96 @@ const response = await fetch(
       );
 
       setBookFormats(formats);
+
+      // Tạo actions dựa trên file types
+      const hasAudio = files.some((file) => {
+        const bookFile = file.bookFile || '';
+        const typeFile = file.typeFile?.toLowerCase() || '';
+        return bookFile === 'Sách_Nói' || typeFile === 'mp3' || typeFile.includes('audio');
+      });
+
+      const pdfFile = files.find((file) => {
+        const bookFile = file.bookFile || '';
+        const typeFile = file.typeFile?.toLowerCase() || '';
+        const fileName = file.fileName?.toLowerCase() || '';
+        return bookFile === 'Sách_Số' || typeFile === 'pdf' || fileName.endsWith('.pdf');
+      });
+
+      const actions: BookAction[] = [];
+
+      if (pdfFile?.partFile) {
+        actions.push({
+          label: 'Đọc',
+          kind: 'pdf',
+          primary: true,
+          href: pdfFile.partFile,
+        });
+      }
+
+      if (hasAudio && bookData?.slug) {
+        actions.push({
+          label: 'Audio',
+          kind: 'audio',
+          primary: false,
+          href: `/sach/${bookData.slug}/Audio.html`,
+        });
+      }
+
+      setBookActions(actions);
     } catch (error) {
       console.error('Lỗi lấy danh sách file của sách:', error);
       setBookFormats([]);
+      setBookActions([]);
     }
   };
 
   fetchBookFiles();
 }, [bookData]);
 
+useEffect(() => {
+  if (allBooks && allBooks.length > 0) {
+    // Extract unique authors from all books
+    const uniqueAuthors = new Map<string, string>();
+    
+    allBooks.forEach((book) => {
+      if (book.author && book.author.trim()) {
+        const authorName = book.author.trim();
+        const authorSlug = authorName
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        
+        if (!uniqueAuthors.has(authorName)) {
+          uniqueAuthors.set(authorName, `/sach/?author=${authorSlug}`);
+        }
+      }
+    });
+
+    // Convert to array and take first 3
+    const authorArray = Array.from(uniqueAuthors.entries())
+      .slice(0, 3)
+      .map(([label, href]) => ({ label, href }));
+
+    setAuthors(authorArray);
+  }
+}, [allBooks]);
+
 
   const onUnavailable = useCallback(
     (action: BookAction) => {
-      // Nếu là action Audio, redirect thay vì hiển thị thông báo
       if (action.kind === 'audio') {
         window.location.href = action.href;
         return;
       }
 
-      setNotice(
-        'Dự án đang được triển khai'
-      );
+      if (action.kind === 'pdf' && action.href) {
+        window.open(action.href, '_blank', 'noopener,noreferrer');
+        return;
+      }
+
+      setNotice('Dự án đang được triển khai');
     },
     []
   );
@@ -171,6 +248,7 @@ const response = await fetch(
   const bookWithFormat = {
     ...book,
     formats: bookFormats,
+    actions: bookActions,
   };
 
   return (
@@ -206,9 +284,14 @@ const response = await fetch(
       <main>
 
         <PageLayout
-
-          sidebar={null}
-
+          sidebar={
+            <Sidebar 
+              categories={bookCategories} 
+              topics={bookTopics} 
+              authors={authors}
+              activeHref={book.category?.href}
+            />
+          }
         >
 
           <BookBrief

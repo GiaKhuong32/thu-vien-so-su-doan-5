@@ -17,7 +17,7 @@ interface BookFile {
   fileUrl?: string;
   filePath?: string;
   content?: string;
-  speakFile?: string; // URL audio public
+  speakFile?: string; 
 }
 
 const API_BASE = 'http://192.168.2.46:8080';
@@ -67,12 +67,11 @@ export default function BookAudioPage() {
 
         console.log('Files sau khi parse:', files);
 
-        // Lọc ra các file audio và chuyển đổi thành AudioTrack
         const audioFiles = files.filter((file) => {
           const fileType = file.bookFile?.toLowerCase() || '';
           const fileName = file.fileName?.toLowerCase() || '';
           const typeFile = file.typeFile?.toLowerCase() || '';
-          const hasSpeakFile = !!file.speakFile; // Có URL audio public
+          const hasSpeakFile = !!file.speakFile; 
           
           const isAudio = 
             fileType.includes('audio') || 
@@ -88,7 +87,6 @@ export default function BookAudioPage() {
 
         console.log('Audio files sau khi filter:', audioFiles);
 
-        // Tạo tracks với URL audio public
         const tracks: AudioTrack[] = audioFiles.map((file, index) => {
           const audioUrl =
             file.partFile ||

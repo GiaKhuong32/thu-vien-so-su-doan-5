@@ -31,6 +31,9 @@ export interface ApiBook {
 
 export interface ApiBookDetail extends ApiBook {
   description?: string;
+  summary?: string;
+  content?: string;
+  details?: string;
   categories?: string[];
   formats?: string[];
 }
@@ -124,7 +127,8 @@ function mapApiBookToBookDetail(apiBook: ApiBookDetail): BookDetail {
       `Vị trí kệ: ${apiBook.shelfLocation}`,
       `Số lượng: ${apiBook.availableCopies}/${apiBook.totalCopies}`,
     ],
-    summary: apiBook.description ? [apiBook.description] : [],
+    summary: apiBook.description || apiBook.summary || apiBook.content || apiBook.details ? 
+      [apiBook.description || apiBook.summary || apiBook.content || apiBook.details || ''] : [],
     related: [],
   };
 }

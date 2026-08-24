@@ -10,19 +10,21 @@ export type Topic = {
   href: string;
 };
 
+export type Author = {
+  label: string;
+  href: string;
+};
+
 export const bookCategories: Category[] = [
   { label: 'Tất cả', href: '/sach/' },
+  { label: 'Tài liệu huấn luyện', href: '/sach/tai-lieu-huan-luyen/' },
+  { label: 'Tài liệu chính trị', href: '/sach/tai-lieu-chinh-tri/' },
   { label: 'Lịch sử', href: '/sach/lich-su/' },
   { label: 'Văn học', href: '/sach/van-hoc/' },
-  { label: 'Văn hóa', href: '/sach/van-hoa/' },
-  { label: 'Nguyễn An Ninh', href: '/sach/nguyen-an-ninh/' },
-  { label: 'Sài Gòn - Gia Định - TPHCM', href: '/sach/sai-gon-gia-dinh-tphcm/' },
-  { label: 'Nhân vật', href: '/sach/nhan-vat/' },
-  { label: 'Hồ Chí Minh', href: '/sach/ho-chi-minh/' },
+  { label: 'Khoa học', href: '/sach/khoa-hoc/' },
+  { label: 'Ngôn ngữ học', href: '/sach/ngon-ngu-hoc/' },
   { label: 'Phim tài liệu', href: '/sach/phim-tai-lieu/' },
-  { label: 'Tạp chí - Báo', href: '/sach/tap-chi-bao/' },
-  { label: 'Nghiên cứu địa bạ - khảo cổ', href: '/sach/nghien-cuu-dia-ba-khao-co/' },
-  { label: 'Hồi ký', href: '/sach/hoi-ky/' },
+  { label: 'Tài liệu khác', href: '/sach/tai-lieu-khac/' },
 ];
 
 export const bookTopics: Topic[] = [
