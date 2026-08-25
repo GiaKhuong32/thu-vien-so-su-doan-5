@@ -118,7 +118,7 @@ const response = await fetch(
           files
             .map((file) => normalizeBookFormat(file.bookFile))
             .filter((format): format is string => {
-              // Chỉ giữ lại "Sách số" hoặc "Sách nói", loại bỏ THUMBNAIL và các định dạng khác
+              
               return Boolean(format) && 
                      (format === 'Sách số' || format === 'Sách nói');
             })
@@ -174,17 +174,17 @@ const response = await fetch(
 
 useEffect(() => {
   if (allBooks && allBooks.length > 0) {
-    // Extract unique authors from all books
+    
     const uniqueAuthors = new Map<string, string>();
     
     allBooks.forEach((book) => {
       if (book.author && book.author.trim()) {
         const authorName = book.author.trim();
+        // Tạo slug nhưng giữ lại dấu tiếng Việt
         const authorSlug = authorName
           .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/\s+/g, '-') // chỉ thay space bằng dấu gạch
+          .replace(/[^a-z0-9-àáạảãâầấậẩẫèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỉỹđ]/g, '') // xóa ký tự đặc biệt
           .replace(/^-+|-+$/g, '');
         
         if (!uniqueAuthors.has(authorName)) {
@@ -193,7 +193,7 @@ useEffect(() => {
       }
     });
 
-    // Convert to array and take first 3
+   
     const authorArray = Array.from(uniqueAuthors.entries())
       .slice(0, 3)
       .map(([label, href]) => ({ label, href }));

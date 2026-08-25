@@ -89,7 +89,6 @@
   font-size: 14px;
 }
 
-/* ---- category links: comma separated ---- */
 .list-category {
   display: flex;
   align-items: center;
@@ -111,7 +110,6 @@
   color: var(--c-secondary);
 }
 
-/* ---- action buttons ---- */
 .group-button {
   margin-bottom: 1rem;
 }
@@ -144,7 +142,6 @@
   height: 18px;
 }
 
-/* ---- share row ---- */
 .list-share-icon {
   display: flex;
   align-items: center;
@@ -185,7 +182,6 @@
   background: #0068ff;
 }
 
-/* ---- responsive: cover beside the text from 768px ---- */
 @media (min-width: 768px) {
   .brief__media {
     width: calc(50% - 0.75rem);

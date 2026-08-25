@@ -29,7 +29,6 @@ export const bookCategories: Category[] = [
 
 export const bookTopics: Topic[] = [
   { label: 'Sách số', href: '/sach/?type=ebooks' },
-  { label: 'Sách giấy', href: '/sach/?type=paperbooks' },
   { label: 'Sách nói', href: '/sach/?type=audiobooks' },
   { label: 'Phim tài liệu', href: '/sach/?type=videobooks' },
 ];

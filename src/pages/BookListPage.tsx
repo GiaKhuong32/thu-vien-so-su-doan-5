@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo } from 'react';
+import { useLayoutEffect, useMemo, useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import BookGrid from '../components/BookGrid/BookGrid';
 import PageBanner from '../components/PageBanner/PageBanner';
@@ -6,6 +6,7 @@ import PageLayout from '../components/PageLayout/PageLayout';
 import Pagination from '../components/Pagination/Pagination';
 import Sidebar from '../components/Sidebar/Sidebar';
 import { bookCategories, bookTopics, libraryBanner } from '../data/library';
+import type { Author } from '../data/library';
 import { useBooks, useBooksByType } from '../hooks/useBooks';
 import useReveal from '../hooks/useReveal';
 
@@ -22,6 +23,8 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
 
   const page = parseInt(searchParams.get('page') || '1', 10);
   const type = searchParams.get('type');
+  const author = searchParams.get('author');
+  const [authors, setAuthors] = useState<Author[]>([]);
 
   const { data: allBooks } = useBooks();
   const { data: ebooksData } = useBooksByType('ebooks');
@@ -31,11 +34,17 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-  }, [type, category]);
+  }, [type, category, author]);
 
   const displayTitle = useMemo(() => {
+    if (author) {
+      // Format author name from slug to readable - giữ nguyên dấu
+      return author
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
     if (type === 'ebooks') return 'Sách số';
-    if (type === 'paperbooks') return 'Sách giấy';
     if (type === 'audiobooks') return 'Sách nói';
     if (type === 'videobooks') return 'Phim tài liệu';
     if (category) {
@@ -43,15 +52,53 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
       if (cat) return cat.label;
     }
     return title;
-  }, [type, category, title]);
+  }, [type, category, author, title]);
 
   const filteredBooks = useMemo(() => {
-    if (type === 'ebooks') return ebooksData || [];
-    if (type === 'paperbooks') return paperbooksData || [];
-    if (type === 'audiobooks') return audiobooksData || [];
-    if (type === 'videobooks') return videobooksData || [];
-    return allBooks || [];
-  }, [type, allBooks, ebooksData, paperbooksData, audiobooksData, videobooksData]);
+    let books: typeof allBooks = [];
+
+    if (type === 'ebooks') {
+      books = ebooksData || [];
+    } else if (type === 'audiobooks') {
+      books = audiobooksData || [];
+    } else if (type === 'videobooks') {
+      books = videobooksData || [];
+    } else {
+      books = allBooks || [];
+    }
+
+    // Filter by author if author parameter is present
+    if (author && books) {
+      // Tạo các biến thể của tên tác giả để so sánh
+      const authorSlug = author.toLowerCase();
+      const authorNameFormatted = author
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      
+      books = books.filter(book => {
+        if (!book.author) return false;
+        
+        const bookAuthor = book.author.toLowerCase();
+        
+        // So sánh nhiều cách:
+        // 1. Slug chính xác
+        // 2. Tên format có chứa slug
+        // 3. Tên tác giả có chứa phần của slug
+        // 4. Tên format có chứa tên tác giả
+        return (
+          bookAuthor.includes(authorSlug) ||
+          authorSlug.includes(bookAuthor.replace(/\s+/g, '-')) ||
+          bookAuthor.includes(authorNameFormatted.toLowerCase()) ||
+          authorNameFormatted.toLowerCase().includes(bookAuthor)
+        );
+      });
+      
+      console.log(`Filter by author: ${author} -> ${authorNameFormatted}, found ${books.length} books`);
+    }
+
+    return books;
+  }, [type, author, allBooks, ebooksData, audiobooksData, videobooksData]);
 
   const totalPages = Math.max(1, Math.ceil(filteredBooks.length / PER_PAGE));
 
@@ -69,6 +116,36 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
 
   useReveal();
 
+  useEffect(() => {
+    if (allBooks && allBooks.length > 0) {
+      // Extract unique authors from all books
+      const uniqueAuthors = new Map<string, string>();
+      
+      allBooks.forEach((book) => {
+        if (book.author && book.author.trim()) {
+          const authorName = book.author.trim();
+          // Tạo slug nhưng giữ lại dấu tiếng Việt
+          const authorSlug = authorName
+            .toLowerCase()
+            .replace(/\s+/g, '-') // chỉ thay space bằng dấu gạch
+            .replace(/[^a-z0-9-àáạảãâầấậẩẫèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỉỹđ]/g, '') // xóa ký tự đặc biệt
+            .replace(/^-+|-+$/g, '');
+          
+          if (!uniqueAuthors.has(authorName)) {
+            uniqueAuthors.set(authorName, `/sach/?author=${authorSlug}`);
+          }
+        }
+      });
+
+      // Convert to array and take first 3
+      const authorArray = Array.from(uniqueAuthors.entries())
+        .slice(0, 3)
+        .map(([label, href]) => ({ label, href }));
+
+      setAuthors(authorArray);
+    }
+  }, [allBooks]);
+
   return (
     <>
       <PageBanner
@@ -83,7 +160,13 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
       <main>
         <PageLayout
           sidebar={
-            <Sidebar categories={bookCategories} topics={bookTopics} activeHref={activeHref} />
+            <Sidebar 
+              categories={bookCategories} 
+              topics={bookTopics} 
+              authors={authors}
+              activeHref={activeHref}
+              activeAuthorHref={author ? `/sach/?author=${author}` : undefined}
+            />
           }
         >
           <h1 className="tt-row mainbody__tt">
@@ -99,6 +182,7 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
             hrefFor={(p) => {
               const params = new URLSearchParams();
               if (type) params.set('type', type);
+              if (author) params.set('author', author);
               params.set('page', p.toString());
               return `/sach/?${params.toString()}`;
             }}

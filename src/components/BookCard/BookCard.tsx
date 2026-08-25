@@ -11,14 +11,7 @@ export type Book = {
 
 type Props = {
   book: Book;
-  /** 'grid' = vertical card (category rows), 'row' = horizontal card (suggest block) */
   variant?: 'grid' | 'row';
-  /**
-   * Keep the author row even when this book has no author. The parent list sets
-   * it to true when *any* book in the group has one, so every card in that group
-   * shares the same baseline — and groups where nobody has an author (Sách số,
-   * Sách nói…) stay compact, exactly like the original.
-   */
   reserveAuthor?: boolean;
 };
 
