@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { mainMenu, type MenuItem } from '../../data/navigation';
 import './Navbar.css';
 import logo from '../../assets/skin/logo.png';
@@ -77,8 +77,10 @@ function MobileItem({ item }: { item: MenuItem }) {
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [stuck, setStuck] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const onScroll = () => setStuck(window.scrollY > 8);
@@ -137,16 +139,33 @@ export default function Navbar() {
 
         <div className="header-right">
           <div className={`form-search${searchOpen ? ' is-open' : ''}`}>
-            <input
-              ref={inputRef}
-              type="text"
-              className="form-control"
-              placeholder="Tìm kiếm sách"
-              aria-label="Tìm kiếm sách"
-            />
-            <button type="button" className="icon-submit" aria-label="Tìm kiếm">
-              <SearchIcon />
-            </button>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (searchQuery.trim()) {
+                  navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                  setSearchQuery('');
+                  setSearchOpen(false);
+                }
+              }}
+            >
+              <input
+                ref={inputRef}
+                type="text"
+                className="form-control"
+                placeholder="Tìm kiếm sách"
+                aria-label="Tìm kiếm sách"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <button 
+                type="submit" 
+                className="icon-submit" 
+                aria-label="Tìm kiếm"
+              >
+                <SearchIcon />
+              </button>
+            </form>
           </div>
           <button
             type="button"

@@ -4,6 +4,7 @@ import BookListPage from './pages/BookListPage';
 import BookAudioPage from './pages/BookAudioPage';
 import BookDetailPage from './pages/BookDetailPage';
 import HomePage from './pages/HomePage';
+import SearchPage from './pages/SearchPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -39,6 +40,10 @@ const router = createBrowserRouter([
       {
         path: '/sach/:slug/Audio.html',
         element: <BookAudioPage />,
+      },
+      {
+        path: '/search',
+        element: <SearchPage />,
       },
       {
         path: '/sach/:category',
