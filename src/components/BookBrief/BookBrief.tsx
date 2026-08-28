@@ -147,35 +147,6 @@ export default function BookBrief({ book, onUnavailable }: Props) {
             </div>
           </div>
         )}
-
-        <div className="list-share-icon">
-          <span className="text-desc">Chia sẻ:</span>
-          <a
-            className="btn-circle btn-facebook"
-            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
-            target="_blank"
-            rel="noreferrer noopener"
-            aria-label="Chia sẻ Facebook"
-            title="Facebook"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M13.5 21v-8h2.7l.4-3.1h-3.1V7.9c0-.9.3-1.5 1.6-1.5h1.6V3.6c-.3 0-1.3-.1-2.4-.1-2.4 0-4 1.4-4 4.1v2.3H7.6V13h2.7v8h3.2Z"
-                fill="currentColor"
-              />
-            </svg>
-          </a>
-          <a
-            className="btn-circle btn-zalo"
-            href={`https://zalo.me/share?u=${encodeURIComponent(shareUrl)}`}
-            target="_blank"
-            rel="noreferrer noopener"
-            aria-label="Chia sẻ Zalo"
-            title="Zalo"
-          >
-            <span>Z</span>
-          </a>
-        </div>
       </div>
     </div>
   );

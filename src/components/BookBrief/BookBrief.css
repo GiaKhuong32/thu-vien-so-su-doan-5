@@ -142,46 +142,6 @@
   height: 18px;
 }
 
-.list-share-icon {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  font-size: 15px;
-}
-
-.list-share-icon .text-desc {
-  margin-right: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-.btn-circle {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  margin-right: 0.5rem;
-  margin-top: 0.5rem;
-  border-radius: 50%;
-  background: var(--c-desc);
-  color: var(--c-white);
-  font-size: 15px;
-  font-weight: 700;
-  transition: background 0.25s var(--ease);
-}
-
-.btn-circle svg {
-  width: 18px;
-  height: 18px;
-}
-
-.btn-facebook:hover {
-  background: #1777f2;
-}
-
-.btn-zalo:hover {
-  background: #0068ff;
-}
-
 @media (min-width: 768px) {
   .brief__media {
     width: calc(50% - 0.75rem);
