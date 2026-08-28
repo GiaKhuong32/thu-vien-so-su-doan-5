@@ -1,13 +1,14 @@
 import PageBanner from '../components/PageBanner/PageBanner';
 import PageLayout from '../components/PageLayout/PageLayout';
 import InfoPane from '../components/InfoPane/InfoPane';
-import { libraryBanner } from '../data/library';
+import { aboutBanner } from '../data/library';
+import './AboutLibraryPage.css';
 
 export default function AboutHistoryPage() {
   return (
     <>
       <PageBanner
-        img={libraryBanner}
+        img={aboutBanner}
         crumbs={[
           { label: 'Trang chủ', href: '/' },
           { label: 'Giới thiệu', href: '/gioi-thieu/' },
@@ -15,16 +16,13 @@ export default function AboutHistoryPage() {
         ]}
       />
 
+      <div className="container about-title-wrap">
+        <h1 className="tt-center about-title-wrap__tt">Lịch sử và truyền thống Sư đoàn 5</h1>
+      </div>
+
       <main>
         <PageLayout sidebar={null}>
           <div className="container about-page">
-            <div className="about-header">
-              <h1 className="about-title">Lịch sử và truyền thống Sư đoàn 5</h1>
-              <p className="about-subtitle">
-                Sư đoàn bộ binh 5 có bề dày lịch sử hào hùng trong cuộc kháng chiến chống Pháp và Mỹ, đóng góp quan trọng vào công cuộc bảo vệ và thống nhất đất nước.
-              </p>
-            </div>
-
             <div className="about-banner">
               <img 
                 src="/assets/images/about-history-banner.jpg" 

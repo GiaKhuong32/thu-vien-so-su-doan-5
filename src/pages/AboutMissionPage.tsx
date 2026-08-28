@@ -1,13 +1,14 @@
 import PageBanner from '../components/PageBanner/PageBanner';
 import PageLayout from '../components/PageLayout/PageLayout';
 import InfoPane from '../components/InfoPane/InfoPane';
-import { libraryBanner } from '../data/library';
+import { aboutBanner } from '../data/library';
+import './AboutLibraryPage.css';
 
 export default function AboutMissionPage() {
   return (
     <>
       <PageBanner
-        img={libraryBanner}
+        img={aboutBanner}
         crumbs={[
           { label: 'Trang chủ', href: '/' },
           { label: 'Giới thiệu', href: '/gioi-thieu/' },
@@ -15,16 +16,13 @@ export default function AboutMissionPage() {
         ]}
       />
 
+      <div className="container about-title-wrap">
+        <h1 className="tt-center about-title-wrap__tt">Chức năng và nhiệm vụ</h1>
+      </div>
+
       <main>
         <PageLayout sidebar={null}>
           <div className="container about-page">
-            <div className="about-header">
-              <h1 className="about-title">Chức năng và nhiệm vụ</h1>
-              <p className="about-subtitle">
-                Thư viện số Sư đoàn bộ binh 5 có chức năng và nhiệm vụ quan trọng trong việc bảo tồn, phát triển và truyền bá các giá trị lịch sử, văn hóa của dân tộc.
-              </p>
-            </div>
-
             <div className="about-banner">
               <img 
                 src="/assets/images/about-mission-banner.jpg" 
@@ -78,18 +76,6 @@ export default function AboutMissionPage() {
                 </ul>
               </div>
             </InfoPane>
-
-            <div className="about-contact">
-              <h2 className="about-section-title">Liên hệ</h2>
-              <div className="contact-info">
-                <p>Để biết thêm thông tin hoặc hỗ trợ, vui lòng liên hệ:</p>
-                <ul className="about-list">
-                  <li><strong>Email:</strong> thuviennguyenanninh@gmail.com</li>
-                  <li><strong>Website:</strong> https://thuviennguyenanninh.vn</li>
-                  <li><strong>Địa chỉ:</strong> 8661 Hoàng Quốc Việt, Phường Phú Mỹ, Quận 7, TP. Hồ Chí Minh</li>
-                </ul>
-              </div>
-            </div>
           </div>
         </PageLayout>
       </main>

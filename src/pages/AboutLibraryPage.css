@@ -2,6 +2,25 @@
   padding: 40px 20px;
   max-width: 1200px;
   margin: 0 auto;
+  background-color: #f9f8f4;
+}
+
+.about-title-wrap {
+  padding-top: 32px;
+}
+
+.about-title-wrap__tt {
+  margin-bottom: 32px;
+}
+
+.about-title-wrap__tt::before {
+  content: '';
+  position: absolute;
+  top: calc(100% + 20px);
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--c-sand-soft);
 }
 
 .about-header {
@@ -63,6 +82,11 @@
 .about-content {
   line-height: 1.8;
   color: #333;
+}
+
+.highlight-text {
+  font-weight: bold;
+  color: black;
 }
 
 .about-list {
