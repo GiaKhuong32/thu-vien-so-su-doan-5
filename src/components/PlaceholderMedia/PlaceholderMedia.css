@@ -1,0 +1,36 @@
+.placeholder-media {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  border: 1.5px dashed var(--c-thumb-shadow);
+  border-radius: var(--radius);
+  background: var(--c-cream);
+  color: var(--c-brown);
+  text-align: center;
+  padding: 16px;
+}
+
+.placeholder-media__icon {
+  display: inline-flex;
+  opacity: 0.7;
+}
+
+.placeholder-media__label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  opacity: 0.85;
+}
+
+.placeholder-media--video {
+  background: var(--c-dark);
+  border-color: var(--c-brown);
+  color: var(--c-white);
+}
+
+.placeholder-media--video .placeholder-media__icon {
+  opacity: 0.9;
+}

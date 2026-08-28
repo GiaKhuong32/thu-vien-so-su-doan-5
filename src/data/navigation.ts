@@ -15,7 +15,6 @@ export const mainMenu: MenuItem[] = [
         href: '/gioi-thieu/thu-vien-so-nguyen-an-ninh-chuyen-de-nam-bo.html',
       },
       { label: 'Lịch sử và truyền thống Sư đoàn 5', href: '/gioi-thieu/quy-hoa-sen.html' },
-      { label: 'Chức năng và nhiệm vụ', href: '/gioi-thieu/chinh-sach-su-dung.html' },
     ],
   },
 {
@@ -71,5 +70,4 @@ export const footerAboutLinks: MenuItem[] = [
     href: '/gioi-thieu/thu-vien-so-nguyen-an-ninh-chuyen-de-nam-bo.html',
   },
   { label: 'Lịch sử và truyền thống Sư đoàn', href: '/gioi-thieu/quy-hoa-sen.html' },
-  { label: 'Chức năng và nhiệm vụ', href: '/gioi-thieu/chinh-sach-su-dung.html' },
 ];

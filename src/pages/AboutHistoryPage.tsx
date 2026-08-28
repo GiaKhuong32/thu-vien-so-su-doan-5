@@ -1,8 +1,54 @@
 import PageBanner from '../components/PageBanner/PageBanner';
-import PageLayout from '../components/PageLayout/PageLayout';
-import InfoPane from '../components/InfoPane/InfoPane';
+import PlaceholderMedia from '../components/PlaceholderMedia/PlaceholderMedia';
 import { aboutBanner } from '../data/library';
-import './AboutLibraryPage.css';
+import './AboutHistoryPage.css';
+
+type Section = {
+  number: string;
+  title: string;
+  paragraphs: string[];
+  list?: string[];
+};
+
+const sections: Section[] = [
+  {
+    number: '01',
+    title: 'LỊCH SỬ HÌNH THÀNH',
+    paragraphs: [
+      '[Nội dung: mốc thời gian thành lập, đơn vị chủ quản, nhiệm vụ ban đầu được giao khi mới thành lập.]',
+      '[Nội dung: các giai đoạn phát triển chính, những dấu mốc quan trọng trong quá trình xây dựng và trưởng thành.]',
+    ],
+  },
+  {
+    number: '02',
+    title: 'TRUYỀN THỐNG ANH HÙNG',
+    paragraphs: ['[Nội dung: khái quát về truyền thống được hun đúc qua nhiều thế hệ cán bộ, chiến sĩ.]'],
+    list: [
+      '[Nội dung: phẩm chất truyền thống 1]',
+      '[Nội dung: phẩm chất truyền thống 2]',
+      '[Nội dung: phẩm chất truyền thống 3]',
+      '[Nội dung: phẩm chất truyền thống 4]',
+    ],
+  },
+  {
+    number: '03',
+    title: 'NHỮNG DẤU ẤN TIÊU BIỂU',
+    paragraphs: ['[Nội dung: các chiến công, sự kiện, cột mốc tiêu biểu trong quá trình xây dựng và chiến đấu.]'],
+    list: [
+      '[Nội dung: dấu ấn tiêu biểu 1]',
+      '[Nội dung: dấu ấn tiêu biểu 2]',
+      '[Nội dung: dấu ấn tiêu biểu 3]',
+    ],
+  },
+  {
+    number: '04',
+    title: 'GIÁ TRỊ TRUYỀN THỐNG HÔM NAY',
+    paragraphs: [
+      '[Nội dung: truyền thống được kế thừa, phát huy trong công tác huấn luyện, xây dựng đơn vị hiện nay.]',
+      '[Nội dung: định hướng, mục tiêu phát triển gắn với giá trị truyền thống trong giai đoạn mới.]',
+    ],
+  },
+];
 
 export default function AboutHistoryPage() {
   return (
@@ -16,66 +62,56 @@ export default function AboutHistoryPage() {
         ]}
       />
 
-      <div className="container about-title-wrap">
-        <h1 className="tt-center about-title-wrap__tt">Lịch sử và truyền thống Sư đoàn 5</h1>
+      <div className="container history-title-wrap">
+        <h1 className="tt-center history-title-wrap__tt">Lịch sử và truyền thống Sư đoàn 5</h1>
       </div>
 
       <main>
-        <PageLayout sidebar={null}>
-          <div className="container about-page">
-            <div className="about-banner">
-              <img 
-                src="/assets/images/about-history-banner.jpg" 
-                alt="Lịch sử và truyền thống Sư đoàn 5"
-                className="about-banner-image"
-              />
-            </div>
-
-            <InfoPane title="Lịch sử hình thành">
-              <div className="about-content">
-                <p>
-                  Sư đoàn bộ binh 5 được thành lập trong giai đoạn khốc liệt nhất của cuộc kháng chiến chống Pháp và Mỹ, với nhiệm vụ bảo vệ vùng đất Nam Bộ - một trong những vị trí chiến lược quan trọng nhất của miền Nam.
-                </p>
-                <p>
-                  Thông qua các chiến dịch lịch sử, Sư đoàn bộ binh 5 đã lập nên nhiều chiến công vẻ vang, góp phần vào thắng lợi của dân tộc. Các chiến sĩ của Sư đoàn 5 đã thể hiện tinh thần dũng cảm, kiên cường, hy sinh vì độc lập tự do của Tổ quốc.
-                </p>
-              </div>
-            </InfoPane>
-
-            <InfoPane title="Truyền thống anh hùng">
-              <div className="about-content">
-                <p>
-                  Truyền thống của Sư đoàn bộ binh 5 được xây dựng và phát triển qua nhiều thế hệ chiến sĩ, bao gồm:
-                </p>
-                <ul className="about-list">
-                  <li>Tinh thần yêu nước nồng nàn, kiên cường đấu tranh</li>
-                  <li>Khả năng chiến đấu xuất sắc trong mọi điều kiện</li>
-                  <li>Sự đoàn kết, gắn bó giữa các đơn vị</li>
-                  <li>Tinh thần kỷ luật thép, tuyệt đối phục tùng mệnh lệnh</li>
-                  <li>Trách nhiệm với dân, thương yêu đồng đội</li>
-                </ul>
-                <p>
-                  Truyền thống này tiếp tục được phát huy và gìn giữ trong thời bình, trở thành nền tảng cho sự phát triển của Sư đoàn trong giai đoạn mới.
-                </p>
-              </div>
-            </InfoPane>
-
-            <InfoPane title="Thành tích và đóng góp">
-              <div className="about-content">
-                <p>
-                  Trong quá trình tồn tại và phát triển, Sư đoàn bộ binh 5 đã đạt được nhiều thành tích xuất sắc:
-                </p>
-                <ul className="about-list">
-                  <li>Nhiều đơn vị, cá nhân được phong tặng danh hiệu Dũng sĩ, Anh hùng</li>
-                  <li>Được nhà nước ghi nhận và biểu dương qua các huân chương, bằng khen</li>
-                  <li>Góp phần vào việc đào tạo cán bộ quân sự cho quân đội và địa phương</li>
-                  <li>Tham gia các hoạt động an ninh quốc phòng, bảo vệ chủ quyền</li>
-                  <li>Xây dựng mối quan hệ đoàn kết với quân và dân</li>
-                </ul>
-              </div>
-            </InfoPane>
+        <div className="history-page">
+          <div className="history-intro">
+            <p>
+              [Nội dung mở đầu: giới thiệu khái quát về quá trình hình thành và bối cảnh ra đời của đơn vị.]
+            </p>
+            <p>
+              [Nội dung: khái quát chặng đường xây dựng, chiến đấu và trưởng thành, gắn với truyền thống{' '}
+              <span className="history-highlight">
+                “[Khẩu hiệu truyền thống của đơn vị]”
+              </span>
+              .]
+            </p>
           </div>
-        </PageLayout>
+
+          <div className="history-card">
+            {sections.map((section, index) => (
+              <section
+                key={section.number}
+                className={`history-section${index % 2 === 1 ? ' history-section--reverse' : ''}`}
+              >
+                <div className="history-section__text">
+                  <span className="history-section__number">{section.number}</span>
+                  <h2 className="history-section__title">{section.title}</h2>
+                  {section.paragraphs.map((p) => (
+                    <p key={p} className="about-article__placeholder">
+                      {p}
+                    </p>
+                  ))}
+                  {section.list && (
+                    <ul className="history-section__list">
+                      {section.list.map((item) => (
+                        <li key={item} className="about-article__placeholder">
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div className="history-section__media">
+                  <PlaceholderMedia label={`Ảnh minh hoạ mục ${section.number}`} ratio="4 / 3" />
+                </div>
+              </section>
+            ))}
+          </div>
+        </div>
       </main>
     </>
   );

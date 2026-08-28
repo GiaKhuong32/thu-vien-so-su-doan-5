@@ -1,0 +1,156 @@
+/* ===== Title block (banner -> title -> line, same spirit as AboutLibraryPage but self-contained) ===== */
+.history-title-wrap {
+  padding-top: 32px;
+}
+
+.history-title-wrap__tt {
+  max-width: none;
+  margin-bottom: 32px;
+}
+
+.history-title-wrap__tt::before {
+  content: '';
+  position: absolute;
+  top: calc(100% + 20px);
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--c-sand-soft);
+}
+
+/* ===== Page wrapper ===== */
+.history-page {
+  padding: 0 20px 56px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ===== Intro paragraphs ===== */
+.history-intro {
+  max-width: 900px;
+  margin: 0 auto 36px;
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--c-body);
+}
+
+.history-intro p {
+  margin: 0 0 14px;
+}
+
+.history-intro p:last-child {
+  margin-bottom: 0;
+}
+
+.history-highlight {
+  font-weight: 700;
+  color: var(--c-primary);
+}
+
+.about-article__placeholder {
+  color: var(--c-desc);
+  font-style: italic;
+}
+
+/* ===== Card wrapping all numbered sections ===== */
+.history-card {
+  border: 1px solid var(--c-thumb-shadow);
+  border-radius: var(--radius);
+  background: var(--c-cream);
+  overflow: hidden;
+}
+
+/* ===== Each numbered section ===== */
+.history-section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  padding: 28px 24px;
+}
+
+.history-section + .history-section {
+  border-top: 1px solid var(--c-line);
+}
+
+.history-section__text {
+  order: 1;
+}
+
+.history-section__media {
+  order: 2;
+}
+
+.history-section__number {
+  display: block;
+  margin-bottom: 4px;
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--c-thumb-shadow);
+}
+
+.history-section__title {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2vw, 21px);
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--c-primary);
+}
+
+.history-section__text p {
+  margin: 0 0 12px;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--c-body);
+}
+
+.history-section__text p:last-child {
+  margin-bottom: 0;
+}
+
+.history-section__list {
+  margin: 0 0 12px;
+  padding-left: 18px;
+}
+
+.history-section__list li {
+  margin-bottom: 6px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--c-body);
+}
+
+.history-section__list li::marker {
+  color: var(--c-primary);
+}
+
+.history-section__media img,
+.history-section__media .placeholder-media {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  border-radius: 6px;
+  object-fit: cover;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Alternate: media on the left for even sections, on desktop only */
+@media (min-width: 860px) {
+  .history-section {
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 40px;
+    padding: 36px 40px;
+  }
+
+  .history-section--reverse .history-section__text {
+    order: 2;
+  }
+
+  .history-section--reverse .history-section__media {
+    order: 1;
+  }
+}
