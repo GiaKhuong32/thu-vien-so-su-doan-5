@@ -66,16 +66,53 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
       books = allBooks || [];
     }
 
+    // Filter by category
+    if (category && books) {
+      const categorySlug = category.replace(/\/$/, ''); // Remove trailing slash
+
+      // Map category slug to category name
+      const categoryMap: Record<string, string> = {
+        'tai-lieu-huan-luyen': 'Tài liệu huấn luyện',
+        'tai-lieu-chinh-tri': 'Tài liệu chính trị',
+        'lich-su': 'Lịch sử',
+        'van-hoc': 'Văn học',
+        'khoa-hoc': 'Khoa học',
+        'ngon-ngu-hoc': 'Ngôn ngữ học',
+        'phim-tai-lieu': 'Phim tài liệu',
+        'tai-lieu-khac': 'Tài liệu khác',
+      };
+
+      const categoryName = categoryMap[categorySlug];
+
+      books = books.filter(book => {
+        if (!categoryName) return false;
+
+        // Check if book category matches exactly
+        if (book.category && book.category === categoryName) {
+          return true;
+        }
+
+        // Check if book category contains the category name
+        if (book.category && book.category.toLowerCase().includes(categoryName.toLowerCase())) {
+          return true;
+        }
+
+        return false;
+      });
+
+      console.log(`Filter by category: ${category} (${categoryName}), found ${books.length} books`);
+    }
+
     if (author && books) {
       const authorSlug = author.toLowerCase();
       const authorNameFormatted = author
         .split('-')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
-      
+
       books = books.filter(book => {
         if (!book.author) return false;
-        
+
         const bookAuthor = book.author.toLowerCase();
 
         return (
@@ -85,12 +122,12 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
           authorNameFormatted.toLowerCase().includes(bookAuthor)
         );
       });
-      
+
       console.log(`Filter by author: ${author} -> ${authorNameFormatted}, found ${books.length} books`);
     }
 
     return books;
-  }, [type, author, allBooks, ebooksData, audiobooksData, videobooksData]);
+  }, [type, category, author, allBooks, ebooksData, audiobooksData, videobooksData]);
 
   const totalPages = Math.max(1, Math.ceil(filteredBooks.length / PER_PAGE));
 

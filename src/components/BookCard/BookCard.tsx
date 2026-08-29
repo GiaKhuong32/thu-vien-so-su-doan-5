@@ -7,6 +7,7 @@ export type Book = {
   img: string;
   href: string;
   rating?: number;
+  category?: string;
 };
 
 type Props = {

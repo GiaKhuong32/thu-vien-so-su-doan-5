@@ -79,13 +79,14 @@ function slugify(value: string): string {
 function mapApiBookToBook(apiBook: ApiBook): Book {
   const slug = slugify(apiBook.title);
   const rawImage = apiBook.thumbnail || apiBook.document?.thumbnail;
-  
+
   return {
     title: apiBook.title,
     author: apiBook.author,
     img: toImageUrl(rawImage),
     href: `/sach/${slug}.html`,
-    rating: 0, 
+    rating: 0,
+    category: apiBook.categoryEntity?.categoryName,
   };
 }
 
