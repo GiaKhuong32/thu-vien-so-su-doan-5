@@ -2,7 +2,7 @@ import './PlaceholderMedia.css';
 
 type Props = {
   label: string;
-  ratio?: string; // e.g. '21 / 9', '16 / 9', '1 / 1'
+  ratio?: string;
   variant?: 'image' | 'video';
   className?: string;
 };

@@ -35,3 +35,4 @@ export const bookTopics: Topic[] = [
 
 export const libraryBanner = assetImage('banner/full_sach-0-2023925182051.jpeg');
 export const aboutBanner = assetImage('banner/giới thiệu.png');
+export const historyBanner = assetImage('skin/bg-about.png');

@@ -56,16 +56,13 @@ export interface ApiResponse<T> {
 
 const API_ORIGIN = 'http://192.168.2.46:8080';
 
-// Hàm chuẩn hóa đường dẫn ảnh từ Backend / MinIO
 function toImageUrl(value?: string | null): string {
   if (!value) return 'https://via.placeholder.com/300x400?text=No+Cover';
 
-  // 1. Link tuyệt đối (MinIO presigned URL, HTTPS, base64)
   if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('data:')) {
     return value;
   }
 
-  // 2. Link tương đối
   const cleanPath = value.startsWith('/') ? value : `/${value}`;
   return `${API_ORIGIN}${cleanPath}`;
 }
@@ -96,7 +93,6 @@ function mapApiBookToBookDetail(apiBook: ApiBookDetail): BookDetail {
   const slug = slugify(apiBook.title);
   const rawImage = apiBook.thumbnail || apiBook.document?.thumbnail;
 
-  // Kiểm tra xem có phải sách nói không
   const isAudiobook = apiBook.document?.typeDocument?.toUpperCase() === 'AUDIO' || 
                       (apiBook.thumbnail && apiBook.thumbnail.toLowerCase().includes('audio'));
 

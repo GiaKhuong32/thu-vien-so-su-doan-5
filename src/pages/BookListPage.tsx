@@ -38,7 +38,6 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
 
   const displayTitle = useMemo(() => {
     if (author) {
-      // Format author name from slug to readable - giữ nguyên dấu
       return author
         .split('-')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -67,9 +66,7 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
       books = allBooks || [];
     }
 
-    // Filter by author if author parameter is present
     if (author && books) {
-      // Tạo các biến thể của tên tác giả để so sánh
       const authorSlug = author.toLowerCase();
       const authorNameFormatted = author
         .split('-')
@@ -80,12 +77,7 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
         if (!book.author) return false;
         
         const bookAuthor = book.author.toLowerCase();
-        
-        // So sánh nhiều cách:
-        // 1. Slug chính xác
-        // 2. Tên format có chứa slug
-        // 3. Tên tác giả có chứa phần của slug
-        // 4. Tên format có chứa tên tác giả
+
         return (
           bookAuthor.includes(authorSlug) ||
           authorSlug.includes(bookAuthor.replace(/\s+/g, '-')) ||
@@ -118,17 +110,16 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
 
   useEffect(() => {
     if (allBooks && allBooks.length > 0) {
-      // Extract unique authors from all books
       const uniqueAuthors = new Map<string, string>();
       
       allBooks.forEach((book) => {
         if (book.author && book.author.trim()) {
           const authorName = book.author.trim();
-          // Tạo slug nhưng giữ lại dấu tiếng Việt
+         
           const authorSlug = authorName
             .toLowerCase()
-            .replace(/\s+/g, '-') // chỉ thay space bằng dấu gạch
-            .replace(/[^a-z0-9-àáạảãâầấậẩẫèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỉỹđ]/g, '') // xóa ký tự đặc biệt
+            .replace(/\s+/g, '-') 
+            .replace(/[^a-z0-9-àáạảãâầấậẩẫèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỉỹđ]/g, '')
             .replace(/^-+|-+$/g, '');
           
           if (!uniqueAuthors.has(authorName)) {
@@ -137,7 +128,6 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
         }
       });
 
-      // Convert to array and take first 3
       const authorArray = Array.from(uniqueAuthors.entries())
         .slice(0, 3)
         .map(([label, href]) => ({ label, href }));
