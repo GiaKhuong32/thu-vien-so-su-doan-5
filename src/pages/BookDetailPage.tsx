@@ -25,32 +25,13 @@ import {
   useBooks,
 } from '../hooks/useBooks';
 
-
-interface BookFile {
-  bookFile?: string;
-  fileName?: string;
-  idFile?: string;
-  partFile?: string;
-  thumbnail?: string;
-  typeFile?: string;
-}
-
-const normalizeBookFormat = (bookFile?: string): string => {
-  if (!bookFile) {
-    return '';
-  }
-
-  switch (bookFile) {
-    case 'Sách_Số':
-      return 'Sách số';
-
-    case 'Sách_Nói':
-      return 'Sách nói';
-
-    default:
-      return bookFile.replaceAll('_', ' ');
-  }
-};
+import {
+  findPdfFile,
+  getBookFileUrl,
+  getDocumentFiles,
+  getReadableFormats,
+  hasAudioFile,
+} from '../api/bookFiles';
 
 
 export default function BookDetailPage() {
@@ -91,68 +72,20 @@ useEffect(() => {
     }
 
     try {
+      const files = await getDocumentFiles(idDocument);
 
+      setBookFormats(getReadableFormats(files));
 
-const response = await fetch(
-  `${API_BASE_URL}/files/document/${idDocument}`,
-  {
-    method: 'GET',
-    headers: {
-      Accept: '*/*',
-    },
-  }
-);
-
-      if (!response.ok) {
-        throw new Error(`API file trả về HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      const files: BookFile[] = Array.isArray(data?.Result)
-        ? data.Result
-        : Array.isArray(data?.result)
-          ? data.result
-          : [];
-
-      const formats = Array.from(
-        new Set(
-          files
-            .map((file) => normalizeBookFormat(file.bookFile))
-            .filter((format): format is string => {
-              
-              return Boolean(format) && 
-                     (format === 'Sách số' || format === 'Sách nói');
-            })
-        )
-      );
-
-      setBookFormats(formats);
-
-      // Tạo actions dựa trên file types
-      const hasAudio = files.some((file) => {
-        const bookFile = file.bookFile || '';
-        const typeFile = file.typeFile?.toLowerCase() || '';
-        return bookFile === 'Sách_Nói' || typeFile === 'mp3' || typeFile.includes('audio');
-      });
-
-      const pdfFile = files.find((file) => {
-        const bookFile = file.bookFile || '';
-        const typeFile = file.typeFile?.toLowerCase() || '';
-        const fileName = file.fileName?.toLowerCase() || '';
-        return bookFile === 'Sách_Số' || typeFile === 'pdf' || fileName.endsWith('.pdf');
-      });
+      const pdfFile = findPdfFile(files);
+      const pdfUrl = getBookFileUrl(pdfFile);
+      const hasAudio = hasAudioFile(files);
 
       const actions: BookAction[] = [];
 
-      if (pdfFile?.partFile) {
-        // Mở trình đọc FlipBook nội bộ, truyền URL file qua query `?file=`
-        // để reader không phải gọi lại API danh sách file.
+      if (pdfUrl) {
         const readerHref = bookData?.slug
-          ? `/sach/${bookData.slug}/doc.html?file=${encodeURIComponent(
-              pdfFile.partFile
-            )}`
-          : `/doc-sach?file=${encodeURIComponent(pdfFile.partFile)}`;
+          ? `/sach/${bookData.slug}/doc.html?file=${encodeURIComponent(pdfUrl)}`
+          : `/doc-sach?file=${encodeURIComponent(pdfUrl)}`;
 
         actions.push({
           label: 'Đọc',

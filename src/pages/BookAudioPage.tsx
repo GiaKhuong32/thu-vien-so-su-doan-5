@@ -6,20 +6,11 @@ import NotFoundPage from './NotFoundPage';
 import { useBookDetail, useRelatedBooks } from '../hooks/useBooks';
 import { libraryBanner } from '../data/library';
 import AudioPlayer, { type AudioTrack } from '../components/AudioPlayer/AudioPlayer';
-import { API_BASE_URL } from '../config/api';
-
-interface BookFile {
-  bookFile?: string;
-  fileName?: string;
-  idFile?: string;
-  partFile?: string;
-  thumbnail?: string;
-  typeFile?: string;
-  fileUrl?: string;
-  filePath?: string;
-  content?: string;
-  speakFile?: string;
-}
+import {
+  getDocumentFiles,
+  isAudioFile,
+  getBookFileUrl,
+} from '../api/bookFiles';
 
 export default function BookAudioPage() {
   const { slug } = useParams();
@@ -41,65 +32,20 @@ export default function BookAudioPage() {
 
       try {
         console.log('Đang fetch files cho idDocument:', idDocument);
-        const response = await fetch(
-          `${API_BASE_URL}/files/document/${idDocument}`,
-          {
-            method: 'GET',
-            headers: {
-              Accept: '*/*',
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`API file trả về HTTP ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('Dữ liệu API files:', data);
-
-        const files: BookFile[] = Array.isArray(data?.Result)
-          ? data.Result
-          : Array.isArray(data?.result)
-            ? data.result
-            : [];
-
+        const files = await getDocumentFiles(idDocument);
         console.log('Files sau khi parse:', files);
 
-        const audioFiles = files.filter((file) => {
-          const fileType = file.bookFile?.toLowerCase() || '';
-          const fileName = file.fileName?.toLowerCase() || '';
-          const typeFile = file.typeFile?.toLowerCase() || '';
-          const hasSpeakFile = !!file.speakFile; 
-          
-          const isAudio = 
-            fileType.includes('audio') || 
-            fileName.includes('.mp3') || 
-            fileName.includes('.wav') ||
-            typeFile.includes('audio') ||
-            typeFile.includes('mp3') ||
-            hasSpeakFile;
-          
-          console.log(`File ${file.fileName}: fileType=${fileType}, typeFile=${typeFile}, hasSpeakFile=${hasSpeakFile}, isAudio=${isAudio}`);
-          return isAudio;
-        });
-
+        const audioFiles = files.filter(isAudioFile);
         console.log('Audio files sau khi filter:', audioFiles);
 
         const tracks: AudioTrack[] = audioFiles.map((file, index) => {
-          const audioUrl =
-            file.partFile ||
-            file.speakFile ||
-            file.fileUrl ||
-            file.filePath ||
-            file.content ||
-            `${API_BASE_URL}/files/download/${file.idFile}`;
-          
+          const audioUrl = getBookFileUrl(file);
+
           console.log(`Audio track ${index}: title=${file.fileName}, url=${audioUrl}`);
-          
+
           return {
             title: file.fileName || `Phần ${index + 1}`,
-            url: audioUrl,
+            url: audioUrl || '',
             time: '00:00',
           };
         });

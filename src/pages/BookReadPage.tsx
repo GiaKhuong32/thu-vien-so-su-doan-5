@@ -3,34 +3,11 @@ import { useParams, useSearchParams } from 'react-router-dom';
 
 import FlipBook from '../components/FlipBook';
 import { useBookDetail } from '../hooks/useBooks';
-import { API_BASE_URL } from '../config/api';
-
-interface BookFile {
-  bookFile?: string;
-  fileName?: string;
-  idFile?: string;
-  partFile?: string;
-  thumbnail?: string;
-  typeFile?: string;
-  fileUrl?: string;
-  filePath?: string;
-}
-
-/** Nhận diện file PDF (sách số) trong danh sách file của tài liệu. */
-function isPdfFile(file: BookFile): boolean {
-  const bookFile = (file.bookFile || '').toLowerCase();
-  const typeFile = (file.typeFile || '').toLowerCase();
-  const fileName = (file.fileName || '').toLowerCase();
-  const part = (file.partFile || '').toLowerCase();
-
-  return (
-    bookFile.includes('số') ||
-    bookFile === 'sách_số' ||
-    typeFile === 'pdf' ||
-    fileName.endsWith('.pdf') ||
-    part.endsWith('.pdf')
-  );
-}
+import {
+  findPdfFile,
+  getBookFileUrl,
+  getDocumentFiles,
+} from '../api/bookFiles';
 
 /**
  * Trang đọc sách toàn màn hình.
@@ -67,28 +44,11 @@ export default function BookReadPage() {
       setResolving(true);
 
       try {
-        const res = await fetch(`${API_BASE_URL}/files/document/${idDocument}`, {
-          method: 'GET',
-          headers: { Accept: '*/*' },
-        });
+        const files = await getDocumentFiles(idDocument);
+        const pdf = findPdfFile(files);
+        const url = getBookFileUrl(pdf);
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        const data = await res.json();
-        const files: BookFile[] = Array.isArray(data?.Result)
-          ? data.Result
-          : Array.isArray(data?.result)
-            ? data.result
-            : [];
-
-        const pdf = files.find(isPdfFile);
-        const url =
-          pdf?.partFile ||
-          pdf?.fileUrl ||
-          pdf?.filePath ||
-          (pdf?.idFile ? `${API_BASE_URL}/files/download/${pdf.idFile}` : null);
-
-        if (!cancelled) setPdfUrl(url ?? null);
+        if (!cancelled) setPdfUrl(url);
       } catch (err) {
         console.error('[BookReadPage] Không lấy được file PDF:', err);
         if (!cancelled) setPdfUrl(null);
