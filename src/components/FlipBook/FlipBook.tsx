@@ -54,9 +54,9 @@ export type FlipBookProps = FlipBookSource &
     className?: string;
   };
 
-const ZOOM_STEPS = [1, 1.5, 2, 3];
+const ZOOM_STEPS = [1, 1.25, 1.5, 2, 3];
 const MAX_ZOOM = 3;
-const MIN_ZOOM = 1;
+const MIN_ZOOM = 0.5;
 
 export default function FlipBook({
   src,
@@ -156,10 +156,34 @@ export default function FlipBook({
     [numPages]
   );
 
+  /** Helper lấy các trang sẽ hiển thị */
+  const getVisiblePages = useCallback(
+    (target: number) => {
+      const next = clamp(target);
+
+      if (!spread) return [next];
+
+      const left = next <= 1 ? 0 : next % 2 === 0 ? next : next - 1;
+      const right = left === 0 ? 1 : left + 1;
+
+      return [left, right].filter((p) => p >= 1 && p <= numPages);
+    },
+    [clamp, spread, numPages]
+  );
+
   /** Đi tới trang bất kỳ. `animate` = false để nhảy tức thì (slider, mục lục). */
   const goTo = useCallback(
     (target: number, animate = false) => {
       const next = clamp(target);
+
+      // Ưu tiên render ngay các trang sẽ nhìn thấy.
+      getVisiblePages(next).forEach((p) => requestPage(p));
+
+      // Nạp thêm vài trang lân cận để quay lại / đọc tiếp không bị trống.
+      for (let p = next - 2; p <= next + 2; p += 1) {
+        if (p >= 1 && p <= numPages) requestPage(p);
+      }
+
       setPage((current) => {
         if (next === current) return current;
 
@@ -173,7 +197,7 @@ export default function FlipBook({
         return next;
       });
     },
-    [clamp, playFlip]
+    [clamp, getVisiblePages, numPages, playFlip, requestPage]
   );
 
   const flipTo = useCallback(
@@ -185,12 +209,14 @@ export default function FlipBook({
 
       if (target < 1 || target > numPages) return;
 
+      getVisiblePages(target).forEach((p) => requestPage(p));
+
       flipSeq.current += 1;
       setFlip({ dir, from: page, to: target, id: flipSeq.current });
       playFlip();
       setPage(target);
     },
-    [flip, step, page, numPages, playFlip]
+    [flip, step, page, numPages, playFlip, getVisiblePages, requestPage]
   );
 
   const goNext = useCallback(() => flipTo('next'), [flipTo]);
@@ -294,18 +320,35 @@ export default function FlipBook({
   useEffect(() => {
     if (numPages === 0) return;
 
+    const visible = getVisiblePages(page);
+
+    // Render trang đang nhìn trước, tránh trường hợp nhảy tới trang cuối bị spinner mãi.
+    visible.forEach((p) => requestPage(p));
+
     const wanted = new Set<number>();
     const from = spread ? leftPage : page;
+    const to = spread ? rightPage : page;
 
-    // 4 trang trước và 6 trang sau
-    for (let p = from - 4; p <= from + 6; p += 1) {
+    for (let p = from - 4; p <= to + 8; p += 1) {
       if (p >= 1 && p <= numPages) wanted.add(p);
     }
+
     wanted.add(1);
     wanted.add(numPages);
 
-    wanted.forEach((p) => requestPage(p));
-  }, [page, leftPage, spread, numPages, requestPage]);
+    // Các trang nền request sau trang visible.
+    wanted.forEach((p) => {
+      if (!visible.includes(p)) requestPage(p);
+    });
+  }, [
+    page,
+    leftPage,
+    rightPage,
+    spread,
+    numPages,
+    requestPage,
+    getVisiblePages,
+  ]);
 
   /** Bàn phím: mũi tên, Home/End, +/-, F, Esc. */
   useEffect(() => {
@@ -1132,7 +1175,6 @@ export default function FlipBook({
         <IcNext />
       </button>
 
-      {/* -------------------------- Thanh trượt -------------------------- */}
       <div
         className={`fb-slider${dragPage !== null ? ' is-dragging' : ''}${
           uiHidden ? ' is-hidden' : ''

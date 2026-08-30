@@ -15,7 +15,6 @@ import type { BookAction } from '../data/detail';
 import type { Author } from '../data/library';
 
 import { bookCategories, bookTopics, libraryBanner } from '../data/library';
-import { API_BASE_URL } from '../config/api';
 
 import NotFoundPage from './NotFoundPage';
 

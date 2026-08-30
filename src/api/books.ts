@@ -1,7 +1,7 @@
 import { api } from './client';
 import type { Book } from '../components/BookCard';
 import type { BookDetail } from '../data/detail';
-import { API_BASE_URL, toApiUrl } from '../config/api';
+import { toApiUrl } from '../config/api';
 import {
   getDocumentFiles,
   isAudioFile,

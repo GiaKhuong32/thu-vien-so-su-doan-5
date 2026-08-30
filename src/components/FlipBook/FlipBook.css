@@ -65,7 +65,7 @@
   color: #1f1f1f;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+ line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 
@@ -890,7 +890,7 @@
   line-height: 1.45;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+ line-clamp:  3;
   -webkit-box-orient: vertical;
 }
 
@@ -1252,7 +1252,7 @@
     left: 12px;
     max-width: 50vw;
   }
-  .fb-meta__title { font-size: 14px; -webkit-line-clamp: 1; }
+  .fb-meta__title { font-size: 14px; line-clamp: 1; }
   .fb-meta__author { font-size: 12px; margin-top: 3px; }
   .fb-meta__cat { display: none; }
 
@@ -1265,7 +1265,6 @@
   .fb-btn svg { width: 15px; height: 15px; }
   .fb-btn[data-tip]::after { display: none; }
 
-  /* Ẩn nút phụ trên màn hình nhỏ để thanh công cụ không bị tràn */
   .fb-btn--optional { display: none; }
 
   .fb-slider {

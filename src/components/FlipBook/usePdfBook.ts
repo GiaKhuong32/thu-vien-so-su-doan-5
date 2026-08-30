@@ -13,7 +13,67 @@ type PageBitmap = {
   url: string;
   width: number;
   height: number;
+  objectUrl?: boolean;
 };
+
+// Helper để revoke Blob URL
+function revokeBitmap(bitmap?: PageBitmap) {
+  if (bitmap?.objectUrl) {
+    URL.revokeObjectURL(bitmap.url);
+  }
+}
+
+// Helper để set cache giới hạn LRU
+function setLimitedCache<K, V extends { url: string; objectUrl?: boolean }>(
+  cache: Map<K, V>,
+  key: K,
+  value: V,
+  max: number
+) {
+  const old = cache.get(key);
+  if (old?.objectUrl) URL.revokeObjectURL(old.url);
+
+  cache.delete(key);
+  cache.set(key, value);
+
+  while (cache.size > max) {
+    const firstKey = cache.keys().next().value;
+    if (firstKey === undefined) break;
+    const removed = cache.get(firstKey);
+
+    if (removed?.objectUrl) URL.revokeObjectURL(removed.url);
+
+    cache.delete(firstKey);
+  }
+}
+
+// Helper riêng cho thumb cache (chỉ lưu string URL)
+function setLimitedThumbCache(
+  cache: Map<number, string>,
+  key: number,
+  value: string,
+  max: number
+) {
+  const old = cache.get(key);
+  if (old?.startsWith('blob:')) {
+    URL.revokeObjectURL(old);
+  }
+
+  cache.delete(key);
+  cache.set(key, value);
+
+  while (cache.size > max) {
+    const firstKey = cache.keys().next().value;
+    if (firstKey === undefined) break;
+    const removed = cache.get(firstKey);
+
+    if (removed?.startsWith('blob:')) {
+      URL.revokeObjectURL(removed);
+    }
+
+    cache.delete(firstKey);
+  }
+}
 
 export type PdfBookState = {
   /** Tổng số trang. 0 khi chưa tải xong. */
@@ -57,9 +117,36 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
   const pendingThumbs = useRef<Set<number>>(new Set());
   const textCache = useRef<Map<number, string>>(new Map());
   const aliveRef = useRef(true);
+  const searchSeq = useRef(0);
 
   const bump = useCallback(() => {
     if (aliveRef.current) setRevision((r) => r + 1);
+  }, []);
+
+  // Helper để lấy text của một trang
+  const getPageText = useCallback(async (pageNumber: number): Promise<string> => {
+    const cached = textCache.current.get(pageNumber);
+    if (cached !== undefined) return cached;
+
+    const doc = docRef.current;
+    if (!doc) return '';
+
+    try {
+      const page = await doc.getPage(pageNumber);
+      const content = await page.getTextContent();
+
+      const text = content.items
+        .map((item: any) => ('str' in item ? item.str : ''))
+        .join(' ')
+        .replace(/\s+/g, ' ');
+
+      textCache.current.set(pageNumber, text);
+      page.cleanup();
+
+      return text;
+    } catch {
+      return '';
+    }
   }, []);
 
   /* ---------- Chế độ ảnh: không cần pdf.js ---------- */
@@ -69,7 +156,17 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
     if (!imageMode || !pages?.length) return;
     aliveRef.current = true;
 
+    // Cleanup cache khi đổi sang chế độ ảnh
+    for (const bitmap of pageCache.current.values()) {
+      revokeBitmap(bitmap);
+    }
     pageCache.current.clear();
+
+    for (const thumb of thumbCache.current.values()) {
+      if (thumb.startsWith('blob:')) {
+        URL.revokeObjectURL(thumb);
+      }
+    }
     thumbCache.current.clear();
 
     pages.forEach((url, i) => {
@@ -116,7 +213,18 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
       setLoading(true);
       setError(null);
       setProgress(0);
+
+      // Cleanup cache khi load PDF mới
+      for (const bitmap of pageCache.current.values()) {
+        revokeBitmap(bitmap);
+      }
       pageCache.current.clear();
+
+      for (const thumb of thumbCache.current.values()) {
+        if (thumb.startsWith('blob:')) {
+          URL.revokeObjectURL(thumb);
+        }
+      }
       thumbCache.current.clear();
       textCache.current.clear();
 
@@ -187,6 +295,19 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
       aliveRef.current = false;
       task?.destroy().catch(() => undefined);
       docRef.current = null;
+
+      // Cleanup tất cả Blob URLs khi unmount
+      for (const bitmap of pageCache.current.values()) {
+        revokeBitmap(bitmap);
+      }
+      pageCache.current.clear();
+
+      for (const thumb of thumbCache.current.values()) {
+        if (thumb.startsWith('blob:')) {
+          URL.revokeObjectURL(thumb);
+        }
+      }
+      thumbCache.current.clear();
     };
   }, [src, bump]);
 
@@ -214,10 +335,18 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
       await page.render({ canvasContext: ctx, viewport }).promise;
       page.cleanup();
 
+      // Sử dụng Blob URL thay vì dataURL để giảm RAM
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, 'image/jpeg', 0.86);
+      });
+
+      if (!blob) return null;
+
       return {
-        url: canvas.toDataURL('image/jpeg', 0.82),
+        url: URL.createObjectURL(blob),
         width: canvas.width,
         height: canvas.height,
+        objectUrl: true,
       };
     },
     []
@@ -239,7 +368,7 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
       renderPage(pageNumber)
         .then((bitmap) => {
           if (bitmap && aliveRef.current) {
-            pageCache.current.set(pageNumber, bitmap);
+            setLimitedCache(pageCache.current, pageNumber, bitmap, 32);
             bump();
           }
         })
@@ -265,7 +394,12 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
       renderPage(pageNumber, THUMB_WIDTH)
         .then((bitmap) => {
           if (bitmap && aliveRef.current) {
-            thumbCache.current.set(pageNumber, bitmap.url);
+            setLimitedThumbCache(
+              thumbCache.current,
+              pageNumber,
+              bitmap.url,
+              80
+            );
             bump();
           }
         })
@@ -290,52 +424,56 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
     const needle = query.trim().toLowerCase();
     if (!doc || needle.length < 2) return [];
 
+    const seq = ++searchSeq.current;
     const hits: SearchHit[] = [];
+    const batchSize = 6;
 
-    for (let p = 1; p <= doc.numPages; p += 1) {
-      let text = textCache.current.get(p);
+    for (let start = 1; start <= doc.numPages; start += batchSize) {
+      // Hủy search cũ nếu query đổi
+      if (seq !== searchSeq.current) return [];
 
-      if (text === undefined) {
-        try {
-          const page = await doc.getPage(p);
-          const content = await page.getTextContent();
-          text = content.items
-            .map((item: any) => ('str' in item ? item.str : ''))
-            .join(' ')
-            .replace(/\s+/g, ' ');
-          textCache.current.set(p, text);
-          page.cleanup();
-        } catch {
-          text = '';
-          textCache.current.set(p, text);
+      const pages = Array.from(
+        { length: Math.min(batchSize, doc.numPages - start + 1) },
+        (_, i) => start + i
+      );
+
+      const texts = await Promise.all(
+        pages.map(async (pageNumber) => ({
+          pageNumber,
+          text: await getPageText(pageNumber),
+        }))
+      );
+
+      for (const { pageNumber, text } of texts) {
+        if (!text) continue;
+
+        const haystack = text.toLowerCase();
+        let idx = haystack.indexOf(needle);
+
+        // Tối đa 3 kết quả mỗi trang để danh sách không quá dài
+        let perPage = 0;
+        while (idx !== -1 && perPage < 3) {
+          const from = Math.max(0, idx - 42);
+          const to = Math.min(text.length, idx + needle.length + 58);
+          hits.push({
+            page: pageNumber,
+            excerpt: (from > 0 ? '…' : '') + text.slice(from, to).trim() + (to < text.length ? '…' : ''),
+            start: idx - from + (from > 0 ? 1 : 0),
+            length: needle.length,
+          });
+          perPage += 1;
+          idx = haystack.indexOf(needle, idx + needle.length);
         }
       }
 
-      if (!text) continue;
+      if (hits.length >= 80) return hits;
 
-      const haystack = text.toLowerCase();
-      let idx = haystack.indexOf(needle);
-
-      // Tối đa 3 kết quả mỗi trang để danh sách không quá dài
-      let perPage = 0;
-      while (idx !== -1 && perPage < 3) {
-        const from = Math.max(0, idx - 42);
-        const to = Math.min(text.length, idx + needle.length + 58);
-        hits.push({
-          page: p,
-          excerpt: (from > 0 ? '…' : '') + text.slice(from, to).trim() + (to < text.length ? '…' : ''),
-          start: idx - from + (from > 0 ? 1 : 0),
-          length: needle.length,
-        });
-        perPage += 1;
-        idx = haystack.indexOf(needle, idx + needle.length);
-      }
-
-      if (hits.length >= 80) break;
+      // Yield để UI không bị freeze
+      await new Promise((resolve) => setTimeout(resolve, 0));
     }
 
     return hits;
-  }, []);
+  }, [getPageText]);
 
   return useMemo(
     () => ({
