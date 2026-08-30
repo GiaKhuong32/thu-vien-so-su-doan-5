@@ -2,8 +2,6 @@ import { Link } from 'react-router-dom';
 import type { BookAction, BookDetail } from '../../data/detail.js';
 import './BookBrief.css';
 
-const SITE = 'https://thuviennguyenanninh.vn';
-
 function Stars({ value = 0 }: { value?: number }) {
   const full = Math.round(value);
   return (
@@ -84,8 +82,6 @@ type Props = {
 };
 
 export default function BookBrief({ book, onUnavailable }: Props) {
-  const shareUrl = `${SITE}/sach/${book.slug}.html`;
-
   return (
     <div className="brief">
       <div className="brief__media">

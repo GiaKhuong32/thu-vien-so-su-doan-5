@@ -2,11 +2,10 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App';
 import BookListPage from './pages/BookListPage';
 import BookAudioPage from './pages/BookAudioPage';
+import BookReadPage from './pages/BookReadPage';
 import BookDetailPage from './pages/BookDetailPage';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
-import AboutLibraryPage from './pages/AboutLibraryPage';
-import AboutHistoryPage from './pages/AboutHistoryPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -20,6 +19,18 @@ function RootRoute() {
 }
 
 const router = createBrowserRouter([
+  /**
+   * Trình đọc sách nằm NGOÀI layout chính (không có Navbar/Footer)
+   * để chiếm trọn màn hình, giống trải nghiệm flipbook toàn trang.
+   */
+  {
+    path: '/sach/:slug/doc.html',
+    element: <BookReadPage />,
+  },
+  {
+    path: '/doc-sach',
+    element: <BookReadPage />,
+  },
   {
     element: <RootRoute />,
     children: [
@@ -46,14 +57,6 @@ const router = createBrowserRouter([
       {
         path: '/search',
         element: <SearchPage />,
-      },
-      {
-        path: '/gioi-thieu/thu-vien-so-nguyen-an-ninh-chuyen-de-nam-bo.html',
-        element: <AboutLibraryPage />,
-      },
-      {
-        path: '/gioi-thieu/quy-hoa-sen.html',
-        element: <AboutHistoryPage />,
       },
       {
         path: '/sach/:category',

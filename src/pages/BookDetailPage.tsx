@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import BookBrief from '../components/BookBrief/BookBrief';
 import BookSection from '../components/BookSection';
@@ -15,6 +15,7 @@ import type { BookAction } from '../data/detail';
 import type { Author } from '../data/library';
 
 import { bookCategories, bookTopics, libraryBanner } from '../data/library';
+import { API_BASE_URL } from '../config/api';
 
 import NotFoundPage from './NotFoundPage';
 
@@ -55,6 +56,7 @@ const normalizeBookFormat = (bookFile?: string): string => {
 export default function BookDetailPage() {
 
   const { slug } = useParams();
+  const navigate = useNavigate();
 
   const {
     data: bookData,
@@ -89,10 +91,10 @@ useEffect(() => {
     }
 
     try {
-   
+
 
 const response = await fetch(
-  `http://192.168.2.46:8080/files/document/${idDocument}`,
+  `${API_BASE_URL}/files/document/${idDocument}`,
   {
     method: 'GET',
     headers: {
@@ -144,11 +146,19 @@ const response = await fetch(
       const actions: BookAction[] = [];
 
       if (pdfFile?.partFile) {
+        // Mở trình đọc FlipBook nội bộ, truyền URL file qua query `?file=`
+        // để reader không phải gọi lại API danh sách file.
+        const readerHref = bookData?.slug
+          ? `/sach/${bookData.slug}/doc.html?file=${encodeURIComponent(
+              pdfFile.partFile
+            )}`
+          : `/doc-sach?file=${encodeURIComponent(pdfFile.partFile)}`;
+
         actions.push({
           label: 'Đọc',
           kind: 'pdf',
           primary: true,
-          href: pdfFile.partFile,
+          href: readerHref,
         });
       }
 
@@ -211,13 +221,15 @@ useEffect(() => {
       }
 
       if (action.kind === 'pdf' && action.href) {
-        window.open(action.href, '_blank', 'noopener,noreferrer');
+        // Điều hướng sang trình đọc FlipBook trong cùng ứng dụng
+        // (trước đây mở PDF thô bằng viewer mặc định của trình duyệt).
+        navigate(action.href);
         return;
       }
 
       setNotice('Dự án đang được triển khai');
     },
-    []
+    [navigate]
   );
 
 

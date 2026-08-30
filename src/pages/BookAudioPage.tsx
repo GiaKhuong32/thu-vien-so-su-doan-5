@@ -6,6 +6,7 @@ import NotFoundPage from './NotFoundPage';
 import { useBookDetail, useRelatedBooks } from '../hooks/useBooks';
 import { libraryBanner } from '../data/library';
 import AudioPlayer, { type AudioTrack } from '../components/AudioPlayer/AudioPlayer';
+import { API_BASE_URL } from '../config/api';
 
 interface BookFile {
   bookFile?: string;
@@ -17,10 +18,8 @@ interface BookFile {
   fileUrl?: string;
   filePath?: string;
   content?: string;
-  speakFile?: string; 
+  speakFile?: string;
 }
-
-const API_BASE = 'http://192.168.2.46:8080';
 
 export default function BookAudioPage() {
   const { slug } = useParams();
@@ -43,7 +42,7 @@ export default function BookAudioPage() {
       try {
         console.log('Đang fetch files cho idDocument:', idDocument);
         const response = await fetch(
-          `${API_BASE}/files/document/${idDocument}`,
+          `${API_BASE_URL}/files/document/${idDocument}`,
           {
             method: 'GET',
             headers: {
@@ -94,7 +93,7 @@ export default function BookAudioPage() {
             file.fileUrl ||
             file.filePath ||
             file.content ||
-            `${API_BASE}/files/download/${file.idFile}`;
+            `${API_BASE_URL}/files/download/${file.idFile}`;
           
           console.log(`Audio track ${index}: title=${file.fileName}, url=${audioUrl}`);
           

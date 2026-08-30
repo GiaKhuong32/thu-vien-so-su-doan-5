@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import BookGrid from '../components/BookGrid/BookGrid';
 import PageBanner from '../components/PageBanner/PageBanner';
 import PageLayout from '../components/PageLayout/PageLayout';
@@ -12,7 +12,6 @@ const PER_PAGE = 12;
 
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const query = searchParams.get('q') || '';
   const page = parseInt(searchParams.get('page') || '1', 10);
 

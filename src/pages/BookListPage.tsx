@@ -28,7 +28,6 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
 
   const { data: allBooks } = useBooks();
   const { data: ebooksData } = useBooksByType('ebooks');
-  const { data: paperbooksData } = useBooksByType('paperbooks');
   const { data: audiobooksData } = useBooksByType('audiobooks');
   const { data: videobooksData } = useBooksByType('videobooks');
 

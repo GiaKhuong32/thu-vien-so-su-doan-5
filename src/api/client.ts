@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://192.168.2.46:8080';
+import { API_BASE_URL } from '../config/api';
+
 const TOKEN_KEY = 'auth_token';
 
 export const getToken = (): string | null => {
@@ -39,11 +40,16 @@ export async function apiRequest<T>(
   });
 
   if (!response.ok) {
+    // Log error but don't throw for 401 - just return empty data
+    if (response.status === 401) {
+      console.warn(`API 401 Unauthorized for ${endpoint}`);
+      return [] as T; // Return empty array for list endpoints
+    }
     throw new Error(`API Error: ${response.status} ${response.statusText}`);
   }
 
   const data = await response.json();
-  
+
   // Xử lý linh hoạt cả 'Result' (chữ R viết hoa từ Swagger) và 'result'
   const resultData = data?.Result ?? data?.result;
 
@@ -53,7 +59,7 @@ export async function apiRequest<T>(
     }
     return resultData as T;
   }
-  
+
   return data as T;
 }
 

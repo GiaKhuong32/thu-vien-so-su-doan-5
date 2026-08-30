@@ -1,6 +1,7 @@
 import { api } from './client';
 import type { Book } from '../components/BookCard';
 import type { BookDetail } from '../data/detail';
+import { API_BASE_URL, toApiUrl } from '../config/api';
 
 export interface CategoryEntity {
   idCategory: string;
@@ -54,17 +55,9 @@ export interface ApiResponse<T> {
   result: T;
 }
 
-const API_ORIGIN = 'http://192.168.2.46:8080';
-
 function toImageUrl(value?: string | null): string {
   if (!value) return 'https://via.placeholder.com/300x400?text=No+Cover';
-
-  if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('data:')) {
-    return value;
-  }
-
-  const cleanPath = value.startsWith('/') ? value : `/${value}`;
-  return `${API_ORIGIN}${cleanPath}`;
+  return toApiUrl(value);
 }
 
 function slugify(value: string): string {
@@ -94,8 +87,39 @@ function mapApiBookToBookDetail(apiBook: ApiBookDetail): BookDetail {
   const slug = slugify(apiBook.title);
   const rawImage = apiBook.thumbnail || apiBook.document?.thumbnail;
 
-  const isAudiobook = apiBook.document?.typeDocument?.toUpperCase() === 'AUDIO' || 
+  const isAudiobook = apiBook.document?.typeDocument?.toUpperCase() === 'AUDIO' ||
                       (apiBook.thumbnail && apiBook.thumbnail.toLowerCase().includes('audio'));
+
+  // Map category name to href
+  const categoryMap: Record<string, string> = {
+    'Tài liệu huấn luyện': '/sach/tai-lieu-huan-luyen/',
+    'Tài liệu chính trị': '/sach/tai-lieu-chinh-tri/',
+    'Lịch sử': '/sach/lich-su/',
+    'Văn học': '/sach/van-hoc/',
+    'Khoa học': '/sach/khoa-hoc/',
+    'Ngôn ngữ học': '/sach/ngon-ngu-hoc/',
+    'Phim tài liệu': '/sach/phim-tai-lieu/',
+    'Tài liệu khác': '/sach/tai-lieu-khac/',
+  };
+
+  const categoryName = apiBook.categoryEntity?.categoryName || 'Sách';
+  let categoryHref = '/sach/';
+
+  // Try exact match first
+  if (categoryMap[categoryName]) {
+    categoryHref = categoryMap[categoryName];
+  } else {
+    // Try case-insensitive match
+    const normalizedCategoryName = categoryName.toLowerCase();
+    for (const [key, value] of Object.entries(categoryMap)) {
+      if (key.toLowerCase() === normalizedCategoryName) {
+        categoryHref = value;
+        break;
+      }
+    }
+  }
+
+  console.log(`Book: ${apiBook.title}, Category: ${categoryName}, Href: ${categoryHref}`);
 
   return {
     slug,
@@ -106,8 +130,8 @@ function mapApiBookToBookDetail(apiBook: ApiBookDetail): BookDetail {
     rating: 0,
     formats: [],
     category: {
-      label: apiBook.categoryEntity?.categoryName || 'Sách',
-      href: '/sach/',
+      label: categoryName,
+      href: categoryHref,
     },
     actions: isAudiobook ? [
       {
@@ -124,7 +148,7 @@ function mapApiBookToBookDetail(apiBook: ApiBookDetail): BookDetail {
       `Vị trí kệ: ${apiBook.shelfLocation}`,
       `Số lượng: ${apiBook.availableCopies}/${apiBook.totalCopies}`,
     ],
-    summary: apiBook.description || apiBook.summary || apiBook.content || apiBook.details ? 
+    summary: apiBook.description || apiBook.summary || apiBook.content || apiBook.details ?
       [apiBook.description || apiBook.summary || apiBook.content || apiBook.details || ''] : [],
     related: [],
   };
@@ -133,7 +157,7 @@ function mapApiBookToBookDetail(apiBook: ApiBookDetail): BookDetail {
 async function getBookFiles(idDocument?: string): Promise<ApiBookFile[]> {
   if (!idDocument) return [];
 
-  const response = await fetch(`${API_ORIGIN}/files/document/${idDocument}`, {
+  const response = await fetch(`${API_BASE_URL}/files/document/${idDocument}`, {
     method: 'GET',
     headers: {
       Accept: '*/*',
