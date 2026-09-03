@@ -5,7 +5,6 @@ import type { OutlineItem, SearchHit } from './types';
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
-/** Độ phân giải render. 1.5 cho chữ nét trên màn hình retina mà không quá nặng. */
 const RENDER_SCALE = 1.5;
 const THUMB_WIDTH = 150;
 
@@ -16,14 +15,12 @@ type PageBitmap = {
   objectUrl?: boolean;
 };
 
-// Helper để revoke Blob URL
 function revokeBitmap(bitmap?: PageBitmap) {
   if (bitmap?.objectUrl) {
     URL.revokeObjectURL(bitmap.url);
   }
 }
 
-// Helper để set cache giới hạn LRU
 function setLimitedCache<K, V extends { url: string; objectUrl?: boolean }>(
   cache: Map<K, V>,
   key: K,
@@ -47,7 +44,6 @@ function setLimitedCache<K, V extends { url: string; objectUrl?: boolean }>(
   }
 }
 
-// Helper riêng cho thumb cache (chỉ lưu string URL)
 function setLimitedThumbCache(
   cache: Map<number, string>,
   key: number,
@@ -76,31 +72,20 @@ function setLimitedThumbCache(
 }
 
 export type PdfBookState = {
-  /** Tổng số trang. 0 khi chưa tải xong. */
   numPages: number;
   loading: boolean;
-  /** Tiến trình tải file, 0..1 */
   progress: number;
   error: string | null;
-  /** Tỉ lệ khung trang (width / height) của trang đầu, dùng để dựng layout. */
   aspect: number;
   outline: OutlineItem[];
-  /** Lấy ảnh của một trang (render nếu chưa có). */
   getPage: (pageNumber: number) => PageBitmap | undefined;
   requestPage: (pageNumber: number) => void;
   getThumb: (pageNumber: number) => string | undefined;
   requestThumb: (pageNumber: number) => void;
   searchText: (query: string) => Promise<SearchHit[]>;
-  /** Bản ghi tăng dần mỗi khi có trang mới render xong, để component re-render. */
   revision: number;
 };
 
-/**
- * Hook quản lý toàn bộ việc đọc PDF: tải document, render trang theo yêu cầu,
- * đọc outline (mục lục) và tìm kiếm văn bản.
- *
- * Nếu `pages` được truyền (danh sách URL ảnh), hook bỏ qua pdf.js và dùng luôn ảnh.
- */
 export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
   const [numPages, setNumPages] = useState(0);
   const [loading, setLoading] = useState(Boolean(src) || Boolean(pages?.length));
@@ -109,7 +94,6 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
   const [aspect, setAspect] = useState(0.707); // A4 dọc
   const [outline, setOutline] = useState<OutlineItem[]>([]);
   const [revision, setRevision] = useState(0);
-
   const docRef = useRef<pdfjs.PDFDocumentProxy | null>(null);
   const pageCache = useRef<Map<number, PageBitmap>>(new Map());
   const thumbCache = useRef<Map<number, string>>(new Map());
@@ -123,7 +107,6 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
     if (aliveRef.current) setRevision((r) => r + 1);
   }, []);
 
-  // Helper để lấy text của một trang
   const getPageText = useCallback(async (pageNumber: number): Promise<string> => {
     const cached = textCache.current.get(pageNumber);
     if (cached !== undefined) return cached;
@@ -149,14 +132,12 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
     }
   }, []);
 
-  /* ---------- Chế độ ảnh: không cần pdf.js ---------- */
   const imageMode = Boolean(pages?.length) && !src;
 
   useEffect(() => {
     if (!imageMode || !pages?.length) return;
     aliveRef.current = true;
 
-    // Cleanup cache khi đổi sang chế độ ảnh
     for (const bitmap of pageCache.current.values()) {
       revokeBitmap(bitmap);
     }
@@ -178,7 +159,6 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
     setLoading(false);
     setProgress(1);
 
-    // Đo tỉ lệ khung từ ảnh đầu tiên
     const probe = new Image();
     probe.onload = () => {
       if (probe.naturalHeight > 0 && aliveRef.current) {
@@ -193,20 +173,12 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
     };
   }, [imageMode, pages, bump]);
 
-  /* ---------- Chế độ PDF ---------- */
   useEffect(() => {
     if (!src) return;
     aliveRef.current = true;
 
     let task: pdfjs.PDFDocumentLoadingTask | null = null;
 
-    /**
-     * Cờ riêng cho từng lần chạy effect.
-     * Không dùng `aliveRef` chung ở đây: dưới StrictMode, effect chạy 2 lần
-     * (mount → cleanup → mount). Lần chạy đầu bị huỷ sẽ reject muộn với
-     * "Worker was destroyed", lúc đó `aliveRef` đã được lần chạy thứ hai
-     * bật lại thành true, khiến lỗi giả bị hiển thị.
-     */
     let cancelled = false;
 
     const load = async () => {
@@ -214,7 +186,6 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
       setError(null);
       setProgress(0);
 
-      // Cleanup cache khi load PDF mới
       for (const bitmap of pageCache.current.values()) {
         revokeBitmap(bitmap);
       }
@@ -231,7 +202,7 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
       try {
         task = pdfjs.getDocument({
           url: src,
-          // Cho phép nạp font/CMap của PDF tiếng Việt
+ 
           cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/cmaps/',
           cMapPacked: true,
           standardFontDataUrl:
@@ -254,19 +225,16 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
         docRef.current = doc;
         setNumPages(doc.numPages);
 
-        // Tỉ lệ khung trang đầu
         const first = await doc.getPage(1);
         const vp = first.getViewport({ scale: 1 });
         if (!cancelled) setAspect(vp.width / vp.height);
 
-        // Mục lục
         try {
           const raw = await doc.getOutline();
           if (raw?.length && !cancelled) {
             setOutline(await flattenOutline(doc, raw, 0));
           }
         } catch {
-          /* PDF không có outline: bỏ qua */
         }
 
         if (!cancelled) {
@@ -275,7 +243,7 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
           bump();
         }
       } catch (err) {
-        // Lần chạy đã bị huỷ: bỏ qua mọi lỗi phát sinh do teardown
+   
         if (cancelled) return;
 
         console.error('[FlipBook] Không tải được PDF:', err);
@@ -296,7 +264,6 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
       task?.destroy().catch(() => undefined);
       docRef.current = null;
 
-      // Cleanup tất cả Blob URLs khi unmount
       for (const bitmap of pageCache.current.values()) {
         revokeBitmap(bitmap);
       }
@@ -311,7 +278,6 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
     };
   }, [src, bump]);
 
-  /* ---------- Render một trang thành ảnh ---------- */
   const renderPage = useCallback(
     async (pageNumber: number, targetWidth?: number): Promise<PageBitmap | null> => {
       const doc = docRef.current;
@@ -328,14 +294,12 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
       const ctx = canvas.getContext('2d', { alpha: false });
       if (!ctx) return null;
 
-      // Nền trắng để trang không bị trong suốt
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       await page.render({ canvasContext: ctx, viewport }).promise;
       page.cleanup();
 
-      // Sử dụng Blob URL thay vì dataURL để giảm RAM
       const blob = await new Promise<Blob | null>((resolve) => {
         canvas.toBlob(resolve, 'image/jpeg', 0.86);
       });
@@ -418,7 +382,6 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
     []
   );
 
-  /* ---------- Tìm kiếm văn bản ---------- */
   const searchText = useCallback(async (query: string): Promise<SearchHit[]> => {
     const doc = docRef.current;
     const needle = query.trim().toLowerCase();
@@ -429,7 +392,7 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
     const batchSize = 6;
 
     for (let start = 1; start <= doc.numPages; start += batchSize) {
-      // Hủy search cũ nếu query đổi
+
       if (seq !== searchSeq.current) return [];
 
       const pages = Array.from(
@@ -450,7 +413,6 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
         const haystack = text.toLowerCase();
         let idx = haystack.indexOf(needle);
 
-        // Tối đa 3 kết quả mỗi trang để danh sách không quá dài
         let perPage = 0;
         while (idx !== -1 && perPage < 3) {
           const from = Math.max(0, idx - 42);
@@ -468,7 +430,6 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
 
       if (hits.length >= 80) return hits;
 
-      // Yield để UI không bị freeze
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
 
@@ -507,7 +468,6 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
   );
 }
 
-/** Chuyển outline dạng cây của pdf.js thành danh sách phẳng kèm số trang. */
 async function flattenOutline(
   doc: pdfjs.PDFDocumentProxy,
   items: Awaited<ReturnType<pdfjs.PDFDocumentProxy['getOutline']>>,

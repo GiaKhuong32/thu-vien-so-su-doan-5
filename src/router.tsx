@@ -7,6 +7,8 @@ import BookDetailPage from './pages/BookDetailPage';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
 import NotFoundPage from './pages/NotFoundPage';
+import AboutLibraryPage from './pages/AboutLibraryPage';
+import AboutHistoryPage from './pages/AboutHistoryPage';
 import ScrollToTop from './components/ScrollToTop';
 
 function RootRoute() {
@@ -57,6 +59,14 @@ const router = createBrowserRouter([
       {
         path: '/search',
         element: <SearchPage />,
+      },
+      {
+        path: '/gioi-thieu/thu-vien-so-nguyen-an-ninh-chuyen-de-nam-bo.html',
+        element: <AboutLibraryPage />,
+      },
+      {
+        path: '/gioi-thieu/quy-hoa-sen.html',
+        element: <AboutHistoryPage />,
       },
       {
         path: '/sach/:category',

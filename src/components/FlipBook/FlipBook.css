@@ -29,7 +29,6 @@
   min-height: 100vh;
 }
 
-/* Hoa văn nền mờ cho giống sân khấu sách của bản gốc */
 .fb-root::before {
   content: '';
   position: absolute;
@@ -39,8 +38,6 @@
     radial-gradient(circle at 12% 82%, rgba(197, 137, 64, 0.16), transparent 42%),
     radial-gradient(circle at 88% 18%, rgba(147, 26, 26, 0.1), transparent 46%);
 }
-
-/* ---------------------------- Tiêu đề góc trên trái --------------------- */
 
 .fb-meta {
   position: absolute;
@@ -109,8 +106,6 @@
   height: 15px;
 }
 
-/* ------------------------------- Thanh công cụ -------------------------- */
-
 .fb-toolbar {
   position: absolute;
   top: 16px;
@@ -177,7 +172,6 @@
   outline-offset: 2px;
 }
 
-/* Tooltip */
 .fb-btn[data-tip]::after {
   content: attr(data-tip);
   position: absolute;
@@ -207,8 +201,6 @@
   margin: 0 2px;
   background: rgba(0, 0, 0, 0.14);
 }
-
-/* ------------------------------- Sân khấu sách -------------------------- */
 
 .fb-stage {
   position: absolute;
@@ -241,7 +233,6 @@
   transition: none;
 }
 
-/* Khối sách: perspective tạo chiều sâu cho trang lật */
 .fb-book {
   position: relative;
   perspective: 2400px;
@@ -249,7 +240,6 @@
   transform-style: preserve-3d;
 }
 
-/* Bóng đổ dưới sách */
 .fb-book::after {
   content: '';
   position: absolute;
@@ -265,8 +255,6 @@
   filter: blur(3px);
   pointer-events: none;
 }
-
-/* --------------------------- Trang giấy & mặt trang --------------------- */
 
 .fb-spread {
   position: relative;
@@ -290,7 +278,6 @@
   pointer-events: none;
 }
 
-/* Nếp gấp giữa hai trang */
 .fb-leaf--left {
   border-radius: 3px 0 0 3px;
   box-shadow:
@@ -310,7 +297,6 @@
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
 }
 
-/* Trang trống (bìa lẻ / trang cuối lẻ) */
 .fb-leaf--blank {
   background:
     linear-gradient(135deg, #f4efe6 0%, #ece5d8 100%);
@@ -328,7 +314,6 @@
     );
 }
 
-/* Số trang in nhỏ ở góc dưới */
 .fb-leaf__num {
   position: absolute;
   bottom: 8px;
@@ -346,7 +331,6 @@
   right: 14px;
 }
 
-/* Skeleton khi trang chưa render xong */
 .fb-leaf__skeleton {
   position: absolute;
   inset: 0;
@@ -376,12 +360,6 @@
   to { transform: rotate(360deg); }
 }
 
-/* ------------------------------ Hiệu ứng lật --------------------------- */
-/*
-   Cấu tạo: .fb-flipper là tờ giấy đang lật, có 2 mặt (front/back)
-   dùng backface-visibility. Xoay quanh trục ở gáy sách.
-*/
-
 .fb-flipper {
   position: absolute;
   top: 0;
@@ -393,13 +371,11 @@
   animation-fill-mode: forwards;
 }
 
-/* Lật sang phải -> trái (đọc tiếp) */
 .fb-flipper--next {
   transform-origin: left center;
   animation-name: fb-flip-next;
 }
 
-/* Lật sang trái -> phải (quay lại) */
 .fb-flipper--prev {
   transform-origin: right center;
   animation-name: fb-flip-prev;
@@ -432,7 +408,6 @@
   transform: rotateY(180deg);
 }
 
-/* Lớp bóng chạy trên tờ giấy đang lật, tạo cảm giác cong */
 .fb-flipper__gloss {
   position: absolute;
   inset: 0;
@@ -496,7 +471,6 @@
   100% { opacity: 0; }
 }
 
-/* Bóng tờ giấy in xuống trang nằm dưới */
 .fb-underShadow {
   position: absolute;
   top: 0;
@@ -514,8 +488,6 @@
   60%  { opacity: 0.22; }
   100% { opacity: 0; }
 }
-
-/* --------------------------- Mũi tên hai bên --------------------------- */
 
 .fb-edge {
   position: absolute;
@@ -560,8 +532,6 @@
   opacity: 0 !important;
   pointer-events: none;
 }
-
-/* ----------------------- Thanh trượt trang dưới ------------------------ */
 
 .fb-slider {
   position: absolute;
@@ -631,7 +601,6 @@
   transform: scale(1.22);
 }
 
-/* Bong bóng xem trước khi kéo */
 .fb-slider__preview {
   position: absolute;
   bottom: 30px;
@@ -665,7 +634,6 @@
   color: var(--fb-muted);
 }
 
-/* Ô nhập số trang */
 .fb-pageBox {
   display: flex;
   align-items: center;
@@ -697,8 +665,6 @@
   color: var(--fb-muted);
   font-weight: 600;
 }
-
-/* ------------------------- Bảng điều khiển trái ------------------------ */
 
 .fb-panel {
   position: absolute;
@@ -796,7 +762,6 @@
   line-height: 1.6;
 }
 
-/* Lưới thumbnail */
 .fb-thumbs {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -854,7 +819,6 @@
   color: #fff;
 }
 
-/* Mục lục / Bookmark */
 .fb-list { list-style: none; margin: 0; padding: 0; }
 
 .fb-list__btn {
@@ -925,8 +889,6 @@
 }
 
 .fb-list__row .fb-list__btn { flex: 1; }
-
-/* ------------------------------ Tìm kiếm ------------------------------- */
 
 .fb-search {
   position: absolute;
@@ -1033,7 +995,6 @@
   text-align: center;
 }
 
-/* Chỉ báo đang quét văn bản */
 .fb-search__spin {
   display: inline-block;
   width: 13px;
@@ -1043,8 +1004,6 @@
   border-radius: 50%;
   animation: fb-spin 0.7s linear infinite;
 }
-
-/* ------------------------------ Chia sẻ -------------------------------- */
 
 .fb-modalWrap {
   position: absolute;
@@ -1142,7 +1101,6 @@
   color: var(--fb-muted);
 }
 
-/* ----------------------- Nạp / lỗi toàn màn hình ----------------------- */
 
 .fb-overlay {
   position: absolute;
@@ -1210,7 +1168,6 @@
 
 .fb-overlay__btn:hover { background: var(--fb-accent-soft); }
 
-/* Thông báo nhỏ (toast) */
 .fb-toast {
   position: absolute;
   bottom: 70px;
@@ -1234,7 +1191,6 @@
   100% { opacity: 0; transform: translateX(-50%) translateY(-6px); }
 }
 
-/* ------------------------------ Responsive ----------------------------- */
 
 @media (max-width: 900px) {
   .fb-stage { padding: 64px 20px 70px; }
@@ -1285,7 +1241,6 @@
   .fb-thumbs { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* Tôn trọng thiết lập giảm chuyển động của người dùng */
 @media (prefers-reduced-motion: reduce) {
   .fb-root { --fb-flip-ms: 1ms; }
 

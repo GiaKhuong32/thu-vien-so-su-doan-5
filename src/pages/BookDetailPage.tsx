@@ -205,10 +205,14 @@ useEffect(() => {
             href: '/',
           },
 
-          {
-            label: 'Thư viện',
-            href: '/sach/',
-          },
+          ...(bookFormats.length > 0
+            ? [
+                {
+                  label: bookFormats.includes('Sách nói') ? 'Sách nói' : 'Sách số',
+                  href: '/sach/',
+                },
+              ]
+            : []),
 
           ...(book.category
             ? [

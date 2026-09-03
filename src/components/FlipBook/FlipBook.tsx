@@ -49,7 +49,7 @@ export type FlipBookProps = FlipBookSource &
     initialPage?: number;
     /** Bật đồng bộ số trang vào URL hash (#page/N) như bản gốc. */
     syncHash?: boolean;
-    /** Khoá lưu bookmark trong localStorage. Mặc định lấy theo `src`. */
+  
     bookKey?: string;
     className?: string;
   };
@@ -75,15 +75,8 @@ export default function FlipBook({
   const book = usePdfBook(src, pages);
   const { numPages, aspect, loading, progress, error, outline } = book;
 
-  /**
-   * Tách riêng các hàm của hook ra biến ổn định.
-   * `book` đổi identity mỗi lần có trang render xong (revision tăng), nên nếu
-   * đưa cả `book` vào dependency của effect thì debounce tìm kiếm sẽ bị reset
-   * liên tục và timer nạp thumbnail sẽ bị tạo trùng lặp.
-   */
   const { requestPage, requestThumb, searchText } = book;
 
-  /* ------------------------------- Trạng thái ---------------------------- */
   const [page, setPage] = useState(initialPage);
   const [viewMode, setViewMode] = useState<ViewMode>('spread');
   const [zoom, setZoom] = useState(1);
@@ -110,7 +103,6 @@ export default function FlipBook({
 
   const playFlip = useFlipSound(soundOn);
 
-  /** Chế độ hai trang chỉ dùng khi khung đủ rộng. */
   const [wide, setWide] = useState(
     () => typeof window === 'undefined' || window.innerWidth >= 820
   );
@@ -118,19 +110,11 @@ export default function FlipBook({
 
   const storageKey = bookKey || src || 'flipbook';
 
-  /* ---- Kích thước trang tính theo khung chứa (đặt ở phần layout bên dưới) ---- */
   const [leafSize, setLeafSize] = useState({ w: 0, h: 0 });
 
-  /* ------------------------------ Giá trị dẫn xuất ----------------------- */
-
-  /**
-   * Quy ước dàn trang giống bản gốc: trang 1 là bìa đứng một mình,
-   * sau đó ghép cặp (2,3), (4,5)… Nên trang bên trái của một spread
-   * luôn là số chẵn.
-   */
   const leftPage = useMemo(() => {
     if (!spread) return page;
-    if (page <= 1) return 0; // 0 = không có trang (chỗ trống cạnh bìa)
+    if (page <= 1) return 0; 
     return page % 2 === 0 ? page : page - 1;
   }, [spread, page]);
 
@@ -139,7 +123,6 @@ export default function FlipBook({
   const canPrev = page > 1;
   const canNext = numPages > 0 && (spread ? rightPage < numPages : page < numPages);
 
-  /** Bước nhảy khi lật: 2 trang ở chế độ spread (trừ lúc rời bìa). */
   const step = useCallback(
     (dir: FlipDirection) => {
       if (!spread) return 1;
@@ -149,14 +132,11 @@ export default function FlipBook({
     [spread, leftPage, page]
   );
 
-  /* ------------------------------ Điều hướng ----------------------------- */
-
   const clamp = useCallback(
     (n: number) => Math.min(Math.max(Math.round(n), 1), Math.max(numPages, 1)),
     [numPages]
   );
 
-  /** Helper lấy các trang sẽ hiển thị */
   const getVisiblePages = useCallback(
     (target: number) => {
       const next = clamp(target);
@@ -171,15 +151,11 @@ export default function FlipBook({
     [clamp, spread, numPages]
   );
 
-  /** Đi tới trang bất kỳ. `animate` = false để nhảy tức thì (slider, mục lục). */
   const goTo = useCallback(
     (target: number, animate = false) => {
       const next = clamp(target);
 
-      // Ưu tiên render ngay các trang sẽ nhìn thấy.
       getVisiblePages(next).forEach((p) => requestPage(p));
-
-      // Nạp thêm vài trang lân cận để quay lại / đọc tiếp không bị trống.
       for (let p = next - 2; p <= next + 2; p += 1) {
         if (p >= 1 && p <= numPages) requestPage(p);
       }
@@ -202,7 +178,7 @@ export default function FlipBook({
 
   const flipTo = useCallback(
     (dir: FlipDirection) => {
-      if (flip) return; // đang lật: bỏ qua để tránh chồng animation
+      if (flip) return; 
 
       const delta = step(dir);
       const target = dir === 'next' ? page + delta : page - delta;
@@ -223,9 +199,7 @@ export default function FlipBook({
   const goPrev = useCallback(() => flipTo('prev'), [flipTo]);
   const goFirst = useCallback(() => goTo(1), [goTo]);
   const goLast = useCallback(() => goTo(numPages), [goTo, numPages]);
-  /* ------------------------------ Hiệu ứng phụ --------------------------- */
 
-  /** Dọn animation lật sau khi chạy xong. */
   useEffect(() => {
     if (!flip) return;
 
@@ -237,7 +211,6 @@ export default function FlipBook({
     };
   }, [flip]);
 
-  /** Theo dõi bề rộng khung để tự chuyển giữa 1 và 2 trang. */
   useEffect(() => {
     const onResize = () => setWide(window.innerWidth >= 820);
     onResize();
@@ -245,7 +218,6 @@ export default function FlipBook({
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  /** Đo khung chứa và tính kích thước mỗi trang sao cho sách vừa khít. */
   useLayoutEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
@@ -262,13 +234,11 @@ export default function FlipBook({
         parseFloat(style.paddingBottom);
 
       if (availW <= 0 || availH <= 0) return;
-
       const leaves = spread ? 2 : 1;
-      // Giới hạn theo chiều cao
+
       let h = availH;
       let w = h * aspect;
 
-      // Nếu tràn ngang thì giới hạn lại theo chiều rộng
       if (w * leaves > availW) {
         w = availW / leaves;
         h = w / aspect;
@@ -284,7 +254,6 @@ export default function FlipBook({
     return () => ro.disconnect();
   }, [aspect, spread]);
 
-  /** Đọc hash #page/N khi mở và khi người dùng bấm back/forward. */
   useEffect(() => {
     if (!syncHash) return;
 
@@ -301,7 +270,6 @@ export default function FlipBook({
     return () => window.removeEventListener('hashchange', readHash);
   }, [syncHash, clamp]);
 
-  /** Ghi số trang hiện tại vào hash. */
   useEffect(() => {
     if (!syncHash || numPages === 0) return;
 
@@ -311,18 +279,15 @@ export default function FlipBook({
     }
   }, [page, syncHash, numPages]);
 
-  /** Kẹp lại số trang khi biết tổng số trang. */
   useEffect(() => {
     if (numPages > 0) setPage((cur) => Math.min(Math.max(cur, 1), numPages));
   }, [numPages]);
 
-  /** Render trước các trang quanh vị trí hiện tại để lật không bị trống. */
   useEffect(() => {
     if (numPages === 0) return;
 
     const visible = getVisiblePages(page);
 
-    // Render trang đang nhìn trước, tránh trường hợp nhảy tới trang cuối bị spinner mãi.
     visible.forEach((p) => requestPage(p));
 
     const wanted = new Set<number>();
@@ -336,7 +301,6 @@ export default function FlipBook({
     wanted.add(1);
     wanted.add(numPages);
 
-    // Các trang nền request sau trang visible.
     wanted.forEach((p) => {
       if (!visible.includes(p)) requestPage(p);
     });
@@ -350,11 +314,10 @@ export default function FlipBook({
     getVisiblePages,
   ]);
 
-  /** Bàn phím: mũi tên, Home/End, +/-, F, Esc. */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      // Không chiếm phím khi người dùng đang gõ vào input
+   
       if (
         target &&
         (target.tagName === 'INPUT' ||
@@ -416,35 +379,29 @@ export default function FlipBook({
 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [goNext, goPrev, goFirst, goLast, searchOpen, shareOpen, panelOpen, zoom]);
 
-  /** Theo dõi trạng thái fullscreen thật của trình duyệt. */
   useEffect(() => {
     const onChange = () => setFullscreen(Boolean(document.fullscreenElement));
     document.addEventListener('fullscreenchange', onChange);
     return () => document.removeEventListener('fullscreenchange', onChange);
   }, []);
 
-  /** Nạp bookmark đã lưu. */
   useEffect(() => {
     setBookmarks(loadBookmarks(storageKey));
   }, [storageKey]);
 
-  /** Reset pan khi thu về zoom 1. */
   useEffect(() => {
     if (zoom === 1) setPan({ x: 0, y: 0 });
   }, [zoom]);
 
-  /** Tự ẩn toast. */
   useEffect(() => {
     if (!toast) return;
     const t = window.setTimeout(() => setToast(null), 2400);
     return () => window.clearTimeout(t);
   }, [toast]);
-  /* -------------------------------- Thao tác ----------------------------- */
 
-  /** Nút Zoom chính: xoay vòng qua các mức 1 → 1.5 → 2 → 3 → 1. */
   const cycleZoom = useCallback(() => {
     setZoom((z) => {
       const idx = ZOOM_STEPS.findIndex((s) => s > z + 0.01);
@@ -469,7 +426,7 @@ export default function FlipBook({
       document.exitFullscreen().catch(() => setFullscreen(false));
     } else if (el.requestFullscreen) {
       el.requestFullscreen().catch(() => {
-        // Trình duyệt chặn: dùng chế độ phủ toàn trang bằng CSS
+
         setFullscreen(true);
       });
     } else {
@@ -477,7 +434,6 @@ export default function FlipBook({
     }
   }
 
-  /** In: mở file gốc ở tab mới rồi gọi hộp thoại in của trình duyệt. */
   const handlePrint = useCallback(() => {
     const url = downloadUrl || src;
     if (!url) {
@@ -494,7 +450,7 @@ export default function FlipBook({
       try {
         win.print();
       } catch {
-        /* PDF viewer nội bộ tự có nút in */
+
       }
     });
   }, [downloadUrl, src]);
@@ -515,8 +471,6 @@ export default function FlipBook({
     a.click();
     a.remove();
   }, [downloadUrl, src, title]);
-
-  /* ------------------------------- Bookmark ------------------------------ */
 
   const isBookmarked = bookmarks.includes(page);
 
@@ -547,7 +501,6 @@ export default function FlipBook({
     [storageKey]
   );
 
-  /* --------------------------- Kéo (pan) khi zoom ------------------------ */
 
   const dragRef = useRef<{
     active: boolean;
@@ -605,14 +558,12 @@ export default function FlipBook({
       const dx = e.clientX - drag.startX;
       const dy = e.clientY - drag.startY;
 
-      // Quét ngang để lật trang (chỉ khi chưa zoom)
       if (zoom === 1 && Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.4) {
         if (dx < 0) goNext();
         else goPrev();
         return;
       }
 
-      // Nhấp vào nửa trái / nửa phải để lật, giống bản gốc
       if (!drag.moved && zoom === 1) {
         const stage = stageRef.current;
         if (!stage) return;
@@ -626,7 +577,6 @@ export default function FlipBook({
     [zoom, goNext, goPrev]
   );
 
-  /** Con lăn: Ctrl+wheel để zoom, wheel thường để lật trang. */
   const wheelLock = useRef(0);
 
   const onWheel = useCallback(
@@ -638,7 +588,7 @@ export default function FlipBook({
         return;
       }
 
-      if (zoom > 1) return; // đang zoom: để người dùng cuộn xem trang
+      if (zoom > 1) return; 
 
       const now = Date.now();
       if (now - wheelLock.current < 420) return;
@@ -649,8 +599,6 @@ export default function FlipBook({
     },
     [zoom, zoomIn, zoomOut, goNext, goPrev]
   );
-
-  /* -------------------------------- Chia sẻ ------------------------------ */
 
   const shareLink = useMemo(() => {
     if (shareUrl) return shareUrl;
@@ -670,8 +618,6 @@ export default function FlipBook({
     }
   }, [shareLink]);
 
-  /* ------------------------------- Tìm kiếm ------------------------------ */
-
   const [query, setQuery] = useState('');
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [searching, setSearching] = useState(false);
@@ -679,12 +625,10 @@ export default function FlipBook({
 
   useEffect(() => {
     if (!searchOpen) return;
-    // Chờ transition xong mới focus để không bị giật
     const t = window.setTimeout(() => searchInput.current?.focus(), 120);
     return () => window.clearTimeout(t);
   }, [searchOpen]);
 
-  /** Tìm kiếm có debounce để không quét lại liên tục khi đang gõ. */
   useEffect(() => {
     if (!searchOpen) return;
 
@@ -717,8 +661,6 @@ export default function FlipBook({
     };
   }, [query, searchOpen, searchText]);
 
-  /* --------------------------- Ô nhập số trang --------------------------- */
-
   const [pageInput, setPageInput] = useState(String(page));
 
   useEffect(() => setPageInput(String(page)), [page]);
@@ -728,8 +670,6 @@ export default function FlipBook({
     if (Number.isFinite(n)) goTo(n);
     else setPageInput(String(page));
   }, [pageInput, goTo, page]);
-
-  /* --------------------------- Kéo thanh trượt --------------------------- */
 
   const trackRef = useRef<HTMLDivElement>(null);
   const [dragPage, setDragPage] = useState<number | null>(null);
@@ -778,11 +718,9 @@ export default function FlipBook({
     [dragPage, goTo]
   );
 
-  /** Nạp thumbnail khi mở bảng thumbnail. */
   useEffect(() => {
     if (!panelOpen || panelTab !== 'thumbnails' || numPages === 0) return;
 
-    // Nạp dần để không nghẽn luồng chính
     let i = 1;
     const tick = () => {
       const end = Math.min(i + 5, numPages + 1);
@@ -791,12 +729,10 @@ export default function FlipBook({
     };
     tick();
   }, [panelOpen, panelTab, numPages, requestThumb]);
-  /* --------------------------------- Render ------------------------------ */
 
   const { w: leafW, h: leafH } = leafSize;
   const ready = leafW > 0 && numPages > 0;
 
-  /** Vẽ một mặt trang. `side` quyết định bóng gáy sách. */
   const renderLeaf = (
     pageNumber: number,
     side: 'left' | 'right' | 'single',
@@ -833,11 +769,6 @@ export default function FlipBook({
     );
   };
 
-  /**
-   * Tờ giấy đang lật.
-   * - Lật tiếp (next): mặt trước = trang phải hiện tại, mặt sau = trang trái mới.
-   * - Lật lui (prev): mặt trước = trang trái hiện tại, mặt sau = trang phải mới.
-   */
   const renderFlipper = () => {
     if (!flip || !ready) return null;
 
@@ -903,10 +834,6 @@ export default function FlipBook({
     );
   };
 
-  /**
-   * Khi đang lật, hai mặt của tờ giấy đã hiển thị nội dung chuyển tiếp,
-   * nên spread nền phải ẩn đúng ô tương ứng để không nhìn thấy trang trùng.
-   */
   const hideLeft = flip !== null && (spread ? flip.dir === 'prev' : true);
   const hideRight = flip !== null && (spread ? flip.dir === 'next' : true);
 
@@ -920,7 +847,7 @@ export default function FlipBook({
       ref={rootRef}
       className={`fb-root${fullscreen ? ' is-fullscreen' : ''} ${className}`.trim()}
     >
-      {/* ------------------------- Thông tin sách ------------------------- */}
+
       <div className={`fb-meta${uiHidden ? ' is-hidden' : ''}`}>
         {title && <h1 className="fb-meta__title">{title}</h1>}
         {author && <h2 className="fb-meta__author">{author}</h2>}
@@ -933,7 +860,6 @@ export default function FlipBook({
         )}
       </div>
 
-      {/* -------------------------- Thanh công cụ ------------------------- */}
       <div className={`fb-toolbar${uiHidden ? '' : ''}`}>
         <button
           type="button"
@@ -1106,7 +1032,6 @@ export default function FlipBook({
         </button>
       </div>
 
-      {/* ---------------------------- Sân khấu --------------------------- */}
       <div
         ref={stageRef}
         className={`fb-stage${panning ? ' is-panning' : ''}${
@@ -1154,7 +1079,6 @@ export default function FlipBook({
         </div>
       </div>
 
-      {/* ------------------------ Mũi tên hai bên ------------------------ */}
       <button
         type="button"
         className="fb-edge fb-edge--prev"
@@ -1235,7 +1159,6 @@ export default function FlipBook({
         </div>
       </div>
 
-      {/* -------------------- Bảng mục lục / thumbnail ------------------- */}
       <aside className={`fb-panel${panelOpen ? ' is-open' : ''}`}>
         <div className="fb-panel__head">
           <div className="fb-panel__tabs">
@@ -1359,7 +1282,6 @@ export default function FlipBook({
         </div>
       </aside>
 
-      {/* ----------------------------- Tìm kiếm ------------------------- */}
       <div className={`fb-search${searchOpen ? ' is-open' : ''}`}>
         <div className="fb-search__bar">
           <IcSearch />
@@ -1416,7 +1338,6 @@ export default function FlipBook({
         )}
       </div>
 
-      {/* ------------------------------ Chia sẻ ------------------------- */}
       {shareOpen && (
         <div
           className="fb-modalWrap"
@@ -1457,7 +1378,6 @@ export default function FlipBook({
         </div>
       )}
 
-      {/* -------------------------- Nạp / lỗi --------------------------- */}
       {loading && (
         <div className="fb-overlay">
           <div className="fb-overlay__ring" />

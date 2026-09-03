@@ -78,7 +78,7 @@ export default function BookAudioPage() {
         img={libraryBanner}
         crumbs={[
           { label: 'Trang chủ', href: '/' },
-          { label: 'Thư viện', href: '/sach/' },
+          { label: 'Sách nói', href: '/sach/' },
           ...(book.category ? [{ label: book.category.label, href: book.category.href }] : []),
           { label: book.title, href: `/sach/${book.slug}.html` },
           { label: `Audio - ${book.title}` },

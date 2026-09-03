@@ -1,4 +1,3 @@
-/** Bộ icon SVG inline cho thanh công cụ FlipBook (không phụ thuộc icon font). */
 
 type IconProps = { className?: string };
 

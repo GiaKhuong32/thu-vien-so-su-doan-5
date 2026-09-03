@@ -1,9 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
 
-/**
- * Tạo tiếng lật trang bằng Web Audio API (noise burst + band-pass sweep).
- * Không cần file âm thanh nên không phát sinh request mạng.
- */
 export function useFlipSound(enabled: boolean) {
   const ctxRef = useRef<AudioContext | null>(null);
   const bufferRef = useRef<AudioBuffer | null>(null);
@@ -20,13 +16,12 @@ export function useFlipSound(enabled: boolean) {
     const ctx = new Ctor();
     ctxRef.current = ctx;
 
-    // Tạo buffer nhiễu trắng 0.35s dùng chung cho mọi lần lật
     const length = Math.floor(ctx.sampleRate * 0.35);
     const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < length; i += 1) {
       const t = i / length;
-      // Nhiễu giảm dần, tạo cảm giác giấy cọ vào nhau
+   
       data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 2.2);
     }
     bufferRef.current = buffer;
@@ -49,7 +44,6 @@ export function useFlipSound(enabled: boolean) {
     source.buffer = buffer;
     source.playbackRate.value = 0.9 + Math.random() * 0.25;
 
-    // Band-pass quét từ cao xuống thấp: mô phỏng tờ giấy trượt qua
     const filter = ctx.createBiquadFilter();
     filter.type = 'bandpass';
     filter.Q.value = 0.9;
@@ -79,7 +73,6 @@ export function useFlipSound(enabled: boolean) {
 
 const BOOKMARK_PREFIX = 'flipbook:bookmarks:';
 
-/** Đọc danh sách trang đã đánh dấu từ localStorage. */
 export function loadBookmarks(bookKey: string): number[] {
   try {
     const raw = localStorage.getItem(BOOKMARK_PREFIX + bookKey);
@@ -90,11 +83,10 @@ export function loadBookmarks(bookKey: string): number[] {
   }
 }
 
-/** Lưu danh sách trang đã đánh dấu. */
 export function saveBookmarks(bookKey: string, pages: number[]): void {
   try {
     localStorage.setItem(BOOKMARK_PREFIX + bookKey, JSON.stringify(pages));
   } catch {
-    /* localStorage bị chặn: bỏ qua */
+   
   }
 }

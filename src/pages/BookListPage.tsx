@@ -178,7 +178,7 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
         img={libraryBanner}
         crumbs={[
           { label: 'Trang chủ', href: '/' },
-          { label: 'Thư viện', href: '/sach/' },
+          { label: type === 'audiobooks' ? 'Sách nói' : 'Sách số', href: '/sach/' },
           { label: displayTitle },
         ]}
       />
