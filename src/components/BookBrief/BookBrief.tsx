@@ -127,6 +127,21 @@ export default function BookBrief({ book, onUnavailable }: Props) {
             <div className="list-button">
               {book.actions.map((a) => {
                 const cls = `btn ${a.primary ? 'btn-primary' : 'btn-outline-primary'}`;
+
+                if (a.href) {
+                  return (
+                    <Link
+                      key={a.label}
+                      to={a.href}
+                      className={cls}
+                      title={book.title}
+                    >
+                      <ActionIcon kind={a.kind} />
+                      {a.label}
+                    </Link>
+                  );
+                }
+
                 return (
                   <button
                     key={a.label}

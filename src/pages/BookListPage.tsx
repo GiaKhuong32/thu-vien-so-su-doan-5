@@ -25,6 +25,8 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
   const type = searchParams.get('type');
   const author = searchParams.get('author');
   const [authors, setAuthors] = useState<Author[]>([]);
+  const [categoriesWithCount, setCategoriesWithCount] = useState(bookCategories);
+  const [topicsWithCount, setTopicsWithCount] = useState(bookTopics);
 
   const { data: allBooks } = useBooks();
   const { data: ebooksData } = useBooksByType('ebooks');
@@ -69,7 +71,6 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
     if (category && books) {
       const categorySlug = category.replace(/\/$/, ''); // Remove trailing slash
 
-      // Map category slug to category name
       const categoryMap: Record<string, string> = {
         'tai-lieu-huan-luyen': 'Tài liệu huấn luyện',
         'tai-lieu-chinh-tri': 'Tài liệu chính trị',
@@ -147,17 +148,17 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
   useEffect(() => {
     if (allBooks && allBooks.length > 0) {
       const uniqueAuthors = new Map<string, string>();
-      
+
       allBooks.forEach((book) => {
         if (book.author && book.author.trim()) {
           const authorName = book.author.trim();
-         
+
           const authorSlug = authorName
             .toLowerCase()
-            .replace(/\s+/g, '-') 
+            .replace(/\s+/g, '-')
             .replace(/[^a-z0-9-àáạảãâầấậẩẫèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỉỹđ]/g, '')
             .replace(/^-+|-+$/g, '');
-          
+
           if (!uniqueAuthors.has(authorName)) {
             uniqueAuthors.set(authorName, `/sach/?author=${authorSlug}`);
           }
@@ -169,26 +170,83 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
         .map(([label, href]) => ({ label, href }));
 
       setAuthors(authorArray);
+
+      // Calculate category counts - use same logic as filter
+      const categoryCounts = new Map<string, number>();
+
+      bookCategories.forEach(cat => {
+        if (cat.label === 'Tất cả') {
+          categoryCounts.set(cat.label, allBooks.length);
+          return;
+        }
+
+        // Count books matching this category using same logic as filter
+        const count = allBooks.filter(book => {
+          if (!book.category) return false;
+
+          // Check exact match
+          if (book.category === cat.label) {
+            return true;
+          }
+
+          // Check contains (case-insensitive)
+          if (book.category.toLowerCase().includes(cat.label.toLowerCase())) {
+            return true;
+          }
+
+          return false;
+        }).length;
+
+        categoryCounts.set(cat.label, count);
+      });
+
+      const categoriesWithCounts = bookCategories.map(cat => ({
+        ...cat,
+        count: categoryCounts.get(cat.label) || 0
+      }));
+      setCategoriesWithCount(categoriesWithCounts);
+
+      // Calculate topic counts
+      const topicCounts = {
+        'Sách số': ebooksData?.length || 0,
+        'Sách nói': audiobooksData?.length || 0,
+        'Phim tài liệu': videobooksData?.length || 0
+      };
+
+      const topicsWithCounts = bookTopics.map(topic => ({
+        ...topic,
+        count: (topicCounts as Record<string, number>)[topic.label] || 0
+      }));
+      setTopicsWithCount(topicsWithCounts);
     }
-  }, [allBooks]);
+  }, [allBooks, ebooksData, audiobooksData, videobooksData]);
+
+  // Breadcrumb logic: chỉ thêm cấp cha khi đang chọn thể loại con
+  const typeLabel = type === 'audiobooks' ? 'Sách nói' : type === 'videobooks' ? 'Phim tài liệu' : 'Sách số';
+  const breadcrumbItems = category
+    ? [
+        { label: 'Trang chủ', href: '/' },
+        { label: typeLabel, href: '/sach/' },
+        { label: displayTitle },
+      ]
+    : [
+        { label: 'Trang chủ', href: '/' },
+        { label: displayTitle },
+      ];
 
   return (
     <>
       <PageBanner
         img={libraryBanner}
-        crumbs={[
-          { label: 'Trang chủ', href: '/' },
-          { label: type === 'audiobooks' ? 'Sách nói' : 'Sách số', href: '/sach/' },
-          { label: displayTitle },
-        ]}
+        crumbs={breadcrumbItems}
       />
 
       <main>
         <PageLayout
           sidebar={
-            <Sidebar 
-              categories={bookCategories} 
-              topics={bookTopics} 
+            <Sidebar
+              categories={categoriesWithCount}
+              topics={topicsWithCount}
               authors={authors}
               activeHref={activeHref}
               activeAuthorHref={author ? `/sach/?author=${author}` : undefined}

@@ -3,16 +3,19 @@ import { assetImage } from './assets';
 export type Category = {
   label: string;
   href: string;
+  count?: number;
 };
 
 export type Topic = {
   label: string;
   href: string;
+  count?: number;
 };
 
 export type Author = {
   label: string;
   href: string;
+  count?: number;
 };
 
 export const bookCategories: Category[] = [

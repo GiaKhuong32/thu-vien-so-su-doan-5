@@ -5,17 +5,20 @@ import './Sidebar.css';
 export type CategoryNode = {
   label: string;
   href: string;
+  count?: number;
   children?: CategoryNode[];
 };
 
 export type TopicTag = {
   label: string;
   href: string;
+  count?: number;
 };
 
 export type AuthorTag = {
   label: string;
   href: string;
+  count?: number;
 };
 
 type Props = {
@@ -118,14 +121,15 @@ function CategoryRow({
         onClick={
           hasKids
             ? (e) => {
-               
+
                 e.preventDefault();
                 setOpen((v) => !v);
               }
             : undefined
         }
       >
-        <span>{node.label}</span>
+        <span className="pane-link-label">{node.label}</span>
+        {node.count !== undefined && <span className="category-count">{node.count}</span>}
         {hasKids && <Chevron />}
       </Link>
 
@@ -134,7 +138,8 @@ function CategoryRow({
           {node.children!.map((kid) => (
             <li key={kid.href} className={kid.href === activeHref ? 'is-active' : undefined}>
               <Link to={kid.href} title={kid.label}>
-                <span>{kid.label}</span>
+                <span className="pane-link-label">{kid.label}</span>
+                {kid.count !== undefined && <span className="category-count">{kid.count}</span>}
               </Link>
             </li>
           ))}
@@ -175,7 +180,8 @@ export default function Sidebar({
                   to={t.href}
                   title={t.label.trim()}
                 >
-                  {t.label.trim()}
+                  <span className="filter-link-label">{t.label.trim()}</span>
+                  {t.count !== undefined && <span className="category-count">{t.count}</span>}
                 </Link>
               </li>
             ))}
@@ -192,7 +198,8 @@ export default function Sidebar({
                     to={a.href}
                     title={a.label.trim()}
                   >
-                    {a.label.trim()}
+                    <span className="filter-link-label">{a.label.trim()}</span>
+                    {a.count !== undefined && <span className="category-count">{a.count}</span>}
                   </Link>
                 </li>
               ))}

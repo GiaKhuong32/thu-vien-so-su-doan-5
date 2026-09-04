@@ -87,7 +87,6 @@ function mapApiBookToBookDetail(apiBook: ApiBookDetail): BookDetail {
   const isAudiobook = apiBook.document?.typeDocument?.toUpperCase() === 'AUDIO' ||
                       (apiBook.thumbnail && apiBook.thumbnail.toLowerCase().includes('audio'));
 
-  // Map category name to href
   const categoryMap: Record<string, string> = {
     'Tài liệu huấn luyện': '/sach/tai-lieu-huan-luyen/',
     'Tài liệu chính trị': '/sach/tai-lieu-chinh-tri/',

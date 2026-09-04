@@ -21,10 +21,7 @@ function RootRoute() {
 }
 
 const router = createBrowserRouter([
-  /**
-   * Trình đọc sách nằm NGOÀI layout chính (không có Navbar/Footer)
-   * để chiếm trọn màn hình, giống trải nghiệm flipbook toàn trang.
-   */
+
   {
     path: '/sach/:slug/doc.html',
     element: <BookReadPage />,

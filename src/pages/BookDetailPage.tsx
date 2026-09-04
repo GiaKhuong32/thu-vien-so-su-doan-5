@@ -58,7 +58,8 @@ export default function BookDetailPage() {
   const [bookActions, setBookActions] = useState<BookAction[]>([]);
   const [authors, setAuthors] = useState<Author[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
-
+  const [categoriesWithCount, setCategoriesWithCount] = useState(bookCategories);
+  const [topicsWithCount, setTopicsWithCount] = useState(bookTopics);
 
 useEffect(() => {
   const fetchBookFiles = async () => {
@@ -141,6 +142,48 @@ useEffect(() => {
       .map(([label, href]) => ({ label, href }));
 
     setAuthors(authorArray);
+
+    // Calculate category counts - use same logic as filter
+    const categoryCounts = new Map<string, number>();
+
+    bookCategories.forEach(cat => {
+      if (cat.label === 'Tất cả') {
+        categoryCounts.set(cat.label, allBooks.length);
+        return;
+      }
+
+      // Count books matching this category using same logic as filter
+      const count = allBooks.filter(book => {
+        if (!book.category) return false;
+
+        // Check exact match
+        if (book.category === cat.label) {
+          return true;
+        }
+
+        // Check contains (case-insensitive)
+        if (book.category.toLowerCase().includes(cat.label.toLowerCase())) {
+          return true;
+        }
+
+        return false;
+      }).length;
+
+      categoryCounts.set(cat.label, count);
+    });
+
+    const categoriesWithCounts = bookCategories.map(cat => ({
+      ...cat,
+      count: categoryCounts.get(cat.label) || 0
+    }));
+    setCategoriesWithCount(categoriesWithCounts);
+
+    // Calculate topic counts - set to 0 for now since we don't have the format data
+    const topicsWithCounts = bookTopics.map(topic => ({
+      ...topic,
+      count: 0
+    }));
+    setTopicsWithCount(topicsWithCounts);
   }
 }, [allBooks]);
 
@@ -233,9 +276,9 @@ useEffect(() => {
 
         <PageLayout
           sidebar={
-            <Sidebar 
-              categories={bookCategories} 
-              topics={bookTopics} 
+            <Sidebar
+              categories={categoriesWithCount}
+              topics={topicsWithCount}
               authors={authors}
               activeHref={book.category?.href}
             />
