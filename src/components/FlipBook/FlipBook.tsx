@@ -9,6 +9,7 @@ import {
 
 import './FlipBook.css';
 import { usePdfBook } from './usePdfBook';
+import PageThumbnail from './PageThumbnail';
 import { useFlipSound, loadBookmarks, saveBookmarks } from './useFlipSound';
 import type {
   BookMeta,
@@ -718,17 +719,18 @@ export default function FlipBook({
     [dragPage, goTo]
   );
 
-  useEffect(() => {
-    if (!panelOpen || panelTab !== 'thumbnails' || numPages === 0) return;
+  // Không cần preload thumbnails nữa vì hook usePdfThumbnail sẽ tự load khi visible
+  // useEffect(() => {
+  //   if (!panelOpen || panelTab !== 'thumbnails' || numPages === 0) return;
 
-    let i = 1;
-    const tick = () => {
-      const end = Math.min(i + 5, numPages + 1);
-      for (; i < end; i += 1) requestThumb(i);
-      if (i <= numPages) window.setTimeout(tick, 160);
-    };
-    tick();
-  }, [panelOpen, panelTab, numPages, requestThumb]);
+  //   let i = 1;
+  //   const tick = () => {
+  //     const end = Math.min(i + 5, numPages + 1);
+  //     for (; i < end; i += 1) requestThumb(i);
+  //     if (i <= numPages) window.setTimeout(tick, 160);
+  //   };
+  //   tick();
+  // }, [panelOpen, panelTab, numPages, requestThumb]);
 
   const { w: leafW, h: leafH } = leafSize;
   const ready = leafW > 0 && numPages > 0;
@@ -1194,23 +1196,16 @@ export default function FlipBook({
           {panelTab === 'thumbnails' && (
             <div className="fb-thumbs">
               {Array.from({ length: numPages }, (_, i) => i + 1).map((p) => {
-                const thumb = book.getThumb(p);
                 const current = spread ? p === leftPage || p === rightPage : p === page;
 
                 return (
-                  <button
+                  <PageThumbnail
                     key={p}
-                    type="button"
-                    className={`fb-thumb${current ? ' is-current' : ''}`}
-                    onClick={() => goTo(p)}
-                  >
-                    {thumb ? (
-                      <img className="fb-thumb__img" src={thumb} alt={`Trang ${p}`} />
-                    ) : (
-                      <span className="fb-thumb__ph" />
-                    )}
-                    <span className="fb-thumb__num">{p}</span>
-                  </button>
+                    pdf={book.getDoc()}
+                    pageNumber={p}
+                    current={current}
+                    onClick={goTo}
+                  />
                 );
               })}
             </div>

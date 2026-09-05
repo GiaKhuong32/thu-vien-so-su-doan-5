@@ -800,7 +800,7 @@
   display: block;
   width: 100%;
   aspect-ratio: 3 / 4;
-  background: linear-gradient(100deg, #f0ebe2 30%, #fbf8f3 50%, #f0ebe2 70%);
+  background: linear-gradient(100deg, #eee9df 30%, #f8f5ef 50%, #eee9df 70%);
   background-size: 220% 100%;
   animation: fb-shimmer 1.3s linear infinite;
 }

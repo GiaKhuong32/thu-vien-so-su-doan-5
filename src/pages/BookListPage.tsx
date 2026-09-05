@@ -67,9 +67,8 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
       books = allBooks || [];
     }
 
-    // Filter by category
     if (category && books) {
-      const categorySlug = category.replace(/\/$/, ''); // Remove trailing slash
+      const categorySlug = category.replace(/\/$/, ''); 
 
       const categoryMap: Record<string, string> = {
         'tai-lieu-huan-luyen': 'Tài liệu huấn luyện',
@@ -87,12 +86,10 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
       books = books.filter(book => {
         if (!categoryName) return false;
 
-        // Check if book category matches exactly
         if (book.category && book.category === categoryName) {
           return true;
         }
 
-        // Check if book category contains the category name
         if (book.category && book.category.toLowerCase().includes(categoryName.toLowerCase())) {
           return true;
         }
@@ -171,7 +168,6 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
 
       setAuthors(authorArray);
 
-      // Calculate category counts - use same logic as filter
       const categoryCounts = new Map<string, number>();
 
       bookCategories.forEach(cat => {
@@ -180,16 +176,13 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
           return;
         }
 
-        // Count books matching this category using same logic as filter
         const count = allBooks.filter(book => {
           if (!book.category) return false;
 
-          // Check exact match
           if (book.category === cat.label) {
             return true;
           }
 
-          // Check contains (case-insensitive)
           if (book.category.toLowerCase().includes(cat.label.toLowerCase())) {
             return true;
           }
@@ -206,7 +199,6 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
       }));
       setCategoriesWithCount(categoriesWithCounts);
 
-      // Calculate topic counts
       const topicCounts = {
         'Sách số': ebooksData?.length || 0,
         'Sách nói': audiobooksData?.length || 0,
@@ -221,7 +213,6 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
     }
   }, [allBooks, ebooksData, audiobooksData, videobooksData]);
 
-  // Breadcrumb logic: chỉ thêm cấp cha khi đang chọn thể loại con
   const typeLabel = type === 'audiobooks' ? 'Sách nói' : type === 'videobooks' ? 'Phim tài liệu' : 'Sách số';
   const breadcrumbItems = category
     ? [

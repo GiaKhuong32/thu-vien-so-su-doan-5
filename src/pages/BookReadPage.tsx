@@ -64,7 +64,6 @@ export default function BookReadPage() {
     };
   }, [book?.idDocument, fileFromQuery]);
 
-  /** Ẩn thanh cuộn trang khi đang đọc để reader chiếm trọn khung. */
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';

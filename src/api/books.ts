@@ -43,6 +43,7 @@ export interface ApiBookDetail extends ApiBook {
   details?: string;
   categories?: string[];
   formats?: string[];
+  qrCode?: string;
 }
 
 export interface ApiResponse<T> {
@@ -77,6 +78,7 @@ function mapApiBookToBook(apiBook: ApiBook): Book {
     href: `/sach/${slug}.html`,
     rating: 0,
     category: apiBook.categoryEntity?.categoryName,
+    publishYear: apiBook.publishYear,
   };
 }
 
@@ -147,6 +149,8 @@ function mapApiBookToBookDetail(apiBook: ApiBookDetail): BookDetail {
     summary: apiBook.description || apiBook.summary || apiBook.content || apiBook.details ?
       [apiBook.description || apiBook.summary || apiBook.content || apiBook.details || ''] : [],
     related: [],
+    qrCode: apiBook.qrCode ? toImageUrl(apiBook.qrCode) : undefined,
+    publishYear: apiBook.publishYear,
   };
 }
 

@@ -8,6 +8,67 @@ pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 const RENDER_SCALE = 1.5;
 const THUMB_WIDTH = 150;
 
+function isCanvasVisuallyBlank(canvas: HTMLCanvasElement): boolean {
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return true;
+
+  const { width, height } = canvas;
+  const data = ctx.getImageData(0, 0, width, height).data;
+
+  let nonWhitePixels = 0;
+
+  for (let i = 0; i < data.length; i += 16) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const a = data[i + 3];
+
+    if (a > 0 && (r < 245 || g < 245 || b < 245)) {
+      nonWhitePixels++;
+      if (nonWhitePixels > 20) return false;
+    }
+  }
+
+  return true;
+}
+
+async function renderPdfThumbnail(
+  doc: pdfjs.PDFDocumentProxy,
+  pageNumber: number,
+  targetWidth: number = THUMB_WIDTH
+): Promise<string> {
+  const page = await doc.getPage(pageNumber);
+  const base = page.getViewport({ scale: 1 });
+  const scale = targetWidth / base.width;
+  const viewport = page.getViewport({ scale });
+
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+  if (!ctx) throw new Error("Cannot create canvas context");
+
+  canvas.width = Math.ceil(viewport.width);
+  canvas.height = Math.ceil(viewport.height);
+
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const task = page.render({
+    canvasContext: ctx,
+    viewport,
+  });
+
+  await task.promise;
+  page.cleanup();
+
+  if (isCanvasVisuallyBlank(canvas)) {
+    throw new Error(`Blank thumbnail page ${pageNumber}`);
+  }
+
+  const url = canvas.toDataURL("image/jpeg", 0.86);
+  return url;
+}
+
 type PageBitmap = {
   url: string;
   width: number;
@@ -84,6 +145,7 @@ export type PdfBookState = {
   requestThumb: (pageNumber: number) => void;
   searchText: (query: string) => Promise<SearchHit[]>;
   revision: number;
+  getDoc: () => pdfjs.PDFDocumentProxy | null;
 };
 
 export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
@@ -343,7 +405,7 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
   );
 
   const requestThumb = useCallback(
-    (pageNumber: number) => {
+    (pageNumber: number, retryCount: number = 0) => {
       if (
         imageMode ||
         pageNumber < 1 ||
@@ -355,22 +417,41 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
       }
 
       pendingThumbs.current.add(pageNumber);
-      renderPage(pageNumber, THUMB_WIDTH)
-        .then((bitmap) => {
-          if (bitmap && aliveRef.current) {
+
+      const loadThumb = async () => {
+        try {
+          const doc = docRef.current;
+          if (!doc) return;
+
+          const url = await renderPdfThumbnail(doc, pageNumber, THUMB_WIDTH);
+
+          if (aliveRef.current) {
             setLimitedThumbCache(
               thumbCache.current,
               pageNumber,
-              bitmap.url,
+              url,
               80
             );
             bump();
           }
-        })
-        .catch(() => undefined)
-        .finally(() => pendingThumbs.current.delete(pageNumber));
+        } catch (error) {
+          console.error(`[FlipBook] Lỗi render thumbnail trang ${pageNumber}:`, error);
+
+          // Retry logic - thử lại tối đa 3 lần
+          if (retryCount < 3 && aliveRef.current) {
+            setTimeout(() => {
+              pendingThumbs.current.delete(pageNumber);
+              requestThumb(pageNumber, retryCount + 1);
+            }, 400);
+          }
+        } finally {
+          pendingThumbs.current.delete(pageNumber);
+        }
+      };
+
+      loadThumb();
     },
-    [imageMode, renderPage, bump]
+    [imageMode, bump]
   );
 
   const getPage = useCallback(
@@ -450,6 +531,7 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
       requestThumb,
       searchText,
       revision,
+      getDoc: () => docRef.current,
     }),
     [
       numPages,

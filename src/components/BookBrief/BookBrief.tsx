@@ -76,6 +76,24 @@ function ActionIcon({ kind }: { kind: BookAction['kind'] }) {
   );
 }
 
+function PhoneIcon() {
+  return (
+    <svg className="qr-box__icon" viewBox="0 0 24 24" aria-hidden="true">
+      <rect
+        x="7"
+        y="2.5"
+        width="10"
+        height="19"
+        rx="1.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <line x1="11" y1="18" x2="13" y2="18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 type Props = {
   book: BookDetail;
   onUnavailable: (action: BookAction) => void;
@@ -100,10 +118,11 @@ export default function BookBrief({ book, onUnavailable }: Props) {
             </Row>
           )}
 
-          <Row label="Đánh giá:">
-            <Stars value={book.rating} />
-            <span className="rate-point text-desc">{book.rating}/5</span>
-          </Row>
+          {book.publishYear && (
+            <Row label="Năm xuất bản:">
+              <b>{book.publishYear}</b>
+            </Row>
+          )}
 
           {book.category && (
             <Row label="Thể loại:">
@@ -155,6 +174,56 @@ export default function BookBrief({ book, onUnavailable }: Props) {
                   </button>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {book.formats.includes('Sách số') && (
+          <div className="qr-box">
+            <div className="qr-box__code">
+              {book.qrCode ? (
+                <img src={book.qrCode} alt={`Mã QR đọc sách ${book.title}`} />
+              ) : (
+                <svg viewBox="0 0 100 100" aria-hidden="true">
+                  <rect x="0" y="0" width="100" height="100" fill="#fff" />
+                  <rect x="6" y="6" width="24" height="24" fill="none" stroke="#111" strokeWidth="6" />
+                  <rect x="14" y="14" width="8" height="8" fill="#111" />
+                  <rect x="70" y="6" width="24" height="24" fill="none" stroke="#111" strokeWidth="6" />
+                  <rect x="78" y="14" width="8" height="8" fill="#111" />
+                  <rect x="6" y="70" width="24" height="24" fill="none" stroke="#111" strokeWidth="6" />
+                  <rect x="14" y="78" width="8" height="8" fill="#111" />
+                  <rect x="40" y="6" width="6" height="6" fill="#111" />
+                  <rect x="52" y="6" width="6" height="6" fill="#111" />
+                  <rect x="40" y="18" width="6" height="6" fill="#111" />
+                  <rect x="58" y="18" width="6" height="6" fill="#111" />
+                  <rect x="40" y="30" width="6" height="6" fill="#111" />
+                  <rect x="46" y="42" width="6" height="6" fill="#111" />
+                  <rect x="58" y="42" width="6" height="6" fill="#111" />
+                  <rect x="70" y="42" width="6" height="6" fill="#111" />
+                  <rect x="82" y="42" width="6" height="6" fill="#111" />
+                  <rect x="40" y="54" width="6" height="6" fill="#111" />
+                  <rect x="58" y="54" width="6" height="6" fill="#111" />
+                  <rect x="70" y="54" width="6" height="6" fill="#111" />
+                  <rect x="40" y="66" width="6" height="6" fill="#111" />
+                  <rect x="52" y="66" width="6" height="6" fill="#111" />
+                  <rect x="64" y="66" width="6" height="6" fill="#111" />
+                  <rect x="82" y="66" width="6" height="6" fill="#111" />
+                  <rect x="46" y="78" width="6" height="6" fill="#111" />
+                  <rect x="58" y="78" width="6" height="6" fill="#111" />
+                  <rect x="70" y="82" width="6" height="6" fill="#111" />
+                  <rect x="82" y="78" width="6" height="6" fill="#111" />
+                </svg>
+              )}
+            </div>
+            <div className="qr-box__text">
+              <PhoneIcon />
+              <span>
+                Quét mã QR
+                <br />
+                để xem chi tiết sách
+                <br />
+                trên thiết bị di động
+              </span>
             </div>
           </div>
         )}

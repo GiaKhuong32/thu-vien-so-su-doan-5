@@ -20,6 +20,8 @@ export type BookDetail = {
   summary: string[];
   related: string[];
   idDocument?: string;
+  qrCode?: string;
+  publishYear?: number;
 };
 
 export const FORMAT_HREF: Record<string, string> = {
@@ -36,5 +38,6 @@ export function toCard(b: BookDetail): Book {
     img: b.img,
     href: `/sach/${b.slug}.html`,
     rating: b.rating,
+    publishYear: b.publishYear,
   };
 }

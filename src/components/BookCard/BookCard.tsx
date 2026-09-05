@@ -8,6 +8,7 @@ export type Book = {
   href: string;
   rating?: number;
   category?: string;
+  publishYear?: number;
 };
 
 type Props = {
@@ -15,18 +16,6 @@ type Props = {
   variant?: 'grid' | 'row';
   reserveAuthor?: boolean;
 };
-
-function Stars({ value = 0 }: { value?: number }) {
-  return (
-    <div className="rated-star" aria-label={`Đánh giá ${value}/5`}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <span key={i} className={`star${i <= value ? ' is-on' : ''}`} aria-hidden="true">
-          ★
-        </span>
-      ))}
-    </div>
-  );
-}
 
 export default function BookCard({ book, variant = 'grid', reserveAuthor = true }: Props) {
   const showAuthor = reserveAuthor || !!book.author;
@@ -40,7 +29,9 @@ export default function BookCard({ book, variant = 'grid', reserveAuthor = true 
       <div className="book-card__info">
         <h3 className="book-card__title">{book.title}</h3>
         {showAuthor && <div className="book-card__author">{book.author}</div>}
-        <Stars value={book.rating} />
+        {book.publishYear && (
+          <div className="book-card__publish-year">Xuất bản: {book.publishYear}</div>
+        )}
       </div>
     </article>
   );

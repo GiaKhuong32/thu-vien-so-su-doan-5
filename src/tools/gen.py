@@ -40,7 +40,6 @@ FORMAT_HREF = {
     'Phim tài liệu': '#/sach/?type=videobooks',
 }
 
-# button label → kind (drives the icon component + click behaviour)
 KIND = {
     'Mượn sách': 'pdf',
     'Sách giấy': 'paper',
@@ -50,7 +49,7 @@ KIND = {
 }
 
 known = {'/sach/' + re.sub(r'[\s\u00a0]+$', '', s) + '.html' for s in d}
-# scraped records keyed by canonical slug, for related-book lookups
+
 by_norm = {re.sub(r'[\s\u00a0]+$', '', k): v for k, v in d.items()}
 records = []
 
@@ -73,7 +72,7 @@ for raw_slug, v in d.items():
     for b in v['buttons']:
         kind = KIND.get(b['label'], 'paper')
         href = b['href']
-        # PDF / Audio / Video readers aren't part of this static clone → modal
+        
         buttons.append({'label': b['label'], 'kind': kind,
                         'primary': b['primary'],
                         'href': href if href.startswith('/sach/') else ''})
@@ -82,7 +81,7 @@ for raw_slug, v in d.items():
     for r in v['related']:
         rhref = '/sach/' + norm(r['href'].split('/sach/')[-1].replace('.html', '')) + '.html'
         if rhref not in known:
-            continue  # cover art for off-set books isn't bundled locally
+            continue  
         rslug = norm(r['href'].split('/sach/')[-1].replace('.html', ''))
         if rslug == slug:
             continue
