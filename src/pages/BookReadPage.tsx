@@ -90,8 +90,6 @@ export default function BookReadPage() {
         initialPage={initialPage}
       />
 
-      {/* Trong lúc dò file, FlipBook tự hiện overlay nạp nên không cần UI riêng.
-          Chỉ báo lỗi khi đã dò xong mà không tìm được PDF nào. */}
       {!resolving && !pdfUrl && (
         <div className="fb-overlay" style={{ zIndex: 75 }}>
           <h3 className="fb-overlay__title">Sách chưa có bản đọc trực tuyến</h3>

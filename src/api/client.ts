@@ -40,17 +40,16 @@ export async function apiRequest<T>(
   });
 
   if (!response.ok) {
-    // Log error but don't throw for 401 - just return empty data
+
     if (response.status === 401) {
       console.warn(`API 401 Unauthorized for ${endpoint}`);
-      return [] as T; // Return empty array for list endpoints
+      return [] as T; 
     }
     throw new Error(`API Error: ${response.status} ${response.statusText}`);
   }
 
   const data = await response.json();
 
-  // Xử lý linh hoạt cả 'Result' (chữ R viết hoa từ Swagger) và 'result'
   const resultData = data?.Result ?? data?.result;
 
   if (data && typeof data === 'object' && ('Result' in data || 'result' in data)) {
@@ -63,7 +62,6 @@ export async function apiRequest<T>(
   return data as T;
 }
 
-// HTTP method helpers
 export const api = {
   get: <T>(endpoint: string): Promise<T> => 
     apiRequest<T>(endpoint, { method: 'GET' }),

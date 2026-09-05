@@ -2,18 +2,7 @@ import { Link } from 'react-router-dom';
 import type { BookAction, BookDetail } from '../../data/detail.js';
 import './BookBrief.css';
 
-function Stars({ value = 0 }: { value?: number }) {
-  const full = Math.round(value);
-  return (
-    <div className="rated-star">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <span key={i} className={`star${i <= full ? ' is-on' : ''}`} aria-hidden="true">
-          ★
-        </span>
-      ))}
-    </div>
-  );
-}
+
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (

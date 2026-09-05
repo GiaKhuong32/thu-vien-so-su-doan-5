@@ -8,11 +8,6 @@ type Props = {
   children: ReactNode;
 };
 
-/**
- * Centred dialog, the React equivalent of the original's Bootstrap
- * `#alertComming` modal ("Dự án đang được triển khai").
- * Closes on backdrop click, the × button, or Escape.
- */
 export default function Modal({ open, onClose, children }: Props) {
   useEffect(() => {
     if (!open) return;

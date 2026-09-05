@@ -35,7 +35,7 @@ export function usePdfThumbnail(pdf: pdfjs.PDFDocumentProxy | null, pageNumber: 
 
     async function load() {
       try {
-        const nextSrc = await renderPdfThumbnail(pdf, pageNumber);
+        const nextSrc = await renderPdfThumbnail(pdf!, pageNumber);
 
         if (!cancelled) {
           setSrc(nextSrc);

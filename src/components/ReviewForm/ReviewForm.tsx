@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import './ReviewForm.css';
 
-/**
- * "Bình luận và đánh giá" form: click-to-set star rating + floating-label
- * inputs. Purely local (no backend), so it just acknowledges the submission.
- */
 export default function ReviewForm() {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);

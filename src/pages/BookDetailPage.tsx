@@ -196,8 +196,6 @@ useEffect(() => {
       }
 
       if (action.kind === 'pdf' && action.href) {
-        // Điều hướng sang trình đọc FlipBook trong cùng ứng dụng
-        // (trước đây mở PDF thô bằng viewer mặc định của trình duyệt).
         navigate(action.href);
         return;
       }

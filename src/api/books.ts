@@ -103,11 +103,10 @@ function mapApiBookToBookDetail(apiBook: ApiBookDetail): BookDetail {
   const categoryName = apiBook.categoryEntity?.categoryName || 'Sách';
   let categoryHref = '/sach/';
 
-  // Try exact match first
   if (categoryMap[categoryName]) {
     categoryHref = categoryMap[categoryName];
   } else {
-    // Try case-insensitive match
+   
     const normalizedCategoryName = categoryName.toLowerCase();
     for (const [key, value] of Object.entries(categoryMap)) {
       if (key.toLowerCase() === normalizedCategoryName) {

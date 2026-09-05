@@ -52,7 +52,7 @@ export default function SearchPage() {
 
   useEffect(() => {
     if (allBooks && allBooks.length > 0) {
-      // Calculate category counts - use same logic as filter
+     
       const categoryCounts = new Map<string, number>();
 
       bookCategories.forEach(cat => {
@@ -61,16 +61,13 @@ export default function SearchPage() {
           return;
         }
 
-        // Count books matching this category using same logic as filter
         const count = allBooks.filter(book => {
           if (!book.category) return false;
 
-          // Check exact match
           if (book.category === cat.label) {
             return true;
           }
 
-          // Check contains (case-insensitive)
           if (book.category.toLowerCase().includes(cat.label.toLowerCase())) {
             return true;
           }
@@ -87,12 +84,12 @@ export default function SearchPage() {
       }));
       setCategoriesWithCount(categoriesWithCounts);
 
-      // Calculate topic counts
-      const topicCounts = {
-        'Sách số': ebooksData?.length || 0,
-        'Sách nói': audiobooksData?.length || 0,
-        'Phim tài liệu': videobooksData?.length || 0
-      };
+ 
+const topicCounts: Record<string, number> = {
+  'Sách số': ebooksData?.length || 0,
+  'Sách nói': audiobooksData?.length || 0,
+  'Phim tài liệu': videobooksData?.length || 0
+};
 
       const topicsWithCounts = bookTopics.map(topic => ({
         ...topic,
