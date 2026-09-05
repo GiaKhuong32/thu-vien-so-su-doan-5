@@ -180,9 +180,19 @@ export const booksApi = {
     }
   },
 
-  getRelated: async (_slug: string, limit = 5): Promise<Book[]> => {
+  getRelated: async (slug: string, limit = 5): Promise<Book[]> => {
     const allBooks = await booksApi.getAll();
-    return allBooks.slice(0, limit);
+    const current = allBooks.find((book) => {
+      const hrefSlug = book.href.replace('/sach/', '').replace('.html', '');
+      return hrefSlug === slug;
+    });
+    const sameCategory = allBooks.filter((book) => {
+      const hrefSlug = book.href.replace('/sach/', '').replace('.html', '');
+      if (hrefSlug === slug) return false;
+      if (!current?.category) return true;
+      return book.category === current.category;
+    });
+    return sameCategory.slice(0, limit);
   },
 
   getNew: async (limit = 10): Promise<Book[]> => {

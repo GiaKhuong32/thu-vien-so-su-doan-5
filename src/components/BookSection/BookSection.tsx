@@ -25,9 +25,16 @@ export default function BookSection({
     <section className="section-products" id={id} aria-labelledby={headingId}>
       <div className="container section-products__inner">
         {titleStyle === 'center' ? (
-          <h2 id={headingId} className="tt-center">
-            {title}
-          </h2>
+          <div className="section-heading">
+            <h2 id={headingId} className="tt-center">
+              {title}
+            </h2>
+            <div className="heading-divider">
+              <span className="line" />
+              <span className="icon-book" aria-hidden="true" />
+              <span className="line" />
+            </div>
+          </div>
         ) : (
           <div className="title-header">
             <h2 id={headingId} className="tt-row">

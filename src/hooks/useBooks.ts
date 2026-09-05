@@ -10,7 +10,8 @@ export function useBookDetail(slug: string) {
     async () => {
       return booksApi.getBySlug(slug);
     },
-    !!slug
+    !!slug,
+    [slug]
   );
 }
 
@@ -19,7 +20,8 @@ export function useRelatedBooks(slug: string, limit = 5) {
     async () => {
       return booksApi.getRelated(slug, limit);
     },
-    !!slug
+    !!slug,
+    [slug, limit]
   );
 }
 

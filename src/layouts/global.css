@@ -1,4 +1,3 @@
-
 :root {
 
   --c-primary: #931a1a;
@@ -128,7 +127,10 @@ ul {
   inset: 100% 0 auto 0;
   height: 22px;
   margin-top: 10px;
-  background: url('../assets/skin/books.png') center / 22px 22px no-repeat;
+  background:
+    url('../assets/skin/books.png') center / 22px 22px no-repeat,
+    linear-gradient(var(--c-secondary), var(--c-secondary)) left center / 42% 2px no-repeat,
+    linear-gradient(var(--c-secondary), var(--c-secondary)) right center / 42% 2px no-repeat;
 }
 
 .tt-row {

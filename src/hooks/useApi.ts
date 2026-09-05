@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 
 export function useApi<T>(
   apiFunction: () => Promise<T>,
-  immediate = true
+  immediate = true,
+  deps: unknown[] = []
 ) {
   const apiFunctionRef = useRef(apiFunction);
   const [data, setData] = useState<T | null>(null);
@@ -36,7 +37,8 @@ export function useApi<T>(
     } else {
       setLoading(false);
     }
-  }, [immediate, execute]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [immediate, execute, ...deps]);
 
   return { data, loading, error, execute, setData };
 }

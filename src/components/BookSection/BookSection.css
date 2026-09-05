@@ -4,6 +4,37 @@
   background: var(--c-white);
 }
 
+.section-heading {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.section-heading .tt-center {
+  margin-bottom: 22px;
+}
+
+.heading-divider {
+  width: min(88%, 1610px);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.heading-divider .line {
+  height: 2px;
+  flex: 1;
+  background: #e9c994;
+}
+
+.heading-divider .icon-book {
+  color: #e3b56c;
+  font-size: 20px;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
 .section-products__inner {
   padding-block: 48px;
 }
