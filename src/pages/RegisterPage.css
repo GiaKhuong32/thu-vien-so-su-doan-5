@@ -1,0 +1,39 @@
+.register-page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  background: white;
+}
+
+.register-page__right {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  position: relative;
+}
+
+.register-page__footer {
+  position: absolute;
+  bottom: 32px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+@media (max-width: 768px) {
+  .register-page {
+    flex-direction: column;
+  }
+
+  .auth-hero-panel {
+    width: 100%;
+    min-height: 300px;
+  }
+
+  .register-page__right {
+    width: 100%;
+    padding: 32px 24px;
+  }
+}

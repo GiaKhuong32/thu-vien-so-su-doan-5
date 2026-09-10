@@ -1,0 +1,147 @@
+.auth-hero-panel {
+  display: flex;
+  width: 50%;
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+}
+
+.auth-hero-panel__bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-image: url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1600&auto=format&fit=crop');
+}
+
+.auth-hero-panel__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.1));
+}
+
+.auth-hero-panel__content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px 32px;
+  width: 100%;
+}
+
+.auth-hero-panel__title {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: white;
+  margin-bottom: 24px;
+}
+
+.auth-hero-panel__title span {
+  color: #34d399;
+}
+
+.auth-hero-panel__description {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 400px;
+  margin-bottom: 56px;
+}
+
+.auth-hero-panel__books {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.auth-hero-panel__book {
+  border-radius: 8px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+}
+
+.auth-hero-panel__book--blue {
+  width: 128px;
+  height: 176px;
+  background: linear-gradient(135deg, #0ea5e9, #1d4ed8);
+  transform: rotate(-3deg);
+}
+
+.auth-hero-panel__book--green {
+  width: 128px;
+  height: 208px;
+  background: linear-gradient(135deg, #059669, #065f46);
+  transform: rotate(2deg);
+}
+
+.auth-hero-panel__book-label {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.auth-hero-panel__book-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.auth-hero-panel__book-label-bold {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.auth-hero-panel__book-tag {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 4px;
+  padding: 8px 8px;
+  text-align: center;
+}
+
+.auth-hero-panel__book-tag span {
+  color: #047857;
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+@media (min-width: 768px) {
+  .auth-hero-panel__content {
+    padding: 48px 64px 48px 96px;
+  }
+
+  .auth-hero-panel__title {
+    font-size: 3rem;
+  }
+
+  .auth-hero-panel__description {
+    font-size: 1.125rem;
+    max-width: 512px;
+  }
+
+  .auth-hero-panel__books {
+    gap: 16px;
+  }
+
+  .auth-hero-panel__book--blue {
+    width: 128px;
+    height: 176px;
+    padding: 12px;
+  }
+
+  .auth-hero-panel__book--green {
+    width: 128px;
+    height: 208px;
+    padding: 12px;
+  }
+}

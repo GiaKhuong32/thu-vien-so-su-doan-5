@@ -1,0 +1,147 @@
+.login-form {
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-form__title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #0f172a;
+  margin-bottom: 24px;
+}
+
+.login-form__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-form__input-group {
+  position: relative;
+}
+
+.login-form__icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: #94a3b8;
+}
+
+.login-form__input {
+  width: 100%;
+  padding: 14px 44px 14px 44px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.875rem;
+  color: #334155;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.login-form__input::placeholder {
+  color: #94a3b8;
+}
+
+.login-form__input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.login-form__password-toggle {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.login-form__password-toggle:hover {
+  color: #475569;
+}
+
+.login-form__submit-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  background: #059669;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.login-form__submit-btn:hover {
+  background: #047857;
+}
+
+.login-form__submit-btn:active {
+  background: #065f46;
+}
+
+.login-form__divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.login-form__divider-line {
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+.login-form__divider-text {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.login-form__register-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #059669;
+  background: transparent;
+  color: #059669;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.login-form__register-btn:hover {
+  background: #ecfdf5;
+}
+
+.login-form__forgot-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.875rem;
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.login-form__forgot-link:hover {
+  color: #2563eb;
+}

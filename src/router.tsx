@@ -9,7 +9,8 @@ import SearchPage from './pages/SearchPage';
 import NotFoundPage from './pages/NotFoundPage';
 import AboutLibraryPage from './pages/AboutLibraryPage';
 import AboutHistoryPage from './pages/AboutHistoryPage';
-import DrivePage from './pages/DrivePage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import ScrollToTop from './components/ScrollToTop';
 
 function RootRoute() {
@@ -32,11 +33,20 @@ const router = createBrowserRouter([
     element: <BookReadPage />,
   },
   {
-    path: '/quan-ly-tep',
+    path: '/dang-nhap',
     element: (
       <>
         <ScrollToTop />
-        <DrivePage />
+        <LoginPage />
+      </>
+    ),
+  },
+  {
+    path: '/dang-ky',
+    element: (
+      <>
+        <ScrollToTop />
+        <RegisterPage />
       </>
     ),
   },

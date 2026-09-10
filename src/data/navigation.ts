@@ -55,14 +55,12 @@ export const mainMenu: MenuItem[] = [
     },
   ],
 },
-{ label: 'Thư mục', href: '/quan-ly-tep' },
 ];
 
 export const footerInfoLinks: MenuItem[] = [
   { label: 'Trang chủ', href: '/' },
   { label: 'Giới thiệu', href: '/gioi-thieu/' },
   { label: 'Thư viện', href: '/sach/' },
-  { label: 'Thư mục', href: '/quan-ly-tep' },
   { label: 'Liên hệ', href: '/lien-he.html' },
 ];
 

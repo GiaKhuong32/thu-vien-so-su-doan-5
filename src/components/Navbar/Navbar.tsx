@@ -158,9 +158,9 @@ export default function Navbar() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <button 
-                type="submit" 
-                className="icon-submit" 
+              <button
+                type="submit"
+                className="icon-submit"
                 aria-label="Tìm kiếm"
               >
                 <SearchIcon />
@@ -176,6 +176,9 @@ export default function Navbar() {
           >
             <SearchIcon />
           </button>
+          <Link to="/dang-nhap" className="btn-login">
+            Đăng nhập
+          </Link>
         </div>
       </div>
 

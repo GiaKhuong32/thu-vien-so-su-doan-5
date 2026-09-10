@@ -252,6 +252,29 @@
   color: var(--c-brown);
 }
 
+.btn-login {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 24px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  background: #e30613;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(227, 6, 19, 0.3);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+
+.btn-login:hover {
+  background: #c10510;
+  box-shadow: 0 4px 12px rgba(227, 6, 19, 0.4);
+}
+
 .nav-backdrop {
   position: fixed;
   inset: 0;
