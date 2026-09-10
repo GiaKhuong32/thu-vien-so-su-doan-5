@@ -235,9 +235,6 @@
 
 .fb-book {
   position: relative;
-  perspective: 2400px;
-  perspective-origin: 50% 45%;
-  transform-style: preserve-3d;
 }
 
 .fb-book::after {
@@ -259,7 +256,47 @@
 .fb-spread {
   position: relative;
   display: flex;
-  transform-style: preserve-3d;
+  /* Bìa canh giữa: khung sách dịch ngang mượt thay vì nhảy giật. */
+  transition: transform 0.42s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.fb-viewport.no-anim .fb-spread {
+  transition: none;
+}
+
+/* Mép giấy dày ở hai bên — cảm giác đang cầm một tập sách thật. */
+.fb-stack {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  width: 7px;
+  pointer-events: none;
+  transition: opacity 0.32s ease;
+  z-index: 1;
+}
+
+.fb-stack--left {
+  left: -7px;
+  border-radius: 3px 0 0 3px;
+  background: repeating-linear-gradient(
+    to left,
+    #efe9dd 0 1px,
+    #cdc4b2 1px 2px,
+    #f6f2e9 2px 3px
+  );
+  box-shadow: -3px 3px 10px rgba(0, 0, 0, 0.16);
+}
+
+.fb-stack--right {
+  right: -7px;
+  border-radius: 0 3px 3px 0;
+  background: repeating-linear-gradient(
+    to right,
+    #efe9dd 0 1px,
+    #cdc4b2 1px 2px,
+    #f6f2e9 2px 3px
+  );
+  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.16);
 }
 
 .fb-leaf {
@@ -267,14 +304,25 @@
   overflow: hidden;
   background: #fdfdfb;
   box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.05);
+  transition: opacity 0.08s linear;
 }
 
-.fb-leaf__img {
+/* Ô trống phía sau bìa: không vẽ giấy, để bìa đứng một mình như sách đóng. */
+.fb-leaf--void {
+  background: none;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.fb-leaf__canvas {
   display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
   background: #fff;
+  pointer-events: none;
+}
+
+/* Hai lớp canvas vẽ hiệu ứng lật và góc giấy hé lên. */
+.fb-flipCanvas,
+.fb-hintCanvas {
   pointer-events: none;
 }
 
@@ -297,21 +345,16 @@
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
 }
 
-.fb-leaf--blank {
-  background:
-    linear-gradient(135deg, #f4efe6 0%, #ece5d8 100%);
-}
-
-.fb-leaf--blank::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    repeating-linear-gradient(
-      0deg,
-      rgba(0, 0, 0, 0.014) 0 1px,
-      transparent 1px 4px
-    );
+/*
+ * Bìa đứng một mình (trang 1 và trang cuối): bốn góc bo đều, đổ bóng dày
+ * hơn trang thường để trông như tấm bìa cứng của sách đang đóng.
+ */
+.fb-spread.is-cover .fb-leaf--right {
+  border-radius: 3px;
+  box-shadow:
+    inset 12px 0 20px -14px rgba(0, 0, 0, 0.22),
+    0 10px 30px rgba(0, 0, 0, 0.26),
+    0 2px 8px rgba(0, 0, 0, 0.16);
 }
 
 .fb-leaf__num {
@@ -360,133 +403,15 @@
   to { transform: rotate(360deg); }
 }
 
-.fb-flipper {
-  position: absolute;
-  top: 0;
-  transform-style: preserve-3d;
-  z-index: 40;
-  pointer-events: none;
-  animation-duration: var(--fb-flip-ms);
-  animation-timing-function: cubic-bezier(0.42, 0.05, 0.28, 1);
-  animation-fill-mode: forwards;
-}
+/*
+ * Hiệu ứng lật giờ được vẽ bằng canvas (xem curl.ts + FlipCanvas.tsx).
+ * CSS rotateY chỉ quay được hình chữ nhật phẳng nên không thể tạo được
+ * độ cong của giấy hay góc bìa bật lên — vì vậy phần keyframes cũ đã bỏ.
+ */
 
-.fb-flipper--next {
-  transform-origin: left center;
-  animation-name: fb-flip-next;
-}
-
-.fb-flipper--prev {
-  transform-origin: right center;
-  animation-name: fb-flip-prev;
-}
-
-@keyframes fb-flip-next {
-  0%   { transform: rotateY(0deg); }
-  100% { transform: rotateY(-180deg); }
-}
-
-@keyframes fb-flip-prev {
-  0%   { transform: rotateY(0deg); }
-  100% { transform: rotateY(180deg); }
-}
-
-.fb-flipper__face {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  background: #fdfdfb;
-}
-
-.fb-flipper__face--front {
-  transform: rotateY(0deg);
-}
-
-.fb-flipper__face--back {
-  transform: rotateY(180deg);
-}
-
-.fb-flipper__gloss {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  animation-duration: var(--fb-flip-ms);
-  animation-timing-function: cubic-bezier(0.42, 0.05, 0.28, 1);
-  animation-fill-mode: forwards;
-}
-
-.fb-flipper--next .fb-flipper__face--front .fb-flipper__gloss {
-  background: linear-gradient(
-    to left,
-    rgba(0, 0, 0, 0.28) 0%,
-    rgba(0, 0, 0, 0.06) 24%,
-    rgba(255, 255, 255, 0.12) 62%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  animation-name: fb-gloss-out;
-}
-
-.fb-flipper--next .fb-flipper__face--back .fb-flipper__gloss {
-  background: linear-gradient(
-    to right,
-    rgba(0, 0, 0, 0.3) 0%,
-    rgba(0, 0, 0, 0.08) 26%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  animation-name: fb-gloss-in;
-}
-
-.fb-flipper--prev .fb-flipper__face--front .fb-flipper__gloss {
-  background: linear-gradient(
-    to right,
-    rgba(0, 0, 0, 0.28) 0%,
-    rgba(0, 0, 0, 0.06) 24%,
-    rgba(255, 255, 255, 0.12) 62%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  animation-name: fb-gloss-out;
-}
-
-.fb-flipper--prev .fb-flipper__face--back .fb-flipper__gloss {
-  background: linear-gradient(
-    to left,
-    rgba(0, 0, 0, 0.3) 0%,
-    rgba(0, 0, 0, 0.08) 26%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  animation-name: fb-gloss-in;
-}
-
-@keyframes fb-gloss-out {
-  0%   { opacity: 0.15; }
-  45%  { opacity: 1; }
-  100% { opacity: 0.4; }
-}
-
-@keyframes fb-gloss-in {
-  0%   { opacity: 0.55; }
-  55%  { opacity: 0.9; }
-  100% { opacity: 0; }
-}
-
-.fb-underShadow {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  z-index: 30;
-  pointer-events: none;
-  animation-duration: var(--fb-flip-ms);
-  animation-timing-function: ease-out;
-  animation-fill-mode: forwards;
-  animation-name: fb-under-shadow;
-}
-
-@keyframes fb-under-shadow {
-  0%   { opacity: 0.5; }
-  60%  { opacity: 0.22; }
-  100% { opacity: 0; }
+/* Con trỏ gợi ý khi đưa chuột tới góc dưới để kéo lật. */
+.fb-stage.is-corner {
+  cursor: pointer;
 }
 
 .fb-edge {
@@ -1245,6 +1170,7 @@
   .fb-root { --fb-flip-ms: 1ms; }
 
   .fb-viewport,
+  .fb-spread,
   .fb-panel,
   .fb-search,
   .fb-btn,

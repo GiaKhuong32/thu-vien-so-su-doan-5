@@ -6,6 +6,7 @@ type PageThumbnailProps = {
   pageNumber: number;
   current: boolean;
   onClick: (pageNumber: number) => void;
+  docId?: number;
 };
 
 export default function PageThumbnail({
@@ -13,14 +14,17 @@ export default function PageThumbnail({
   pageNumber,
   current,
   onClick,
+  docId = 0,
 }: PageThumbnailProps) {
-  const { ref, src } = usePdfThumbnail(pdf, pageNumber);
+  const { ref, src } = usePdfThumbnail(pdf, pageNumber, docId);
 
   return (
     <button
       ref={ref}
       type="button"
       className={`fb-thumb${current ? ' is-current' : ''}`}
+      aria-label={`Tới trang ${pageNumber}`}
+      aria-current={current || undefined}
       onClick={() => onClick(pageNumber)}
     >
       {src ? (
@@ -29,6 +33,7 @@ export default function PageThumbnail({
           src={src}
           alt={`Trang ${pageNumber}`}
           loading="lazy"
+          decoding="async"
         />
       ) : (
         <span className="fb-thumb__ph" />

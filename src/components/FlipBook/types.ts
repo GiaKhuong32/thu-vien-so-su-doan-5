@@ -36,6 +36,14 @@ export type RenderedPage = {
   height: number;
 };
 
+export type PageDrawable = {
+  el: CanvasImageSource;
+  width: number;
+  height: number;
+  
+  renderedWidth: number;
+};
+
 export type PanelTab = 'thumbnails' | 'index' | 'bookmarks';
 
 export type FlipDirection = 'next' | 'prev';

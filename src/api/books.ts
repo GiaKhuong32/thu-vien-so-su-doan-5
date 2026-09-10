@@ -67,6 +67,22 @@ function slugify(value: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+function normalizeText(value?: string): string {
+  return (value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function getSlugFromHref(href: string): string {
+  return href
+    .replace(/^\/sach\//, '')
+    .replace(/\.html$/, '')
+    .replace(/\/$/, '');
+}
+
 function mapApiBookToBook(apiBook: ApiBook): Book {
   const slug = slugify(apiBook.title);
   const rawImage = apiBook.thumbnail || apiBook.document?.thumbnail;
@@ -181,16 +197,25 @@ export const booksApi = {
 
   getRelated: async (slug: string, limit = 5): Promise<Book[]> => {
     const allBooks = await booksApi.getAll();
-    const current = allBooks.find((book) => {
-      const hrefSlug = book.href.replace('/sach/', '').replace('.html', '');
-      return hrefSlug === slug;
-    });
+
+    const current = allBooks.find((book) => getSlugFromHref(book.href) === slug);
+
+    if (!current?.category) {
+      return allBooks
+        .filter((book) => getSlugFromHref(book.href) !== slug)
+        .slice(0, limit);
+    }
+
+    const currentCategory = normalizeText(current.category);
+
     const sameCategory = allBooks.filter((book) => {
-      const hrefSlug = book.href.replace('/sach/', '').replace('.html', '');
-      if (hrefSlug === slug) return false;
-      if (!current?.category) return true;
-      return book.category === current.category;
+      const bookSlug = getSlugFromHref(book.href);
+
+      if (bookSlug === slug) return false;
+
+      return normalizeText(book.category) === currentCategory;
     });
+
     return sameCategory.slice(0, limit);
   },
 

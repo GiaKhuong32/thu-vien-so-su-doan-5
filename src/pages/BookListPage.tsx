@@ -140,7 +140,14 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  useReveal();
+  useReveal([
+    page,
+    type,
+    category,
+    author,
+    filteredBooks.length,
+    slice.length,
+  ]);
 
   useEffect(() => {
     if (allBooks && allBooks.length > 0) {

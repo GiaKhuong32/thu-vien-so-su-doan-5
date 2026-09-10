@@ -8,6 +8,7 @@ export default function useReveal(deps: unknown[] = []) {
     let io: IntersectionObserver | null = null;
     let frame = 0;
     let timeout = 0;
+    let mutationObserver: MutationObserver | null = null;
 
     const run = () => {
       const nodes = Array.from(document.querySelectorAll<HTMLElement>('.reveal'));
@@ -41,9 +42,19 @@ export default function useReveal(deps: unknown[] = []) {
     frame = window.requestAnimationFrame(run);
     timeout = window.setTimeout(run, 150);
 
+    mutationObserver = new MutationObserver(() => {
+      window.requestAnimationFrame(run);
+    });
+
+    mutationObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
     return () => {
       window.cancelAnimationFrame(frame);
       window.clearTimeout(timeout);
+      mutationObserver?.disconnect();
       io?.disconnect();
     };
   }, [pathname, search, ...deps]);

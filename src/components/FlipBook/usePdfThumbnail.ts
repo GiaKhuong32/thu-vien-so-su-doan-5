@@ -1,13 +1,57 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from 'react';
 import * as pdfjs from 'pdfjs-dist';
 
-const thumbCache = new Map<number, string>();
+const caches = new Map<number, Map<number, string>>();
 
-export function usePdfThumbnail(pdf: pdfjs.PDFDocumentProxy | null, pageNumber: number) {
+function cacheFor(docId: number): Map<number, string> {
+  let cache = caches.get(docId);
+  if (!cache) {
+    cache = new Map();
+    caches.set(docId, cache);
+
+    if (caches.size > 2) {
+      const oldest = caches.keys().next().value;
+      if (oldest !== undefined && oldest !== docId) caches.delete(oldest);
+    }
+  }
+  return cache;
+}
+
+const THUMB_WIDTH = 132;
+
+const MAX_CONCURRENT = 2;
+
+let active = 0;
+const waiting: (() => void)[] = [];
+
+async function acquire(): Promise<void> {
+  if (active < MAX_CONCURRENT) {
+    active += 1;
+    return;
+  }
+  await new Promise<void>((resolve) => waiting.push(resolve));
+  active += 1;
+}
+
+function release(): void {
+  active -= 1;
+  waiting.shift()?.();
+}
+
+export function usePdfThumbnail(
+  pdf: pdfjs.PDFDocumentProxy | null,
+  pageNumber: number,
+  docId = 0
+) {
   const ref = useRef<HTMLButtonElement | null>(null);
   const [visible, setVisible] = useState(false);
-  const [src, setSrc] = useState<string | null>(thumbCache.get(pageNumber) ?? null);
-  const [retry, setRetry] = useState(0);
+  const [src, setSrc] = useState<string | null>(
+    () => cacheFor(docId).get(pageNumber) ?? null
+  );
+
+  useEffect(() => {
+    setSrc(cacheFor(docId).get(pageNumber) ?? null);
+  }, [docId, pageNumber]);
 
   useEffect(() => {
     const el = ref.current;
@@ -18,13 +62,13 @@ export function usePdfThumbnail(pdf: pdfjs.PDFDocumentProxy | null, pageNumber: 
         if (entry.isIntersecting) setVisible(true);
       },
       {
-        root: document.querySelector(".fb-panel__body") ?? null,
-        rootMargin: "500px",
+      
+        root: el.closest('.fb-panel__body') ?? null,
+        rootMargin: '220px',
       }
     );
 
     observer.observe(el);
-
     return () => observer.disconnect();
   }, []);
 
@@ -33,103 +77,76 @@ export function usePdfThumbnail(pdf: pdfjs.PDFDocumentProxy | null, pageNumber: 
 
     let cancelled = false;
 
-    async function load() {
+    const load = async () => {
+      await acquire();
+
       try {
-        const nextSrc = await renderPdfThumbnail(pdf!, pageNumber);
+        if (cancelled) return;
 
-        if (!cancelled) {
-          setSrc(nextSrc);
-        }
-      } catch (error) {
-        console.error(`[usePdfThumbnail] Lỗi render thumbnail trang ${pageNumber}:`, error);
+        const cache = cacheFor(docId);
+        const cached = cache.get(pageNumber);
 
-        if (!cancelled && retry < 5) {
-          window.setTimeout(() => {
-            setRetry((value) => value + 1);
-          }, 300 + retry * 300);
+        if (cached) {
+          if (!cancelled) setSrc(cached);
+          return;
         }
+
+        const next = await renderThumb(pdf, pageNumber);
+        cache.set(pageNumber, next);
+
+        if (!cancelled) setSrc(next);
+      } catch (err) {
+     
+        console.warn(`[FlipBook] Không render được thumbnail trang ${pageNumber}`, err);
+      } finally {
+        release();
       }
-    }
+    };
 
     load();
 
     return () => {
       cancelled = true;
     };
-  }, [pdf, pageNumber, visible, src, retry]);
+  }, [pdf, pageNumber, visible, src, docId]);
 
   return { ref, src };
 }
 
-async function renderPdfThumbnail(
+async function renderThumb(
   pdf: pdfjs.PDFDocumentProxy,
   pageNumber: number
 ): Promise<string> {
-  const cached = thumbCache.get(pageNumber);
-  if (cached) return cached;
-
   const page = await pdf.getPage(pageNumber);
-  const viewport = page.getViewport({ scale: 0.28 });
+  const base = page.getViewport({ scale: 1 });
+  const viewport = page.getViewport({ scale: THUMB_WIDTH / base.width });
 
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d", { willReadFrequently: true });
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d', { alpha: false });
 
-  if (!context) {
-    throw new Error("Cannot create thumbnail canvas");
+  if (!ctx) {
+    page.cleanup();
+    throw new Error('Không tạo được canvas thumbnail');
   }
 
-  canvas.width = Math.ceil(viewport.width);
-  canvas.height = Math.ceil(viewport.height);
+  canvas.width = Math.max(1, Math.ceil(viewport.width));
+  canvas.height = Math.max(1, Math.ceil(viewport.height));
 
-  context.fillStyle = "#fff";
-  context.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const task = page.render({
-    canvasContext: context,
-    viewport,
-  });
-
-  await task.promise;
+  await page.render({ canvasContext: ctx, viewport }).promise;
   page.cleanup();
 
-  if (isCanvasVisuallyBlank(canvas)) {
-    throw new Error(`Blank thumbnail ${pageNumber}`);
-  }
+  const url = canvas.toDataURL('image/jpeg', 0.82);
 
-  const src = canvas.toDataURL("image/jpeg", 0.86);
-  thumbCache.set(pageNumber, src);
+  canvas.width = 0;
+  canvas.height = 0;
 
-  return src;
+  return url;
 }
 
-function isCanvasVisuallyBlank(canvas: HTMLCanvasElement): boolean {
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) return true;
-
-  const { width, height } = canvas;
-  const data = ctx.getImageData(0, 0, width, height).data;
-
-  let nonWhitePixels = 0;
-
-  for (let i = 0; i < data.length; i += 16) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-    const a = data[i + 3];
-
-    if (a > 0 && (r < 245 || g < 245 || b < 245)) {
-      nonWhitePixels++;
-      if (nonWhitePixels > 20) return false;
-    }
-  }
-
-  return true;
-}
-
-export function clearThumbnailCache(pageNumber?: number) {
-  if (pageNumber) {
-    thumbCache.delete(pageNumber);
-  } else {
-    thumbCache.clear();
-  }
+export function clearThumbnailCache(docId?: number) {
+  if (docId === undefined) caches.clear();
+  else caches.delete(docId);
 }

@@ -10,6 +10,9 @@ import {
 import './FlipBook.css';
 import { usePdfBook } from './usePdfBook';
 import PageThumbnail from './PageThumbnail';
+import PageCanvas from './PageCanvas';
+import FlipCanvas from './FlipCanvas';
+import type { FlipRequest } from './FlipCanvas';
 import { useFlipSound, loadBookmarks, saveBookmarks } from './useFlipSound';
 import type {
   BookMeta,
@@ -46,11 +49,11 @@ import {
 
 export type FlipBookProps = FlipBookSource &
   BookMeta & {
-    /** Trang mở đầu (1-based). Bị ghi đè bởi hash #page/N nếu có. */
+   
     initialPage?: number;
-    /** Bật đồng bộ số trang vào URL hash (#page/N) như bản gốc. */
-    syncHash?: boolean;
   
+    syncHash?: boolean;
+
     bookKey?: string;
     className?: string;
   };
@@ -58,6 +61,9 @@ export type FlipBookProps = FlipBookSource &
 const ZOOM_STEPS = [1, 1.25, 1.5, 2, 3];
 const MAX_ZOOM = 3;
 const MIN_ZOOM = 0.5;
+const FLIP_MS = 820;
+const CURL_PAD = 90;
+const CORNER_ZONE = 130;
 
 export default function FlipBook({
   src,
@@ -74,9 +80,8 @@ export default function FlipBook({
   className = '',
 }: FlipBookProps) {
   const book = usePdfBook(src, pages);
-  const { numPages, aspect, loading, progress, error, outline } = book;
-
-  const { requestPage, requestThumb, searchText } = book;
+  const { numPages, aspect, loading, progress, error, outline, docId } = book;
+  const { requestPage, requestThumb, searchText, setTargetWidth, markHot } = book;
 
   const [page, setPage] = useState(initialPage);
   const [viewMode, setViewMode] = useState<ViewMode>('spread');
@@ -90,16 +95,9 @@ export default function FlipBook({
   const [shareOpen, setShareOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [bookmarks, setBookmarks] = useState<number[]>([]);
-  const [flip, setFlip] = useState<{
-    dir: FlipDirection;
-    from: number;
-    to: number;
-    id: number;
-  } | null>(null);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  const flipTimer = useRef<number | null>(null);
   const flipSeq = useRef(0);
 
   const playFlip = useFlipSound(soundOn);
@@ -113,13 +111,36 @@ export default function FlipBook({
 
   const [leafSize, setLeafSize] = useState({ w: 0, h: 0 });
 
-  const leftPage = useMemo(() => {
-    if (!spread) return page;
-    if (page <= 1) return 0; 
-    return page % 2 === 0 ? page : page - 1;
-  }, [spread, page]);
+  const clamp = useCallback(
+    (n: number) => Math.min(Math.max(Math.round(n), 1), Math.max(numPages, 1)),
+    [numPages]
+  );
 
-  const rightPage = spread ? (leftPage === 0 ? 1 : leftPage + 1) : page;
+  const leftOf = useCallback(
+    (n: number) => {
+      if (!spread) return n;
+      if (n <= 1) return 0;
+      return n % 2 === 0 ? n : n - 1;
+    },
+    [spread]
+  );
+
+  const rightOf = useCallback(
+    (n: number) => {
+      if (!spread) return n;
+      const left = leftOf(n);
+      return left === 0 ? 1 : left + 1;
+    },
+    [spread, leftOf]
+  );
+
+  const leftPage = leftOf(page);
+  const rightPage = rightOf(page);
+
+
+  const coverMode = spread && leftPage === 0;
+  const backCoverMode =
+    spread && numPages > 1 && leftPage === numPages && rightPage > numPages;
 
   const canPrev = page > 1;
   const canNext = numPages > 0 && (spread ? rightPage < numPages : page < numPages);
@@ -133,67 +154,119 @@ export default function FlipBook({
     [spread, leftPage, page]
   );
 
-  const clamp = useCallback(
-    (n: number) => Math.min(Math.max(Math.round(n), 1), Math.max(numPages, 1)),
-    [numPages]
-  );
-
   const getVisiblePages = useCallback(
     (target: number) => {
       const next = clamp(target);
-
       if (!spread) return [next];
 
-      const left = next <= 1 ? 0 : next % 2 === 0 ? next : next - 1;
-      const right = left === 0 ? 1 : left + 1;
-
-      return [left, right].filter((p) => p >= 1 && p <= numPages);
+      return [leftOf(next), rightOf(next)].filter((p) => p >= 1 && p <= numPages);
     },
-    [clamp, spread, numPages]
+    [clamp, spread, numPages, leftOf, rightOf]
+  );
+
+  const [flip, setFlip] = useState<
+    | (FlipRequest & {
+        underLeft: number;
+        underRight: number;
+      })
+    | null
+  >(null);
+
+  const [drag, setDrag] = useState<{
+    dir: FlipDirection;
+    progress: number;
+    front?: ReturnType<typeof book.getPage>;
+    back?: ReturnType<typeof book.getPage>;
+    underLeft: number;
+    underRight: number;
+    target: number;
+  } | null>(null);
+
+  const [hint, setHint] = useState<{ side: FlipDirection; amount: number } | null>(
+    null
+  );
+
+  /** Tính hai mặt của tờ giấy sẽ quay, và hai trang nằm dưới nó. */
+  const buildFlipFaces = useCallback(
+    (from: number, to: number, dir: FlipDirection) => {
+      if (!spread) {
+        return {
+          frontPage: from,
+          backPage: to,
+          underLeft: to,
+          underRight: to,
+        };
+      }
+
+      if (dir === 'next') {
+        return {
+          frontPage: rightOf(from),
+          backPage: leftOf(to),
+          // Trong lúc lật, nửa trái vẫn là trang cũ, nửa phải đã là trang mới.
+          underLeft: leftOf(from),
+          underRight: rightOf(to),
+        };
+      }
+
+      return {
+        frontPage: leftOf(from),
+        backPage: rightOf(to),
+        underLeft: leftOf(to),
+        underRight: rightOf(from),
+      };
+    },
+    [spread, leftOf, rightOf]
   );
 
   const goTo = useCallback(
-    (target: number, animate = false) => {
+    (target: number) => {
       const next = clamp(target);
-
-      getVisiblePages(next).forEach((p) => requestPage(p));
-      for (let p = next - 2; p <= next + 2; p += 1) {
-        if (p >= 1 && p <= numPages) requestPage(p);
-      }
-
-      setPage((current) => {
-        if (next === current) return current;
-
-        if (animate) {
-          const dir: FlipDirection = next > current ? 'next' : 'prev';
-          flipSeq.current += 1;
-          setFlip({ dir, from: current, to: next, id: flipSeq.current });
-          playFlip();
-        }
-
-        return next;
-      });
+      getVisiblePages(next).forEach((p) => requestPage(p, 100));
+      setPage(next);
     },
-    [clamp, getVisiblePages, numPages, playFlip, requestPage]
+    [clamp, getVisiblePages, requestPage]
+  );
+
+  const startFlip = useCallback(
+    (dir: FlipDirection, target: number, from = 0) => {
+      const faces = buildFlipFaces(page, target, dir);
+
+      // Cần ảnh của cả hai mặt trước khi quay, nếu không sẽ thấy tờ giấy trắng.
+      requestPage(faces.frontPage, 200);
+      requestPage(faces.backPage, 200);
+      requestPage(faces.underLeft, 150);
+      requestPage(faces.underRight, 150);
+
+      flipSeq.current += 1;
+
+      setFlip({
+        id: flipSeq.current,
+        dir,
+        front: book.getPage(faces.frontPage),
+        back: book.getPage(faces.backPage),
+        underLeft: faces.underLeft,
+        underRight: faces.underRight,
+        from,
+        duration: FLIP_MS,
+      });
+
+      playFlip();
+      setPage(target);
+    },
+    [page, buildFlipFaces, requestPage, book, playFlip]
   );
 
   const flipTo = useCallback(
     (dir: FlipDirection) => {
-      if (flip) return; 
+      if (flip || drag) return;
 
       const delta = step(dir);
       const target = dir === 'next' ? page + delta : page - delta;
-
       if (target < 1 || target > numPages) return;
 
-      getVisiblePages(target).forEach((p) => requestPage(p));
-
-      flipSeq.current += 1;
-      setFlip({ dir, from: page, to: target, id: flipSeq.current });
-      playFlip();
-      setPage(target);
+      startFlip(dir, target);
     },
-    [flip, step, page, numPages, playFlip, getVisiblePages, requestPage]
+    [flip, drag, step, page, numPages, startFlip]
   );
 
   const goNext = useCallback(() => flipTo('next'), [flipTo]);
@@ -201,17 +274,11 @@ export default function FlipBook({
   const goFirst = useCallback(() => goTo(1), [goTo]);
   const goLast = useCallback(() => goTo(numPages), [goTo, numPages]);
 
-  useEffect(() => {
-    if (!flip) return;
+  const onFlipEnd = useCallback((id: number) => {
+    setFlip((cur) => (cur && cur.id === id ? null : cur));
+  }, []);
 
-    if (flipTimer.current) window.clearTimeout(flipTimer.current);
-    flipTimer.current = window.setTimeout(() => setFlip(null), 800);
-
-    return () => {
-      if (flipTimer.current) window.clearTimeout(flipTimer.current);
-    };
-  }, [flip]);
-
+  // ---- Đo kích thước trang ------------------------------------------------
   useEffect(() => {
     const onResize = () => setWide(window.innerWidth >= 820);
     onResize();
@@ -245,7 +312,11 @@ export default function FlipBook({
         h = w / aspect;
       }
 
-      setLeafSize({ w: Math.floor(w), h: Math.floor(h) });
+      setLeafSize((cur) => {
+        const nw = Math.floor(w);
+        const nh = Math.floor(h);
+        return cur.w === nw && cur.h === nh ? cur : { w: nw, h: nh };
+      });
     };
 
     measure();
@@ -255,6 +326,14 @@ export default function FlipBook({
     return () => ro.disconnect();
   }, [aspect, spread]);
 
+  /** Báo cho hook biết cần render trang ở độ nét nào. */
+  useEffect(() => {
+    if (leafSize.w <= 0) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    setTargetWidth(leafSize.w * dpr * zoom);
+  }, [leafSize.w, zoom, setTargetWidth]);
+
+  // ---- Đồng bộ hash ------------------------------------------------------
   useEffect(() => {
     if (!syncHash) return;
 
@@ -284,41 +363,62 @@ export default function FlipBook({
     if (numPages > 0) setPage((cur) => Math.min(Math.max(cur, 1), numPages));
   }, [numPages]);
 
+  // ---- Nạp trước ---------------------------------------------------------
   useEffect(() => {
     if (numPages === 0) return;
 
     const visible = getVisiblePages(page);
+    visible.forEach((p) => requestPage(p, 100));
 
-    visible.forEach((p) => requestPage(p));
+    // Ghim trang đang xem + hai khổ liền kề để không bị dọn khỏi cache.
+    markHot([
+      ...visible,
+      leftPage - 2,
+      leftPage - 1,
+      rightPage + 1,
+      rightPage + 2,
+    ].filter((p) => p >= 1 && p <= numPages));
 
-    const wanted = new Set<number>();
-    const from = spread ? leftPage : page;
-    const to = spread ? rightPage : page;
-
-    for (let p = from - 4; p <= to + 8; p += 1) {
-      if (p >= 1 && p <= numPages) wanted.add(p);
+    // Nạp trước theo hướng đọc: phía sau nhiều hơn phía trước.
+    const ahead: number[] = [];
+    for (let p = rightPage + 1; p <= Math.min(rightPage + 4, numPages); p += 1) {
+      ahead.push(p);
+    }
+    for (let p = leftPage - 1; p >= Math.max(leftPage - 2, 1); p -= 1) {
+      ahead.push(p);
     }
 
-    wanted.add(1);
-    wanted.add(numPages);
-
-    wanted.forEach((p) => {
-      if (!visible.includes(p)) requestPage(p);
+    ahead.forEach((p, i) => {
+      if (!visible.includes(p)) requestPage(p, -10 - i);
     });
   }, [
     page,
     leftPage,
     rightPage,
-    spread,
     numPages,
     requestPage,
     getVisiblePages,
+    markHot,
   ]);
+
+  // ---- Bàn phím ----------------------------------------------------------
+  const toggleFullscreen = useCallback(() => {
+    const el = rootRef.current;
+    if (!el) return;
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => setFullscreen(false));
+    } else if (el.requestFullscreen) {
+      el.requestFullscreen().catch(() => setFullscreen(true));
+    } else {
+      setFullscreen((f) => !f);
+    }
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-   
+
       if (
         target &&
         (target.tagName === 'INPUT' ||
@@ -380,8 +480,17 @@ export default function FlipBook({
 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-   
-  }, [goNext, goPrev, goFirst, goLast, searchOpen, shareOpen, panelOpen, zoom]);
+  }, [
+    goNext,
+    goPrev,
+    goFirst,
+    goLast,
+    searchOpen,
+    shareOpen,
+    panelOpen,
+    zoom,
+    toggleFullscreen,
+  ]);
 
   useEffect(() => {
     const onChange = () => setFullscreen(Boolean(document.fullscreenElement));
@@ -410,30 +519,8 @@ export default function FlipBook({
     });
   }, []);
 
-  const zoomIn = useCallback(
-    () => setZoom((z) => Math.min(z + 0.5, MAX_ZOOM)),
-    []
-  );
-  const zoomOut = useCallback(
-    () => setZoom((z) => Math.max(z - 0.5, MIN_ZOOM)),
-    []
-  );
-
-  function toggleFullscreen() {
-    const el = rootRef.current;
-    if (!el) return;
-
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => setFullscreen(false));
-    } else if (el.requestFullscreen) {
-      el.requestFullscreen().catch(() => {
-
-        setFullscreen(true);
-      });
-    } else {
-      setFullscreen((f) => !f);
-    }
-  }
+  const zoomIn = useCallback(() => setZoom((z) => Math.min(z + 0.5, MAX_ZOOM)), []);
+  const zoomOut = useCallback(() => setZoom((z) => Math.max(z - 0.5, MIN_ZOOM)), []);
 
   const handlePrint = useCallback(() => {
     const url = downloadUrl || src;
@@ -451,7 +538,7 @@ export default function FlipBook({
       try {
         win.print();
       } catch {
-
+        /* trình duyệt chặn */
       }
     });
   }, [downloadUrl, src]);
@@ -502,7 +589,19 @@ export default function FlipBook({
     [storageKey]
   );
 
+  const { w: leafW, h: leafH } = leafSize;
+  const ready = leafW > 0 && numPages > 0;
 
+  /**
+   * Bìa canh giữa khung.
+   *
+   * Khổ đôi rộng 2 trang và được canh giữa, nên ô bên phải (chứa bìa trước)
+   * lệch sang phải nửa trang so với tâm → phải dịch trái nửa trang để bìa
+   * nằm đúng giữa. Bìa sau nằm ở ô bên trái nên dịch ngược lại.
+   */
+  const spreadShift = coverMode ? -leafW / 2 : backCoverMode ? leafW / 2 : 0;
+
+  // ---- Cử chỉ chuột / cảm ứng --------------------------------------------
   const dragRef = useRef<{
     active: boolean;
     startX: number;
@@ -510,13 +609,118 @@ export default function FlipBook({
     originX: number;
     originY: number;
     moved: boolean;
+    /** Kéo góc giấy để lật, thay vì kéo để pan. */
+    corner: FlipDirection | null;
+    target: number;
+    faces: {
+      frontPage: number;
+      backPage: number;
+      underLeft: number;
+      underRight: number;
+    } | null;
   } | null>(null);
 
   const [panning, setPanning] = useState(false);
 
+  /**
+   * Hình học của sách trên màn hình — một nguồn duy nhất cho cả vùng nhận góc
+   * giấy và phép quy đổi vị trí con trỏ thành mức lật.
+   *
+   * Phải suy ra từ đúng `spreadShift` mà phần render đang dùng. Trước đây hai
+   * hàm dưới tự tính lại khung sách và bỏ sót chế độ bìa sau, nên vùng bấm lệch
+   * nửa trang so với trang đang thấy.
+   */
+  const bookBox = useCallback(() => {
+    const stage = stageRef.current;
+    if (!stage || leafW <= 0) return null;
+
+    const rect = stage.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+
+    // Khổ đôi luôn rộng 2 trang, canh giữa khung rồi dịch ngang spreadShift.
+    const spreadLeft = cx - (spread ? leafW : leafW / 2) + spreadShift;
+
+    // Bìa trước nằm ở ô phải, bìa sau ở ô trái; cả hai đứng một mình.
+    const alone = !spread || coverMode || backCoverMode;
+    const left = coverMode ? spreadLeft + leafW : spreadLeft;
+    const right = left + (alone ? leafW : leafW * 2);
+
+    /** Gáy sách — trục quay của tờ giấy đang lật. */
+    const spineOf = (dir: FlipDirection) => {
+      if (!spread) return dir === 'next' ? left : right;
+      if (coverMode) return left; // gáy ở mép trái của bìa trước
+      if (backCoverMode) return right; // gáy ở mép phải của bìa sau
+      return spreadLeft + leafW;
+    };
+
+    return { left, right, bottom: cy + leafH / 2, spineOf };
+  }, [leafW, leafH, spread, spreadShift, coverMode, backCoverMode]);
+
+  /** Xác định con trỏ có đang ở vùng góc dưới của trang hay không. */
+  const cornerAt = useCallback(
+    (clientX: number, clientY: number): FlipDirection | null => {
+      if (!ready || zoom > 1) return null;
+
+      const box = bookBox();
+      if (!box) return null;
+
+      // Chỉ nhận ở dải sát mép dưới.
+      if (clientY < box.bottom - CORNER_ZONE || clientY > box.bottom + 24) return null;
+
+      if (clientX > box.right - CORNER_ZONE && clientX < box.right + 24) {
+        return canNext ? 'next' : null;
+      }
+      if (clientX < box.left + CORNER_ZONE && clientX > box.left - 24) {
+        return canPrev ? 'prev' : null;
+      }
+      return null;
+    },
+    [ready, zoom, bookBox, canNext, canPrev]
+  );
+
+  /** Quy đổi vị trí con trỏ thành mức lật 0 → 1. */
+  const progressFromPointer = useCallback(
+    (clientX: number, dir: FlipDirection) => {
+      const box = bookBox();
+      if (!box) return 0;
+
+      // Mép ngoài của tờ giấy đi từ cách gáy 1 trang sang phía đối diện 1 trang.
+      const spineX = box.spineOf(dir);
+      const travelled =
+        dir === 'next' ? spineX + leafW - clientX : clientX - (spineX - leafW);
+
+      return Math.min(Math.max(travelled / (leafW * 2), 0), 1);
+    },
+    [bookBox, leafW]
+  );
+
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       if (e.button !== 0) return;
+      if (flip) return;
+
+      const corner = cornerAt(e.clientX, e.clientY);
+
+      let faces = null as
+        | null
+        | { frontPage: number; backPage: number; underLeft: number; underRight: number };
+      let target = page;
+
+      if (corner) {
+        const delta = step(corner);
+        target = corner === 'next' ? page + delta : page - delta;
+
+        if (target < 1 || target > numPages) {
+          faces = null;
+        } else {
+          faces = buildFlipFaces(page, target, corner);
+          requestPage(faces.frontPage, 200);
+          requestPage(faces.backPage, 200);
+          requestPage(faces.underLeft, 150);
+          requestPage(faces.underRight, 150);
+        }
+      }
 
       dragRef.current = {
         active: true,
@@ -525,39 +729,108 @@ export default function FlipBook({
         originX: pan.x,
         originY: pan.y,
         moved: false,
+        corner: faces ? corner : null,
+        target,
+        faces,
       };
+
       if (zoom > 1) setPanning(true);
+      (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
     },
-    [pan.x, pan.y, zoom]
+    [
+      flip,
+      cornerAt,
+      page,
+      step,
+      numPages,
+      buildFlipFaces,
+      requestPage,
+      pan.x,
+      pan.y,
+      zoom,
+    ]
   );
 
   const onPointerMove = useCallback(
     (e: React.PointerEvent) => {
-      const drag = dragRef.current;
-      if (!drag?.active) return;
+      const d = dragRef.current;
 
-      const dx = e.clientX - drag.startX;
-      const dy = e.clientY - drag.startY;
+      // Không kéo: chỉ hiện gợi ý góc giấy khi rê chuột tới góc.
+      if (!d?.active) {
+        if (flip || zoom > 1) {
+          if (hint) setHint(null);
+          return;
+        }
 
-      if (Math.abs(dx) > 6 || Math.abs(dy) > 6) drag.moved = true;
-
-      if (zoom > 1) {
-        setPan({ x: drag.originX + dx, y: drag.originY + dy });
+        const side = cornerAt(e.clientX, e.clientY);
+        if (side) {
+          if (hint?.side !== side) setHint({ side, amount: 1 });
+        } else if (hint) {
+          setHint(null);
+        }
+        return;
       }
+
+      const dx = e.clientX - d.startX;
+      const dy = e.clientY - d.startY;
+
+      if (Math.abs(dx) > 6 || Math.abs(dy) > 6) d.moved = true;
+
+      // Kéo góc giấy → lật theo tay.
+      if (d.corner && d.faces && zoom === 1) {
+        const p = progressFromPointer(e.clientX, d.corner);
+
+        setDrag({
+          dir: d.corner,
+          progress: p,
+          front: book.getPage(d.faces.frontPage),
+          back: book.getPage(d.faces.backPage),
+          underLeft: d.faces.underLeft,
+          underRight: d.faces.underRight,
+          target: d.target,
+        });
+        return;
+      }
+
+      if (zoom > 1) setPan({ x: d.originX + dx, y: d.originY + dy });
     },
-    [zoom]
+    [flip, zoom, hint, cornerAt, progressFromPointer, book]
   );
 
   const onPointerUp = useCallback(
     (e: React.PointerEvent) => {
-      const drag = dragRef.current;
+      const d = dragRef.current;
       dragRef.current = null;
       setPanning(false);
 
-      if (!drag?.active) return;
+      if (!d?.active) return;
 
-      const dx = e.clientX - drag.startX;
-      const dy = e.clientY - drag.startY;
+      // Kết thúc cú kéo góc giấy.
+      if (d.corner && d.faces) {
+        const p = progressFromPointer(e.clientX, d.corner);
+        setDrag(null);
+
+        // Kéo quá nửa → lật tiếp cho xong; chưa tới → nhả về chỗ cũ.
+        if (p > 0.42) {
+          startFlip(d.corner, d.target, p);
+        } else if (p > 0.02) {
+          flipSeq.current += 1;
+          setFlip({
+            id: flipSeq.current,
+            dir: d.corner === 'next' ? 'prev' : 'next',
+            front: book.getPage(d.faces.backPage),
+            back: book.getPage(d.faces.frontPage),
+            underLeft: leftPage,
+            underRight: rightPage,
+            from: 1 - p,
+            duration: Math.round(FLIP_MS * 0.55),
+          });
+        }
+        return;
+      }
+
+      const dx = e.clientX - d.startX;
+      const dy = e.clientY - d.startY;
 
       if (zoom === 1 && Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.4) {
         if (dx < 0) goNext();
@@ -565,7 +838,7 @@ export default function FlipBook({
         return;
       }
 
-      if (!drag.moved && zoom === 1) {
+      if (!d.moved && zoom === 1) {
         const stage = stageRef.current;
         if (!stage) return;
         const rect = stage.getBoundingClientRect();
@@ -575,7 +848,16 @@ export default function FlipBook({
         else if (rel < 0.45) goPrev();
       }
     },
-    [zoom, goNext, goPrev]
+    [
+      progressFromPointer,
+      startFlip,
+      book,
+      leftPage,
+      rightPage,
+      zoom,
+      goNext,
+      goPrev,
+    ]
   );
 
   const wheelLock = useRef(0);
@@ -589,7 +871,7 @@ export default function FlipBook({
         return;
       }
 
-      if (zoom > 1) return; 
+      if (zoom > 1) return;
 
       const now = Date.now();
       if (now - wheelLock.current < 420) return;
@@ -601,6 +883,7 @@ export default function FlipBook({
     [zoom, zoomIn, zoomOut, goNext, goPrev]
   );
 
+  // ---- Chia sẻ / tìm kiếm / slider ----------------------------------------
   const shareLink = useMemo(() => {
     if (shareUrl) return shareUrl;
     if (typeof window === 'undefined') return '';
@@ -719,137 +1002,63 @@ export default function FlipBook({
     [dragPage, goTo]
   );
 
-  // Không cần preload thumbnails nữa vì hook usePdfThumbnail sẽ tự load khi visible
-  // useEffect(() => {
-  //   if (!panelOpen || panelTab !== 'thumbnails' || numPages === 0) return;
+  const sliderRatio =
+    numPages > 1 ? ((dragPage ?? page) - 1) / (numPages - 1) : 0;
+  const previewPage = dragPage ?? page;
+  const uiHidden = zoom > 1;
 
-  //   let i = 1;
-  //   const tick = () => {
-  //     const end = Math.min(i + 5, numPages + 1);
-  //     for (; i < end; i += 1) requestThumb(i);
-  //     if (i <= numPages) window.setTimeout(tick, 160);
-  //   };
-  //   tick();
-  // }, [panelOpen, panelTab, numPages, requestThumb]);
+  // ---- Trang nào hiện dưới lớp lật ---------------------------------------
+  const active = flip ?? drag;
 
-  const { w: leafW, h: leafH } = leafSize;
-  const ready = leafW > 0 && numPages > 0;
+  const underLeft = active ? active.underLeft : leftPage;
+  const underRight = active ? active.underRight : rightPage;
 
-  const renderLeaf = (
-    pageNumber: number,
-    side: 'left' | 'right' | 'single',
-    key: string
-  ) => {
-    const blank = pageNumber < 1 || pageNumber > numPages;
-    const bitmap = blank ? undefined : book.getPage(pageNumber);
+  /**
+   * Hai trang nằm dưới luôn được vẽ, kể cả trong lúc lật: tờ giấy đang quay
+   * (vẽ trên canvas, z-index cao hơn) chỉ che một nửa khung, nửa còn lại
+   * chính là trang mới đang dần lộ ra. Nhờ vậy không còn khoảng trống xám
+   * giữa cú lật như bản cũ.
+   */
+  const renderLeaf = (pageNumber: number, side: 'left' | 'right' | 'single') => {
+    if (pageNumber < 1 || pageNumber > numPages) {
+      return (
+        <div
+          className="fb-leaf fb-leaf--void"
+          style={{ width: leafW, height: leafH }}
+        />
+      );
+    }
+
+    const drawable = book.getPage(pageNumber);
 
     return (
       <div
-        key={key}
-        className={`fb-leaf fb-leaf--${side}${blank ? ' fb-leaf--blank' : ''}`}
+        className={`fb-leaf fb-leaf--${side}`}
         style={{ width: leafW, height: leafH }}
       >
-        {!blank && bitmap && (
-          <img
-            className="fb-leaf__img"
-            src={bitmap.url}
-            alt={`Trang ${pageNumber}`}
-            draggable={false}
-          />
-        )}
+        <PageCanvas
+          page={drawable}
+          width={leafW}
+          height={leafH}
+          className="fb-leaf__canvas"
+        />
 
-        {!blank && !bitmap && (
+        {!drawable && (
           <div className="fb-leaf__skeleton">
             <div className="fb-leaf__spinner" />
           </div>
         )}
 
-        {!blank && side !== 'single' && (
-          <span className="fb-leaf__num">{pageNumber}</span>
-        )}
+        {side !== 'single' && <span className="fb-leaf__num">{pageNumber}</span>}
       </div>
     );
   };
-
-  const renderFlipper = () => {
-    if (!flip || !ready) return null;
-
-    const { dir, from, to } = flip;
-
-    let frontPage: number;
-    let backPage: number;
-
-    if (spread) {
-      if (dir === 'next') {
-        frontPage = from <= 1 ? 1 : from % 2 === 0 ? from + 1 : from;
-        backPage = to % 2 === 0 ? to : to - 1;
-      } else {
-        frontPage = from % 2 === 0 ? from : from - 1;
-        backPage = to <= 1 ? 1 : to % 2 === 0 ? to + 1 : to;
-      }
-    } else {
-      frontPage = from;
-      backPage = to;
-    }
-
-    const single = !spread;
-    const leftOffset = single ? 0 : dir === 'next' ? leafW : 0;
-
-    return (
-      <>
-        <div
-          className="fb-underShadow"
-          style={{
-            width: leafW,
-            left: single ? 0 : dir === 'next' ? leafW : 0,
-            background:
-              dir === 'next'
-                ? 'linear-gradient(to right, rgba(0,0,0,.34), rgba(0,0,0,0) 62%)'
-                : 'linear-gradient(to left, rgba(0,0,0,.34), rgba(0,0,0,0) 62%)',
-          }}
-        />
-
-        <div
-          key={flip.id}
-          className={`fb-flipper fb-flipper--${dir}`}
-          style={{ width: leafW, height: leafH, left: leftOffset }}
-        >
-          <div className="fb-flipper__face fb-flipper__face--front">
-            {renderLeaf(
-              frontPage,
-              single ? 'single' : dir === 'next' ? 'right' : 'left',
-              `f-front-${flip.id}`
-            )}
-            <span className="fb-flipper__gloss" />
-          </div>
-
-          <div className="fb-flipper__face fb-flipper__face--back">
-            {renderLeaf(
-              backPage,
-              single ? 'single' : dir === 'next' ? 'left' : 'right',
-              `f-back-${flip.id}`
-            )}
-            <span className="fb-flipper__gloss" />
-          </div>
-        </div>
-      </>
-    );
-  };
-
-  const hideLeft = flip !== null && (spread ? flip.dir === 'prev' : true);
-  const hideRight = flip !== null && (spread ? flip.dir === 'next' : true);
-
-  const sliderRatio =
-    numPages > 1 ? ((dragPage ?? page) - 1) / (numPages - 1) : 0;
-  const previewPage = dragPage ?? page;
-  const uiHidden = zoom > 1;
 
   return (
     <div
       ref={rootRef}
       className={`fb-root${fullscreen ? ' is-fullscreen' : ''} ${className}`.trim()}
     >
-
       <div className={`fb-meta${uiHidden ? ' is-hidden' : ''}`}>
         {title && <h1 className="fb-meta__title">{title}</h1>}
         {author && <h2 className="fb-meta__author">{author}</h2>}
@@ -862,7 +1071,7 @@ export default function FlipBook({
         )}
       </div>
 
-      <div className={`fb-toolbar${uiHidden ? '' : ''}`}>
+      <div className={`fb-toolbar${uiHidden ? ' is-hidden' : ''}`}>
         <button
           type="button"
           className={`fb-btn${panelOpen ? ' is-active' : ''}`}
@@ -949,9 +1158,7 @@ export default function FlipBook({
           data-tip={spread ? 'Xem một trang' : 'Xem hai trang'}
           aria-label="Đổi cách xem"
           disabled={!wide}
-          onClick={() =>
-            setViewMode((m) => (m === 'spread' ? 'single' : 'spread'))
-          }
+          onClick={() => setViewMode((m) => (m === 'spread' ? 'single' : 'spread'))}
         >
           {spread ? <IcSingle /> : <IcSpread />}
         </button>
@@ -1038,41 +1245,65 @@ export default function FlipBook({
         ref={stageRef}
         className={`fb-stage${panning ? ' is-panning' : ''}${
           zoom > 1 ? ' is-zoomed' : ''
-        }`}
+        }${hint && !active ? ' is-corner' : ''}`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
+        onPointerLeave={() => setHint(null)}
         onPointerCancel={() => {
           dragRef.current = null;
           setPanning(false);
+          setDrag(null);
         }}
         onWheel={onWheel}
       >
         <div
           className={`fb-viewport${panning ? ' no-anim' : ''}`}
-          style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-          }}
+          style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
         >
           <div className="fb-book">
             {ready ? (
-              <div className="fb-spread">
+              <div
+                className={`fb-spread${coverMode ? ' is-cover' : ''}`}
+                style={{
+                  width: spread ? leafW * 2 : leafW,
+                  height: leafH,
+                  transform: `translateX(${spreadShift}px)`,
+                }}
+              >
+                {/* Mép giấy dày ở hai bên tạo cảm giác sách thật */}
+                <span
+                  className="fb-stack fb-stack--left"
+                  style={{ opacity: coverMode ? 0 : 1 }}
+                />
+                <span
+                  className="fb-stack fb-stack--right"
+                  style={{ opacity: backCoverMode ? 0 : 1 }}
+                />
+
                 {spread ? (
                   <>
-                    <div style={{ opacity: hideLeft ? 0 : 1 }}>
-                      {renderLeaf(leftPage, 'left', `L-${leftPage}`)}
-                    </div>
-                    <div style={{ opacity: hideRight ? 0 : 1 }}>
-                      {renderLeaf(rightPage, 'right', `R-${rightPage}`)}
-                    </div>
+                    {renderLeaf(underLeft, 'left')}
+                    {renderLeaf(underRight, 'right')}
                   </>
                 ) : (
-                  <div style={{ opacity: flip ? 0 : 1 }}>
-                    {renderLeaf(page, 'single', `S-${page}`)}
-                  </div>
+                  /*
+                   * Xem một trang: trong lúc lật phải hiện trang ĐÍCH nằm dưới,
+                   * tờ giấy quay ở trên mang nội dung trang cũ.
+                   */
+                  renderLeaf(active ? active.underRight : page, 'single')
                 )}
 
-                {renderFlipper()}
+                <FlipCanvas
+                  leafW={leafW}
+                  leafH={leafH}
+                  spread={spread}
+                  pad={CURL_PAD}
+                  request={flip}
+                  drag={drag}
+                  hint={hint}
+                  onFlipEnd={onFlipEnd}
+                />
               </div>
             ) : (
               <div style={{ width: 300, height: 420 }} />
@@ -1149,11 +1380,7 @@ export default function FlipBook({
               <img src={book.getThumb(previewPage)} alt="" />
             ) : (
               <div
-                style={{
-                  width: 74,
-                  aspectRatio: '3 / 4',
-                  background: '#efeae1',
-                }}
+                style={{ width: 74, aspectRatio: '3 / 4', background: '#efeae1' }}
               />
             )}
             <span>Trang {previewPage}</span>
@@ -1202,6 +1429,7 @@ export default function FlipBook({
                   <PageThumbnail
                     key={p}
                     pdf={book.getDoc()}
+                    docId={docId}
                     pageNumber={p}
                     current={current}
                     onClick={goTo}
@@ -1211,8 +1439,8 @@ export default function FlipBook({
             </div>
           )}
 
-          {panelTab === 'index' && (
-            outline.length ? (
+          {panelTab === 'index' &&
+            (outline.length ? (
               <ul className="fb-list">
                 {outline.map((item, i) => (
                   <li key={`${i}-${item.title}`}>
@@ -1239,11 +1467,10 @@ export default function FlipBook({
                 <br />
                 Bạn có thể dùng tab “Trang” để xem toàn bộ.
               </p>
-            )
-          )}
+            ))}
 
-          {panelTab === 'bookmarks' && (
-            bookmarks.length ? (
+          {panelTab === 'bookmarks' &&
+            (bookmarks.length ? (
               <ul className="fb-list">
                 {bookmarks.map((p) => (
                   <li key={p} className="fb-list__row">
@@ -1272,8 +1499,7 @@ export default function FlipBook({
                 <br />
                 Bấm biểu tượng cờ trên thanh công cụ để lưu trang đang đọc.
               </p>
-            )
-          )}
+            ))}
         </div>
       </aside>
 
@@ -1324,7 +1550,9 @@ export default function FlipBook({
                 >
                   <span className="fb-search__hitPage">Trang {hit.page}</span>
                   {hit.excerpt.slice(0, hit.start)}
-                  <mark>{hit.excerpt.slice(hit.start, hit.start + hit.length)}</mark>
+                  <mark>
+                    {hit.excerpt.slice(hit.start, hit.start + hit.length)}
+                  </mark>
                   {hit.excerpt.slice(hit.start + hit.length)}
                 </button>
               </li>

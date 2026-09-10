@@ -23,6 +23,7 @@ import {
   useRelatedBooks,
   useBooks,
 } from '../hooks/useBooks';
+import useReveal from '../hooks/useReveal';
 
 import {
   findPdfFile,
@@ -53,6 +54,8 @@ export default function BookDetailPage() {
 
   const book = bookData;
   const related = relatedData || [];
+
+  useReveal([book?.slug, related.length]);
 
   const [bookFormats, setBookFormats] = useState<string[]>([]);
   const [bookActions, setBookActions] = useState<BookAction[]>([]);
