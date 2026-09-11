@@ -11,7 +11,6 @@
   inset: 0;
   background-size: cover;
   background-position: center;
-  background-image: url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=1600&auto=format&fit=crop');
 }
 
 .auth-hero-panel__overlay {
@@ -50,69 +49,62 @@
   margin-bottom: 56px;
 }
 
+/* ===== Books — chồng lên nhau, nghiêng, đổ bóng như ảnh mẫu ===== */
 .auth-hero-panel__books {
   display: flex;
   align-items: flex-end;
-  gap: 12px;
+  /* không dùng gap — 2 quyển sẽ chồng lên nhau nhờ margin âm ở quyển sau */
 }
 
 .auth-hero-panel__book {
-  border-radius: 8px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  background: white;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  transition: transform 0.25s ease;
+}
+
+.auth-hero-panel__book::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 45%);
+  pointer-events: none;
 }
 
 .auth-hero-panel__book--blue {
-  width: 128px;
-  height: 176px;
-  background: linear-gradient(135deg, #0ea5e9, #1d4ed8);
-  transform: rotate(-3deg);
+  width: 168px;
+  height: 226px;
+  transform: rotate(-8deg);
+  transform-origin: bottom left;
+  box-shadow: 12px 16px 28px rgba(0, 0, 0, 0.45);
+  z-index: 1;
 }
 
 .auth-hero-panel__book--green {
-  width: 128px;
-  height: 208px;
-  background: linear-gradient(135deg, #059669, #065f46);
-  transform: rotate(2deg);
+  width: 168px;
+  height: 226px;
+  transform: rotate(5deg);
+  transform-origin: bottom left;
+  margin-left: -56px;
+  box-shadow: -6px 18px 30px rgba(0, 0, 0, 0.5);
+  z-index: 2;
 }
 
-.auth-hero-panel__book-label {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-align: center;
-  line-height: 1.4;
+.auth-hero-panel__books:hover .auth-hero-panel__book--blue {
+  transform: rotate(-11deg) translateY(-4px);
 }
 
-.auth-hero-panel__book-badge {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
+.auth-hero-panel__books:hover .auth-hero-panel__book--green {
+  transform: rotate(7deg) translateY(-4px);
 }
 
-.auth-hero-panel__book-label-bold {
-  color: white;
-  font-size: 0.875rem;
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-.auth-hero-panel__book-tag {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 4px;
-  padding: 8px 8px;
-  text-align: center;
-}
-
-.auth-hero-panel__book-tag span {
-  color: #047857;
-  font-weight: 700;
-  font-size: 1.125rem;
+.auth-hero-panel__book-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 @media (min-width: 768px) {
@@ -129,19 +121,13 @@
     max-width: 512px;
   }
 
-  .auth-hero-panel__books {
-    gap: 16px;
-  }
-
-  .auth-hero-panel__book--blue {
-    width: 128px;
-    height: 176px;
-    padding: 12px;
+  .auth-hero-panel__book--blue,
+  .auth-hero-panel__book--green {
+    width: 152px;
+    height: 204px;
   }
 
   .auth-hero-panel__book--green {
-    width: 128px;
-    height: 208px;
-    padding: 12px;
+    margin-left: -50px;
   }
 }

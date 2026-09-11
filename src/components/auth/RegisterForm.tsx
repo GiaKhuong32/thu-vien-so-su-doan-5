@@ -1,13 +1,10 @@
 import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   User,
   Lock,
   Eye,
   EyeOff,
   UserPlus,
-  LogIn,
-  ArrowRight,
   ShieldCheck,
   Check,
 } from "lucide-react";
@@ -19,13 +16,12 @@ interface RegisterFormProps {
     password: string;
     confirmPassword: string;
   }) => void;
-  onLoginClick?: () => void;
 }
 
 type StrengthLevel = {
   label: string;
   colorClass: string;
-  score: number; // 0–4
+  score: number; 
 };
 
 function getPasswordStrength(password: string): StrengthLevel {
@@ -50,9 +46,7 @@ function getPasswordStrength(password: string): StrengthLevel {
 
 export default function RegisterForm({
   onSubmit,
-  onLoginClick,
 }: RegisterFormProps) {
-  const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -79,14 +73,6 @@ export default function RegisterForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit?.({ username, password, confirmPassword });
-  };
-
-  const handleLoginClick = () => {
-    if (onLoginClick) {
-      onLoginClick();
-    } else {
-      navigate("/dang-nhap");
-    }
   };
 
   const getStrengthValueClass = () => {
@@ -223,31 +209,8 @@ export default function RegisterForm({
         </button>
       </form>
 
-      <div className="register-form__divider">
-        <div className="register-form__divider-line" />
-        <span className="register-form__divider-text">Hoặc</span>
-        <div className="register-form__divider-line" />
-      </div>
-
-      <button
-        type="button"
-        onClick={handleLoginClick}
-        className="register-form__login-btn"
-      >
-        <LogIn className="w-4 h-4" />
-        Đăng nhập
-      </button>
-
       <div className="register-form__footer">
-        Đã có tài khoản?{" "}
-        <button
-          type="button"
-          onClick={handleLoginClick}
-          className="register-form__login-link"
-        >
-          Đăng nhập ngay
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
+        Đã có tài khoản? Quay lại trang đăng nhập
       </div>
     </div>
   );

@@ -4,9 +4,9 @@
 }
 
 .login-form__title {
-  font-size: 0.875rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: 1rem;        
+  font-weight: 800;       
+  letter-spacing: 0.04em;
   color: #0f172a;
   margin-bottom: 24px;
 }
@@ -73,8 +73,8 @@
   border-radius: 12px;
   background: #059669;
   color: white;
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 1rem;        
+  font-weight: 700;       
   border: none;
   cursor: pointer;
   transition: background 0.2s;
@@ -102,9 +102,11 @@
   background: #e2e8f0;
 }
 
+
 .login-form__divider-text {
-  font-size: 0.75rem;
-  color: #94a3b8;
+  font-size: 0.875rem;   
+  font-weight: 500;
+  color: #64748b;         
 }
 
 .login-form__register-btn {

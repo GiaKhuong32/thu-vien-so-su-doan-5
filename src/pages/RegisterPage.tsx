@@ -1,16 +1,18 @@
-import React from "react";
+import { useNavigate } from "react-router-dom";
 import AuthHeroPanel from "../components/auth/AuthHeroPanel";
 import RegisterForm from "../components/auth/RegisterForm";
 import "./RegisterPage.css";
 
 export default function RegisterPage() {
+  const navigate = useNavigate();
+
   const handleRegister = (data: {
     username: string;
     password: string;
     confirmPassword: string;
   }) => {
     console.log("Đăng ký:", data);
-    // TODO: gọi API đăng ký thật ở đây
+    navigate("/dang-nhap");
   };
 
   return (
@@ -18,13 +20,10 @@ export default function RegisterPage() {
       <AuthHeroPanel />
 
       <div className="register-page__right">
-        <RegisterForm
-          onSubmit={handleRegister}
-          onLoginClick={() => console.log("Đi tới trang đăng nhập")}
-        />
+        <RegisterForm onSubmit={handleRegister} />
 
         <p className="register-page__footer">
-          Copyright @ 2023 Quanglich. All right reserved
+          Bản quyền © 2026 thuộc về Sư đoàn 5 - Quân khu 7. Bảo lưu mọi quyền.
         </p>
       </div>
     </div>
