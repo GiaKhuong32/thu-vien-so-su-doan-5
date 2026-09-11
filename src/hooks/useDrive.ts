@@ -309,6 +309,10 @@ export function useDrive() {
     setClipboard({ mode: 'copy', ids: [id] });
   }, []);
 
+  const cutToClipboard = useCallback((id: string) => {
+    setClipboard({ mode: 'cut', ids: [id] });
+  }, []);
+
   const duplicateNode = useCallback(
     (source: DriveNode, targetParentId: string | null, all: DriveNode[]): DriveNode[] => {
       const siblingNames = all.filter((n) => n.parentId === targetParentId && !n.trashed).map((n) => n.name);
@@ -338,6 +342,27 @@ export function useDrive() {
   const paste = useCallback(
     (targetParentId: string | null) => {
       if (!clipboard) return;
+      if (clipboard.mode === 'cut') {
+        setNodes((prev) => {
+          const isInsideOwnSubtree = (rootId: string, target: string | null): boolean => {
+            let cursor = target;
+            while (cursor) {
+              if (cursor === rootId) return true;
+              cursor = prev.find((n) => n.id === cursor)?.parentId ?? null;
+            }
+            return false;
+          };
+          const now = new Date().toISOString();
+          return prev.map((n) => {
+            if (!clipboard.ids.includes(n.id)) return n;
+            if (n.type === 'folder' && isInsideOwnSubtree(n.id, targetParentId)) return n;
+            const siblingNames = prev.filter((s) => s.parentId === targetParentId && !s.trashed && s.id !== n.id).map((s) => s.name);
+            return { ...n, parentId: targetParentId, name: nextAvailableName(n.name, siblingNames), updatedAt: now };
+          });
+        });
+        setClipboard(null);
+        return;
+      }
       setNodes((prev) => {
         let result = prev;
         for (const id of clipboard.ids) {
@@ -393,6 +418,7 @@ export function useDrive() {
     deleteForever,
     emptyTrash,
     copyToClipboard,
+    cutToClipboard,
     paste,
     rename,
   };

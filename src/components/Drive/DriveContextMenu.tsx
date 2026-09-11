@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Copy, FolderPlus, Heart, Info, Pencil, RotateCcw, Trash2, ClipboardPaste } from 'lucide-react';
+import { Copy, FolderPlus, Heart, Info, Pencil, RotateCcw, Scissors, Trash2, ClipboardPaste } from 'lucide-react';
 import type { DriveNode } from '../../types/drive';
 import './DriveContextMenu.css';
 
@@ -11,6 +11,7 @@ type Props = {
   onClose: () => void;
   onRename: () => void;
   onCopy: () => void;
+  onCut: () => void;
   onPaste: () => void;
   onToggleFavourite: () => void;
   onShowInfo: () => void;
@@ -28,6 +29,7 @@ export default function DriveContextMenu({
   onClose,
   onRename,
   onCopy,
+  onCut,
   onPaste,
   onToggleFavourite,
   onShowInfo,
@@ -97,6 +99,7 @@ export default function DriveContextMenu({
         <>
           {item('Đổi tên', Pencil, onRename)}
           {item('Sao chép', Copy, onCopy)}
+          {item('Cắt', Scissors, onCut)}
           {item('Dán vào đây', ClipboardPaste, onPaste, { disabled: !canPaste })}
           {item(node.favourite ? 'Bỏ ưa thích' : 'Thêm vào ưa thích', Heart, onToggleFavourite)}
           {item('Thông tin', Info, onShowInfo)}

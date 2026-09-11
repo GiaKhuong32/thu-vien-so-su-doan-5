@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, Trash2 } from 'lucide-react';
 import type { DriveNode, DriveSection, DriveViewMode } from '../../types/drive';
 import { DriveNodeIcon } from './driveIcons';
 import { formatBytes, formatDate } from './driveFormat';
@@ -20,6 +20,8 @@ type Props = {
   onUploadClick?: () => void;
   onRenameCommit: (id: string, name: string) => void;
   renamingId: string | null;
+  onTrash: (id: string) => void;
+  cutIds?: Set<string>;
 };
 
 function FavButton({ node, onToggleFavourite }: { node: DriveNode; onToggleFavourite: (id: string) => void }) {
@@ -34,6 +36,19 @@ function FavButton({ node, onToggleFavourite }: { node: DriveNode; onToggleFavou
       }}
     >
       <Heart size={14} strokeWidth={2} fill={node.favourite ? 'currentColor' : 'none'} />
+    </button>
+  );
+}
+
+function TrashButton({ node, onTrash }: { node: DriveNode; onTrash: (id: string) => void }) {
+  return (
+    <button
+      type="button"
+      className="drive-trash-btn"
+      title="Chuyển vào thùng rác"
+      onClick={(e) => { e.stopPropagation(); onTrash(node.id); }}
+    >
+      <Trash2 size={14} strokeWidth={2} />
     </button>
   );
 }
@@ -82,6 +97,8 @@ export default function DriveItemsView({
   onUploadClick,
   onRenameCommit,
   renamingId,
+  onTrash,
+  cutIds,
 }: Props) {
   const [dragOverId, setDragOverId] = useState<string | null>(null);
 
@@ -122,7 +139,7 @@ export default function DriveItemsView({
         {nodes.map((node) => (
           <div
             key={node.id}
-            className={`drive-card${node.id === selectedId ? ' is-selected' : ''}${node.favourite ? ' is-fav' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}`}
+            className={`drive-card${node.id === selectedId ? ' is-selected' : ''}${node.favourite ? ' is-fav' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}${cutIds?.has(node.id) ? ' is-cut' : ''}`}
             onClick={(e) => {
               e.stopPropagation();
               onSelect(node.id);
@@ -143,7 +160,10 @@ export default function DriveItemsView({
                 <DriveNodeIcon node={node} size={30} />
               )}
             </div>
-            <FavButton node={node} onToggleFavourite={onToggleFavourite} />
+            <div className="drive-card__actions">
+              <FavButton node={node} onToggleFavourite={onToggleFavourite} />
+              {!node.trashed && <TrashButton node={node} onTrash={onTrash} />}
+            </div>
             {renamingId === node.id ? (
               <EditableName node={node} onCommit={onRenameCommit} className="drive-card__name-input" />
             ) : (
@@ -160,14 +180,14 @@ export default function DriveItemsView({
     <div onClick={() => onSelect(null)} onContextMenu={section === 'cloud' ? onContextMenuEmpty : undefined}>
       <div className="drive-list-head">
         <span>Tên</span>
-        <span />
         <span>Ngày</span>
         <span>Dung lượng</span>
+        <span />
       </div>
       {nodes.map((node) => (
         <div
           key={node.id}
-          className={`drive-list-row${node.id === selectedId ? ' is-selected' : ''}${node.favourite ? ' is-fav' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}`}
+          className={`drive-list-row${node.id === selectedId ? ' is-selected' : ''}${node.favourite ? ' is-fav' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}${cutIds?.has(node.id) ? ' is-cut' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
             onSelect(node.id);
@@ -191,11 +211,12 @@ export default function DriveItemsView({
               <span>{node.name}</span>
             )}
           </div>
-          <div className="drive-list-fav">
-            <FavButton node={node} onToggleFavourite={onToggleFavourite} />
-          </div>
           <div className="drive-list-sub">{formatDate(node.updatedAt)}</div>
           <div className="drive-list-sub">{node.type === 'folder' ? '—' : formatBytes(node.size)}</div>
+          <div className="drive-list-actions">
+            <FavButton node={node} onToggleFavourite={onToggleFavourite} />
+            {!node.trashed && <TrashButton node={node} onTrash={onTrash} />}
+          </div>
         </div>
       ))}
     </div>

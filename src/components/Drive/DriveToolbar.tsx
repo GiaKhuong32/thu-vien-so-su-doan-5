@@ -1,4 +1,5 @@
-import { Info, LayoutGrid, List } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronDown, Info, LayoutGrid, List } from 'lucide-react';
 import type { DriveBreadcrumb, DriveSection, DriveSort, DriveViewMode } from '../../types/drive';
 import './DriveToolbar.css';
 
@@ -30,6 +31,47 @@ const SORT_OPTIONS: { value: string; label: string; sort: DriveSort }[] = [
   { value: 'size-asc', label: 'Dung lượng nhỏ nhất', sort: { key: 'size', order: 'asc' } },
 ];
 
+function SortDropdown({ sort, onChange }: { sort: DriveSort; onChange: (sort: DriveSort) => void }) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const current = SORT_OPTIONS.find((o) => o.sort.key === sort.key && o.sort.order === sort.order) ?? SORT_OPTIONS[0];
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, []);
+
+  return (
+    <div className="drive-sort" ref={wrapRef}>
+      <button type="button" className={`drive-sort__trigger${open ? ' is-open' : ''}`} onClick={() => setOpen((v) => !v)}>
+        <span>{current.label}</span>
+        <ChevronDown size={14} strokeWidth={2.2} />
+      </button>
+      {open && (
+        <div className="drive-sort__menu">
+          {SORT_OPTIONS.map((opt) => (
+            <div
+              key={opt.value}
+              className={`drive-sort__option${opt.value === current.value ? ' is-active' : ''}`}
+              onClick={() => { onChange(opt.sort); setOpen(false); }}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DriveToolbar({
   section,
   breadcrumbs,
@@ -41,8 +83,6 @@ export default function DriveToolbar({
   infoOpen,
   onToggleInfo,
 }: Props) {
-  const sortValue = `${sort.key}-${sort.order}`;
-
   return (
     <div className="drive-toolbar">
       <div className="drive-crumbs">
@@ -72,21 +112,7 @@ export default function DriveToolbar({
       </div>
 
       <div className="drive-tools-right">
-        <div className="drive-select-wrap">
-          <select
-            value={sortValue}
-            onChange={(e) => {
-              const opt = SORT_OPTIONS.find((o) => o.value === e.target.value);
-              if (opt) onSortChange(opt.sort);
-            }}
-          >
-            {SORT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <SortDropdown sort={sort} onChange={onSortChange} />
 
         <button
           type="button"

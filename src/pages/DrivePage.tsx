@@ -24,6 +24,8 @@ export default function DrivePage() {
   const dragCounter = useRef(0);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const cutIds = drive.clipboard?.mode === 'cut' ? new Set(drive.clipboard.ids) : undefined;
+
   const showToast = useCallback((msg: string) => {
     setToast(msg);
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -143,6 +145,8 @@ export default function DrivePage() {
                 setRenamingId(null);
               }}
               renamingId={renamingId}
+              onTrash={(id) => { drive.moveToTrash(id); showToast('Đã chuyển vào thùng rác'); }}
+              cutIds={cutIds}
             />
           </div>
 
@@ -165,6 +169,7 @@ export default function DrivePage() {
           onClose={closeCtxMenu}
           onRename={() => ctxMenu.node && setRenamingId(ctxMenu.node.id)}
           onCopy={() => ctxMenu.node && drive.copyToClipboard(ctxMenu.node.id)}
+          onCut={() => ctxMenu.node && drive.cutToClipboard(ctxMenu.node.id)}
           onPaste={() => {
             const targetId = ctxMenu.node?.type === 'folder' ? ctxMenu.node.id : drive.currentFolderId;
             drive.paste(drive.section === 'cloud' ? targetId : null);
