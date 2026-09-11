@@ -28,24 +28,17 @@ export type DriveFileKind =
 
 export type DriveNode = {
   id: string;
-
   parentId: string | null;
   name: string;
   type: DriveNodeType;
- 
   size: number;
-
   mimeType?: string;
   createdAt: string;
   updatedAt: string;
   favourite: boolean;
-  
   trashed: boolean;
- 
   trashedAt?: string | null;
- 
   openedAt?: string | null;
- 
   previewUrl?: string | null;
 };
 

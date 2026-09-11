@@ -256,7 +256,6 @@
 .fb-spread {
   position: relative;
   display: flex;
-  /* Bìa canh giữa: khung sách dịch ngang mượt thay vì nhảy giật. */
   transition: transform 0.42s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
@@ -264,7 +263,6 @@
   transition: none;
 }
 
-/* Mép giấy dày ở hai bên — cảm giác đang cầm một tập sách thật. */
 .fb-stack {
   position: absolute;
   top: 6px;
@@ -307,7 +305,6 @@
   transition: opacity 0.08s linear;
 }
 
-/* Ô trống phía sau bìa: không vẽ giấy, để bìa đứng một mình như sách đóng. */
 .fb-leaf--void {
   background: none;
   box-shadow: none;
@@ -320,7 +317,6 @@
   pointer-events: none;
 }
 
-/* Hai lớp canvas vẽ hiệu ứng lật và góc giấy hé lên. */
 .fb-flipCanvas,
 .fb-hintCanvas {
   pointer-events: none;
@@ -345,10 +341,6 @@
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
 }
 
-/*
- * Bìa đứng một mình (trang 1 và trang cuối): bốn góc bo đều, đổ bóng dày
- * hơn trang thường để trông như tấm bìa cứng của sách đang đóng.
- */
 .fb-spread.is-cover .fb-leaf--right {
   border-radius: 3px;
   box-shadow:
@@ -403,13 +395,6 @@
   to { transform: rotate(360deg); }
 }
 
-/*
- * Hiệu ứng lật giờ được vẽ bằng canvas (xem curl.ts + FlipCanvas.tsx).
- * CSS rotateY chỉ quay được hình chữ nhật phẳng nên không thể tạo được
- * độ cong của giấy hay góc bìa bật lên — vì vậy phần keyframes cũ đã bỏ.
- */
-
-/* Con trỏ gợi ý khi đưa chuột tới góc dưới để kéo lật. */
 .fb-stage.is-corner {
   cursor: pointer;
 }

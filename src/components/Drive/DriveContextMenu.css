@@ -1,0 +1,50 @@
+.drive-ctx-menu {
+  position: fixed;
+  min-width: 210px;
+  background: var(--drive-panel);
+  border-radius: 10px;
+  box-shadow: var(--drive-shadow-menu);
+  border: 1px solid var(--drive-border);
+  padding: 6px;
+  z-index: 100;
+}
+
+.drive-ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--drive-text);
+}
+
+.drive-ctx-item svg {
+  color: var(--drive-text-muted);
+  flex-shrink: 0;
+}
+
+.drive-ctx-item:hover {
+  background: var(--drive-bg);
+}
+
+.drive-ctx-item.is-danger {
+  color: var(--drive-danger);
+}
+
+.drive-ctx-item.is-danger svg {
+  color: var(--drive-danger);
+}
+
+.drive-ctx-item.is-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.drive-ctx-sep {
+  height: 1px;
+  background: var(--drive-border);
+  margin: 5px 2px;
+}

@@ -1,0 +1,139 @@
+.drive-sidebar {
+  width: 232px;
+  min-width: 232px;
+  background: var(--drive-panel);
+  border-right: 1px solid var(--drive-border);
+  display: flex;
+  flex-direction: column;
+  padding: 18px 12px;
+}
+
+.drive-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 2px 8px 20px 8px;
+}
+
+.drive-brand__mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(155deg, var(--drive-accent) 0%, var(--drive-accent-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.drive-brand__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  color: var(--drive-accent-dark);
+}
+
+.drive-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.drive-nav__item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 10px;
+  border-radius: var(--drive-radius);
+  cursor: pointer;
+  color: var(--drive-text-muted);
+  font-weight: 600;
+  font-size: 13.5px;
+  transition: background 0.12s ease, color 0.12s ease;
+  user-select: none;
+}
+
+.drive-nav__item:hover {
+  background: var(--drive-bg);
+  color: var(--drive-text);
+}
+
+.drive-nav__item.is-active {
+  background: var(--drive-sand);
+  color: var(--drive-accent-dark);
+}
+
+.drive-nav__item svg {
+  flex-shrink: 0;
+}
+
+.drive-nav__count {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--drive-text-faint);
+  background: var(--drive-bg);
+  padding: 1px 7px;
+  border-radius: 20px;
+}
+
+.drive-nav__item.is-active .drive-nav__count {
+  background: #fff;
+  color: var(--drive-accent-dark);
+}
+
+.drive-storage {
+  border-top: 1px solid var(--drive-border);
+  padding-top: 14px;
+  margin-top: 8px;
+}
+
+.drive-storage__label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--drive-text-muted);
+  font-weight: 600;
+  margin-bottom: 7px;
+}
+
+.drive-storage__track {
+  height: 6px;
+  border-radius: 4px;
+  background: var(--drive-bg);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.drive-storage__fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--drive-accent), var(--drive-accent-dark));
+  transition: width 0.3s ease;
+}
+
+.drive-storage__sub {
+  font-size: 11.5px;
+  color: var(--drive-text-faint);
+}
+
+@media (max-width: 760px) {
+  .drive-sidebar {
+    width: 74px;
+    min-width: 74px;
+    padding: 16px 8px;
+  }
+  .drive-brand__name,
+  .drive-nav__item span:not(.drive-nav__count),
+  .drive-storage {
+    display: none;
+  }
+  .drive-nav__item {
+    justify-content: center;
+  }
+}

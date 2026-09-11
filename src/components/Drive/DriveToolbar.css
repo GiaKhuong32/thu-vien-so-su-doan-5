@@ -1,0 +1,88 @@
+.drive-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 22px 12px 22px;
+  gap: 10px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--drive-border);
+}
+
+.drive-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  flex-wrap: wrap;
+}
+
+.drive-crumb {
+  cursor: pointer;
+  color: var(--drive-text-muted);
+}
+
+.drive-crumb:hover {
+  color: var(--drive-accent-dark);
+}
+
+.drive-crumb.is-current {
+  color: var(--drive-text);
+  cursor: default;
+}
+
+.drive-crumb-sep {
+  color: var(--drive-text-faint);
+  font-weight: 400;
+  margin: 0 4px;
+}
+
+.drive-tools-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drive-select-wrap select {
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--drive-text-muted);
+  background: var(--drive-panel);
+  border: 1px solid var(--drive-border);
+  border-radius: var(--drive-radius);
+  padding: 7px 26px 7px 10px;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--drive-text-faint) 50%),
+    linear-gradient(135deg, var(--drive-text-faint) 50%, transparent 50%);
+  background-position: calc(100% - 14px) center, calc(100% - 9px) center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.drive-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--drive-radius);
+  border: 1px solid var(--drive-border);
+  background: var(--drive-panel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--drive-text-muted);
+}
+
+.drive-icon-btn:hover {
+  background: var(--drive-bg);
+  color: var(--drive-text);
+}
+
+.drive-icon-btn.is-active {
+  background: var(--drive-sand);
+  color: var(--drive-accent-dark);
+  border-color: var(--drive-sand);
+}

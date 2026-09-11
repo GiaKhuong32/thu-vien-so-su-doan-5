@@ -1,0 +1,63 @@
+.drive-upload-tray {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 120;
+  width: 260px;
+}
+
+.drive-upload-task {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--drive-panel);
+  border: 1px solid var(--drive-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: var(--drive-shadow-menu);
+  color: var(--drive-accent-dark);
+}
+
+.drive-upload-task__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.drive-upload-task__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.drive-upload-task__name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--drive-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drive-upload-task__size {
+  font-size: 11px;
+  color: var(--drive-text-faint);
+  flex-shrink: 0;
+}
+
+.drive-upload-task__track {
+  height: 5px;
+  border-radius: 4px;
+  background: var(--drive-bg);
+  overflow: hidden;
+}
+
+.drive-upload-task__fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--drive-accent), var(--drive-accent-dark));
+  transition: width 0.15s ease;
+}

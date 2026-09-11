@@ -1,0 +1,226 @@
+.drive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 14px;
+}
+
+.drive-card {
+  background: var(--drive-panel);
+  border: 1px solid var(--drive-border);
+  border-radius: var(--drive-radius-lg);
+  padding: 14px 12px 12px 12px;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  user-select: none;
+}
+
+.drive-card:hover {
+  border-color: var(--drive-border-strong);
+}
+
+.drive-card.is-selected {
+  border-color: var(--drive-accent);
+  box-shadow: 0 0 0 3px var(--drive-sand);
+}
+
+.drive-card.is-drop-target {
+  border-color: var(--drive-accent);
+  outline: 2px dashed var(--drive-accent);
+  outline-offset: -2px;
+}
+
+.drive-card__thumb {
+  height: 76px;
+  border-radius: 8px;
+  background: var(--drive-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.drive-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.drive-card__name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--drive-text);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.drive-card__name-input {
+  width: 100%;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--drive-text);
+  border: 1.5px solid var(--drive-accent);
+  border-radius: 4px;
+  padding: 1px 4px;
+  outline: none;
+  background: #fff;
+}
+
+.drive-card__meta {
+  font-size: 11px;
+  color: var(--drive-text-faint);
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.drive-fav-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(20, 20, 20, 0.14);
+  opacity: 0;
+  color: var(--drive-text-faint);
+  transition: opacity 0.12s ease, transform 0.08s ease;
+}
+
+.drive-card:hover .drive-fav-btn,
+.drive-card.is-fav .drive-fav-btn {
+  opacity: 1;
+}
+
+.drive-card.is-fav .drive-fav-btn {
+  color: var(--drive-danger);
+}
+
+.drive-fav-btn:hover {
+  transform: scale(1.12);
+}
+
+.drive-fav-btn:active {
+  transform: scale(0.92);
+}
+
+.drive-list-head {
+  display: grid;
+  grid-template-columns: 1fr 46px 110px 120px;
+  padding: 8px 12px;
+  color: var(--drive-text-faint);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid var(--drive-border);
+}
+
+.drive-list-row {
+  display: grid;
+  grid-template-columns: 1fr 46px 110px 120px;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: var(--drive-radius);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.drive-list-row:hover {
+  background: var(--drive-bg);
+}
+
+.drive-list-row.is-selected {
+  background: var(--drive-sand);
+}
+
+.drive-list-row.is-drop-target {
+  outline: 2px dashed var(--drive-accent);
+  outline-offset: -2px;
+}
+
+.drive-list-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-weight: 700;
+}
+
+.drive-list-name__icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: var(--drive-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.drive-list-name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drive-list-name__input {
+  font: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--drive-text);
+  border: 1.5px solid var(--drive-accent);
+  border-radius: 4px;
+  padding: 1px 5px;
+  outline: none;
+  min-width: 0;
+  flex: 1;
+}
+
+.drive-list-sub {
+  color: var(--drive-text-faint);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.drive-list-fav {
+  display: flex;
+  justify-content: center;
+}
+
+.drive-list-fav .drive-fav-btn {
+  position: static;
+  opacity: 1;
+  box-shadow: none;
+  background: var(--drive-panel);
+  border: 1.5px solid var(--drive-border-strong);
+  width: 28px;
+  height: 28px;
+  color: var(--drive-text-faint);
+}
+
+.drive-list-fav .drive-fav-btn:hover {
+  border-color: var(--drive-text-faint);
+  background: var(--drive-bg);
+}
+
+.drive-list-row.is-fav .drive-list-fav .drive-fav-btn {
+  border-color: #f2c7c1;
+  background: #fcefed;
+  color: var(--drive-danger);
+}
+
+.drive-list-row.is-fav .drive-list-fav .drive-fav-btn:hover {
+  border-color: var(--drive-danger);
+}
