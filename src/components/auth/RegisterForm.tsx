@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   User,
   Lock,
@@ -47,6 +48,7 @@ function getPasswordStrength(password: string): StrengthLevel {
 export default function RegisterForm({
   onSubmit,
 }: RegisterFormProps) {
+  const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -210,7 +212,14 @@ export default function RegisterForm({
       </form>
 
       <div className="register-form__footer">
-        Đã có tài khoản? Quay lại trang đăng nhập
+        Đã có tài khoản?{" "}
+        <button
+          type="button"
+          onClick={() => navigate("/dang-nhap")}
+          className="register-form__login-link"
+        >
+          Quay lại trang đăng nhập
+        </button>
       </div>
     </div>
   );

@@ -176,9 +176,14 @@ export default function Navbar() {
           >
             <SearchIcon />
           </button>
-          <Link to="/dang-nhap" className="btn-login">
-            Đăng nhập
-          </Link>
+          <div className="auth-buttons">
+            <Link to="/dang-nhap" className="btn-auth btn-auth--login">
+              Đăng nhập
+            </Link>
+            <Link to="/dang-ky" className="btn-auth btn-auth--register">
+              Đăng ký
+            </Link>
+          </div>
         </div>
       </div>
 

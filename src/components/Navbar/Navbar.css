@@ -194,7 +194,7 @@
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 12px;
   margin-left: auto;
 }
 
@@ -252,27 +252,47 @@
   color: var(--c-brown);
 }
 
-.btn-login {
+.auth-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-auth {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 24px;
+  padding: 8px 20px;
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  color: #fff;
-  background: #e30613;
-  border: none;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(227, 6, 19, 0.3);
-  cursor: pointer;
   text-decoration: none;
-  transition: background 0.25s var(--ease), box-shadow 0.25s var(--ease);
+  border-radius: 6px;
+  transition: all 0.25s var(--ease);
 }
 
-.btn-login:hover {
+.btn-auth--login {
+  color: var(--c-brown);
+  background: transparent;
+  border: 1.5px solid var(--c-brown);
+}
+
+.btn-auth--login:hover {
+  color: var(--c-primary);
+  border-color: var(--c-primary);
+  background: rgba(227, 6, 19, 0.05);
+}
+
+.btn-auth--register {
+  color: #fff;
+  background: var(--c-primary);
+  border: 1.5px solid var(--c-primary);
+}
+
+.btn-auth--register:hover {
   background: #c10510;
-  box-shadow: 0 4px 12px rgba(227, 6, 19, 0.4);
+  border-color: #c10510;
+  box-shadow: 0 2px 8px rgba(227, 6, 19, 0.3);
 }
 
 .nav-backdrop {

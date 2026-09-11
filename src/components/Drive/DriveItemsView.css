@@ -88,7 +88,7 @@
 .drive-card.is-fav .drive-card__actions,
 .drive-card__actions.is-visible { opacity: 1; }
 
-.drive-fav-btn, .drive-trash-btn {
+.drive-fav-btn, .drive-trash-btn, .drive-restore-btn {
   width: 24px; height: 24px; border-radius: 50%; border: none;
   background: rgba(255,255,255,.92); display: flex; align-items: center; justify-content: center;
   cursor: pointer; box-shadow: 0 1px 4px rgba(20,20,20,.14);
@@ -96,8 +96,12 @@
   transition: transform .08s ease, color .12s ease, background .12s ease;
 }
 .drive-card.is-fav .drive-fav-btn { color: var(--drive-danger); }
-.drive-fav-btn:hover, .drive-trash-btn:hover { transform: scale(1.12); }
+.drive-fav-btn:hover, .drive-trash-btn:hover, .drive-restore-btn:hover { transform: scale(1.12); }
 .drive-trash-btn:hover { color: var(--drive-danger); background: var(--drive-danger-soft); }
+.drive-restore-btn:hover {
+  color: var(--drive-accent-dark);
+  background: var(--drive-sand);
+}
 .drive-card.is-cut { opacity: .55; }
 
 .drive-list-head {
@@ -180,10 +184,16 @@
 
 .drive-list-actions { display: flex; justify-content: flex-end; gap: 6px; }
 .drive-list-actions .drive-fav-btn,
-.drive-list-actions .drive-trash-btn {
+.drive-list-actions .drive-trash-btn,
+.drive-list-actions .drive-restore-btn {
   box-shadow: none; background: var(--drive-panel);
   border: 1.5px solid var(--drive-border-strong); width: 28px; height: 28px; color: var(--drive-text-faint);
 }
 .drive-list-actions .drive-trash-btn:hover { border-color: var(--drive-danger); background: var(--drive-danger-soft); color: var(--drive-danger); }
+.drive-list-actions .drive-restore-btn:hover {
+  border-color: var(--drive-accent);
+  background: var(--drive-sand);
+  color: var(--drive-accent-dark);
+}
 .drive-list-row.is-fav .drive-list-actions .drive-fav-btn { border-color: #f2c7c1; background: #fcefed; color: var(--drive-danger); }
 .drive-list-row.is-cut { opacity: .55; }

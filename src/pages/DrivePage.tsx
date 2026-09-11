@@ -146,6 +146,8 @@ export default function DrivePage() {
               }}
               renamingId={renamingId}
               onTrash={(id) => { drive.moveToTrash(id); showToast('Đã chuyển vào thùng rác'); }}
+              onRestore={(id) => { drive.restore(id); showToast('Đã khôi phục'); }}
+              onDeleteForever={(id) => { drive.deleteForever(id); showToast('Đã xóa vĩnh viễn'); }}
               cutIds={cutIds}
             />
           </div>

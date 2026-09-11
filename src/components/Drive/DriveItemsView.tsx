@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, Trash2 } from 'lucide-react';
+import { Heart, RotateCcw, Trash2 } from 'lucide-react';
 import type { DriveNode, DriveSection, DriveViewMode } from '../../types/drive';
 import { DriveNodeIcon } from './driveIcons';
 import { formatBytes, formatDate } from './driveFormat';
@@ -21,6 +21,8 @@ type Props = {
   onRenameCommit: (id: string, name: string) => void;
   renamingId: string | null;
   onTrash: (id: string) => void;
+  onRestore: (id: string) => void;
+  onDeleteForever: (id: string) => void;
   cutIds?: Set<string>;
 };
 
@@ -48,6 +50,24 @@ function TrashButton({ node, onTrash }: { node: DriveNode; onTrash: (id: string)
       title="Chuyển vào thùng rác"
       onClick={(e) => { e.stopPropagation(); onTrash(node.id); }}
     >
+      <Trash2 size={14} strokeWidth={2} />
+    </button>
+  );
+}
+
+function RestoreButton({ node, onRestore }: { node: DriveNode; onRestore: (id: string) => void }) {
+  return (
+    <button type="button" className="drive-restore-btn" title="Khôi phục"
+      onClick={(e) => { e.stopPropagation(); onRestore(node.id); }}>
+      <RotateCcw size={14} strokeWidth={2} />
+    </button>
+  );
+}
+
+function DeleteForeverButton({ node, onDeleteForever }: { node: DriveNode; onDeleteForever: (id: string) => void }) {
+  return (
+    <button type="button" className="drive-trash-btn" title="Xóa vĩnh viễn"
+      onClick={(e) => { e.stopPropagation(); onDeleteForever(node.id); }}>
       <Trash2 size={14} strokeWidth={2} />
     </button>
   );
@@ -98,6 +118,8 @@ export default function DriveItemsView({
   onRenameCommit,
   renamingId,
   onTrash,
+  onRestore,
+  onDeleteForever,
   cutIds,
 }: Props) {
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -160,9 +182,18 @@ export default function DriveItemsView({
                 <DriveNodeIcon node={node} size={30} />
               )}
             </div>
-            <div className="drive-card__actions">
-              <FavButton node={node} onToggleFavourite={onToggleFavourite} />
-              {!node.trashed && <TrashButton node={node} onTrash={onTrash} />}
+            <div className={`drive-card__actions${node.trashed ? ' is-visible' : ''}`}>
+              {node.trashed ? (
+                <>
+                  <RestoreButton node={node} onRestore={onRestore} />
+                  <DeleteForeverButton node={node} onDeleteForever={onDeleteForever} />
+                </>
+              ) : (
+                <>
+                  <FavButton node={node} onToggleFavourite={onToggleFavourite} />
+                  <TrashButton node={node} onTrash={onTrash} />
+                </>
+              )}
             </div>
             {renamingId === node.id ? (
               <EditableName node={node} onCommit={onRenameCommit} className="drive-card__name-input" />
@@ -214,8 +245,17 @@ export default function DriveItemsView({
           <div className="drive-list-sub">{formatDate(node.updatedAt)}</div>
           <div className="drive-list-sub">{node.type === 'folder' ? '—' : formatBytes(node.size)}</div>
           <div className="drive-list-actions">
-            <FavButton node={node} onToggleFavourite={onToggleFavourite} />
-            {!node.trashed && <TrashButton node={node} onTrash={onTrash} />}
+            {node.trashed ? (
+              <>
+                <RestoreButton node={node} onRestore={onRestore} />
+                <DeleteForeverButton node={node} onDeleteForever={onDeleteForever} />
+              </>
+            ) : (
+              <>
+                <FavButton node={node} onToggleFavourite={onToggleFavourite} />
+                <TrashButton node={node} onTrash={onTrash} />
+              </>
+            )}
           </div>
         </div>
       ))}
