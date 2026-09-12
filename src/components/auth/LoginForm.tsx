@@ -1,18 +1,21 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Lock, Eye, EyeOff, UserPlus, ArrowRight } from "lucide-react";
+import { User, Lock, Eye, EyeOff, UserPlus} from "lucide-react";
 import "./LoginForm.css";
 
 interface LoginFormProps {
   onSubmit?: (username: string, password: string) => void;
   onRegisterClick?: () => void;
   onForgotPasswordClick?: () => void;
+  error?: string | null;
+  loading?: boolean;
 }
 
 export default function LoginForm({
   onSubmit,
   onRegisterClick,
-  onForgotPasswordClick,
+  error,
+  loading,
 }: LoginFormProps) {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -36,6 +39,12 @@ export default function LoginForm({
     <div className="login-form">
       <h2 className="login-form__title">THÔNG TIN TÀI KHOẢN</h2>
 
+      {error && (
+        <div className="login-form__error">
+          {error}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="login-form__form">
         <div className="login-form__input-group">
           <User className="login-form__icon" />
@@ -45,6 +54,7 @@ export default function LoginForm({
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className="login-form__input"
+            disabled={loading}
           />
         </div>
 
@@ -56,12 +66,14 @@ export default function LoginForm({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="login-form__input"
+            disabled={loading}
           />
           <button
             type="button"
             onClick={() => setShowPassword((s) => !s)}
             className="login-form__password-toggle"
             aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+            disabled={loading}
           >
             {showPassword ? (
               <EyeOff className="w-4 h-4" />
@@ -71,8 +83,12 @@ export default function LoginForm({
           </button>
         </div>
 
-        <button type="submit" className="login-form__submit-btn">
-          Đăng nhập
+        <button 
+          type="submit" 
+          className="login-form__submit-btn"
+          disabled={loading}
+        >
+          {loading ? "Đang đăng nhập..." : "Đăng nhập"}
         </button>
       </form>
 
@@ -86,21 +102,13 @@ export default function LoginForm({
         type="button"
         onClick={handleRegisterClick}
         className="login-form__register-btn"
+        disabled={loading}
       >
         <UserPlus className="w-4 h-4" />
         Đăng ký tài khoản
       </button>
 
-      <div className="text-center" style={{ marginTop: "24px" }}>
-        <button
-          type="button"
-          onClick={onForgotPasswordClick}
-          className="login-form__forgot-link"
-        >
-          Quên mật khẩu?
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
-      </div>
+    
     </div>
   );
 }

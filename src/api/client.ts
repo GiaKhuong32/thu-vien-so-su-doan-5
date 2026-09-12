@@ -40,12 +40,16 @@ export async function apiRequest<T>(
   });
 
   if (!response.ok) {
+    let message = `API Error: ${response.status} ${response.statusText}`;
 
-    if (response.status === 401) {
-      console.warn(`API 401 Unauthorized for ${endpoint}`);
-      return [] as T; 
+    try {
+      const errorData = await response.json();
+      message = errorData?.message || errorData?.Message || message;
+    } catch {
+      // response body is not JSON
     }
-    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+
+    throw new Error(message);
   }
 
   const data = await response.json();

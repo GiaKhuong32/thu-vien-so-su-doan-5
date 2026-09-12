@@ -4,11 +4,21 @@
 }
 
 .login-form__title {
-  font-size: 1rem;        
-  font-weight: 800;       
+  font-size: 1rem;
+  font-weight: 800;
   letter-spacing: 0.04em;
   color: #0f172a;
   margin-bottom: 24px;
+}
+
+.login-form__error {
+  padding: 12px;
+  border-radius: 8px;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 0.875rem;
+  margin-bottom: 16px;
 }
 
 .login-form__form {
@@ -89,6 +99,17 @@
   background: #065f46;
 }
 
+.login-form__submit-btn:disabled,
+.login-form__register-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-form__input:disabled {
+  background: #f1f5f9;
+  cursor: not-allowed;
+}
+
 .login-form__divider {
   display: flex;
   align-items: center;
@@ -130,20 +151,6 @@
   background: #ecfdf5;
 }
 
-.login-form__forgot-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.875rem;
-  color: #3b82f6;
-  text-decoration: none;
-  transition: color 0.2s;
-  cursor: pointer;
-  border: none;
-  background: none;
-  padding: 0;
-}
 
-.login-form__forgot-link:hover {
-  color: #2563eb;
-}
+
+

@@ -37,17 +37,17 @@ export default function DrivePage() {
   }, []);
 
   const handleUpload = useCallback(
-    (files: FileList) => {
-      drive.uploadFiles(files);
+    async (files: FileList) => {
+      await drive.uploadFiles(files);
       showToast(`Đã tải lên ${files.length} tệp`);
     },
     [drive, showToast],
   );
 
   const handleDropOnFolder = useCallback(
-    (folderId: string, files: FileList) => {
-      drive.uploadFiles(files, { parentId: folderId });
-      drive.navigateTo(folderId);
+    async (folderId: string, files: FileList) => {
+      await drive.uploadFiles(files, { parentId: folderId });
+      await drive.navigateTo(folderId);
       showToast(`Đã tải lên ${files.length} tệp`);
     },
     [drive, showToast],
@@ -76,8 +76,8 @@ export default function DrivePage() {
     if (e.dataTransfer.files.length) handleUpload(e.dataTransfer.files);
   };
 
-  const handleCreateFolder = (name: string) => {
-    drive.createFolder({ parentId: drive.section === 'cloud' ? drive.currentFolderId : null, name });
+  const handleCreateFolder = async (name: string) => {
+    await drive.createFolder({ parentId: drive.section === 'cloud' ? drive.currentFolderId : null, name });
     setFolderModalOpen(false);
     showToast('Đã tạo thư mục');
   };

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import type {
   CreateFolderInput,
   DriveBreadcrumb,
@@ -10,11 +10,11 @@ import type {
   DriveUploadTask,
   DriveViewMode,
 } from '../types/drive';
-
+import { isAuthenticated } from '../api/auth';
+import { driveApi, type FolderVisibility } from '../api/drive';
 
 const STORAGE_TOTAL_BYTES = 20 * 1024 * 1024 * 1024;
-const STORAGE_PLAN_NAME = 'Dung lượng';
-const IMAGE_PREVIEW_MAX_BYTES = 3 * 1024 * 1024; 
+const STORAGE_PLAN_NAME = 'Dung lượng'; 
 
 function makeId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
@@ -46,21 +46,69 @@ export function useDrive() {
   const [searchTerm, setSearchTerm] = useState('');
   const [infoOpen, setInfoOpen] = useState(false);
   const [uploads, setUploads] = useState<DriveUploadTask[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [visibility, setVisibility] = useState<FolderVisibility>(
+    isAuthenticated() ? 'private' : 'public',
+  );
 
   const setSection = useCallback((next: DriveSection) => {
     setSectionState(next);
     setSelectedId(null);
   }, []);
 
-  const navigateTo = useCallback((folderId: string | null) => {
+  const loadRoots = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const rootNodes = isAuthenticated()
+        ? await driveApi.getPrivateRoots()
+        : await driveApi.getPublicRoots();
+
+      setVisibility(isAuthenticated() ? 'private' : 'public');
+      setNodes(rootNodes);
+      setCurrentFolderId(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không tải được thư mục');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const navigateTo = useCallback(async (folderId: string | null) => {
     setSectionState('cloud');
     setCurrentFolderId(folderId);
     setSelectedId(null);
-  }, []);
+
+    if (!folderId) {
+      await loadRoots();
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const children = await driveApi.getChildren(folderId);
+
+      setNodes((prev) => [
+        ...prev.filter((node) => node.parentId !== folderId),
+        ...children,
+      ]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không tải được nội dung thư mục');
+    } finally {
+      setLoading(false);
+    }
+  }, [loadRoots]);
 
   const select = useCallback((id: string | null) => setSelectedId(id), []);
 
-  /* ---------------- Dữ liệu dẫn xuất ---------------- */
+  useEffect(() => {
+    loadRoots();
+  }, [loadRoots]);
+
 
   const breadcrumbs = useMemo<DriveBreadcrumb[]>(() => {
     if (section !== 'cloud') return [];
@@ -149,87 +197,75 @@ export function useDrive() {
 
   /* ---------------- Hành động ---------------- */
 
-  const createFolder = useCallback(({ parentId, name }: CreateFolderInput) => {
-    const now = new Date().toISOString();
-    const node: DriveNode = {
-      id: makeId(),
-      parentId,
-      name: name.trim() || 'Thư mục mới',
-      type: 'folder',
-      size: 0,
-      createdAt: now,
-      updatedAt: now,
-      favourite: false,
-      trashed: false,
-    };
-    setNodes((prev) => [...prev, node]);
-    return node;
-  }, []);
+  const createFolder = useCallback(
+    async ({ parentId, name }: CreateFolderInput) => {
+      const node = await driveApi.createFolder(
+        name.trim() || 'Thư mục mới',
+        parentId,
+        visibility,
+      );
+
+      setNodes((prev) => [...prev, node]);
+      return node;
+    },
+    [visibility],
+  );
 
   const uploadFiles = useCallback(
-    (files: FileList | File[], opts?: { parentId?: string | null }) => {
+    async (files: FileList | File[], opts?: { parentId?: string | null }) => {
       const list = Array.from(files);
       if (list.length === 0) return;
-      const parentId = opts && 'parentId' in opts ? (opts.parentId ?? null) : section === 'cloud' ? currentFolderId : null;
+
+      const parentId =
+        opts && 'parentId' in opts
+          ? opts.parentId ?? null
+          : section === 'cloud'
+            ? currentFolderId
+            : null;
+
+      if (!parentId) {
+        setError('Vui lòng mở một thư mục trước khi tải file lên');
+        return;
+      }
 
       const tasks: DriveUploadTask[] = list.map((file) => ({
         id: makeId(),
         name: file.name,
         size: file.size,
-        progress: 0,
+        progress: 20,
         status: 'uploading',
       }));
+
       setUploads((prev) => [...prev, ...tasks]);
 
-      list.forEach((file, idx) => {
-        const taskId = tasks[idx].id;
-        const finish = (previewUrl: string | null) => {
-          const now = new Date().toISOString();
-          const node: DriveNode = {
-            id: makeId(),
-            parentId,
-            name: file.name,
-            type: 'file',
-            size: file.size,
-            mimeType: file.type || 'application/octet-stream',
-            createdAt: now,
-            updatedAt: now,
-            favourite: false,
-            trashed: false,
-            previewUrl,
-          };
-          setNodes((prev) => [...prev, node]);
+      try {
+        const uploadedNodes = await driveApi.uploadFilesToFolder(parentId, list);
+        setNodes((prev) => [...prev, ...uploadedNodes]);
 
-          // Chạy thanh tiến trình giả lập rồi dọn khỏi khay sau khi xong.
-          let progress = 0;
-          const tick = () => {
-            progress = Math.min(100, progress + 20 + Math.random() * 30);
-            setUploads((prev) =>
-              prev.map((t) =>
-                t.id === taskId
-                  ? { ...t, progress, status: progress >= 100 ? 'done' : 'uploading' }
-                  : t,
-              ),
-            );
-            if (progress < 100) {
-              setTimeout(tick, 110);
-            } else {
-              setTimeout(() => setUploads((prev) => prev.filter((t) => t.id !== taskId)), 1200);
-            }
-          };
-          tick();
-        };
+        setUploads((prev) =>
+          prev.map((task) =>
+            tasks.some((item) => item.id === task.id)
+              ? { ...task, progress: 100, status: 'done' }
+              : task,
+          ),
+        );
 
-        const isPreviewableImage = file.type.startsWith('image/') && file.size < IMAGE_PREVIEW_MAX_BYTES;
-        if (isPreviewableImage) {
-          const reader = new FileReader();
-          reader.onload = () => finish(typeof reader.result === 'string' ? reader.result : null);
-          reader.onerror = () => finish(null);
-          reader.readAsDataURL(file);
-        } else {
-          finish(null);
-        }
-      });
+        setTimeout(() => {
+          setUploads((prev) => prev.filter((task) => !tasks.some((item) => item.id === task.id)));
+        }, 1200);
+      } catch (err) {
+        setUploads((prev) =>
+          prev.map((task) =>
+            tasks.some((item) => item.id === task.id)
+              ? {
+                  ...task,
+                  status: 'error',
+                  error: err instanceof Error ? err.message : 'Upload thất bại',
+                }
+              : task,
+          ),
+        );
+      }
 
       if (section !== 'cloud') setSectionState('cloud');
     },
@@ -395,6 +431,9 @@ export function useDrive() {
     searchTerm,
     infoOpen,
     uploads,
+    loading,
+    error,
+    visibility,
     // derived
     breadcrumbs,
     visibleNodes,

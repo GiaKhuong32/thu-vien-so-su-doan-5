@@ -1,14 +1,28 @@
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { login } from "../api/auth";
 import AuthHeroPanel from "../components/auth/AuthHeroPanel";
 import LoginForm from "../components/auth/LoginForm";
 import "./LoginPage.css";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (username: string, password: string) => {
-    console.log("Đăng nhập:", { username, password });
-  
+  const handleLogin = async (username: string, password: string) => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      await login({ username, password });
+      // Đăng nhập thành công, chuyển về trang chủ
+      navigate("/");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Đăng nhập thất bại");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -19,7 +33,8 @@ export default function LoginPage() {
         <LoginForm
           onSubmit={handleLogin}
           onRegisterClick={() => navigate("/dang-ky")}
-          onForgotPasswordClick={() => console.log("Đi tới trang quên mật khẩu")}
+          error={error}
+          loading={loading}
         />
 
         <p className="login-page__footer">

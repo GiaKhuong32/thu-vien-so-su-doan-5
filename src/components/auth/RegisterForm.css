@@ -16,6 +16,16 @@
   margin-bottom: 24px;
 }
 
+.register-form__error {
+  padding: 12px;
+  border-radius: 8px;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 0.875rem;
+  margin-bottom: 16px;
+}
+
 .register-form__form {
   display: flex;
   flex-direction: column;
@@ -214,6 +224,16 @@
 
 .register-form__submit-btn:active {
   background: #065f46;
+}
+
+.register-form__submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.register-form__input:disabled {
+  background: #f1f5f9;
+  cursor: not-allowed;
 }
 
 .register-form__divider {

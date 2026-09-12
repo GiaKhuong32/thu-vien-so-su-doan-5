@@ -17,6 +17,8 @@ interface RegisterFormProps {
     password: string;
     confirmPassword: string;
   }) => void;
+  error?: string | null;
+  loading?: boolean;
 }
 
 type StrengthLevel = {
@@ -47,6 +49,8 @@ function getPasswordStrength(password: string): StrengthLevel {
 
 export default function RegisterForm({
   onSubmit,
+  error,
+  loading,
 }: RegisterFormProps) {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
@@ -90,6 +94,12 @@ export default function RegisterForm({
         Tạo tài khoản để bắt đầu trải nghiệm thư viện điện tử
       </p>
 
+      {error && (
+        <div className="register-form__error">
+          {error}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="register-form__form">
         <div className="register-form__input-group">
           <User className="register-form__icon" />
@@ -99,6 +109,7 @@ export default function RegisterForm({
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className="register-form__input"
+            disabled={loading}
           />
         </div>
 
@@ -205,9 +216,13 @@ export default function RegisterForm({
           </button>
         </div>
 
-        <button type="submit" className="register-form__submit-btn">
+        <button 
+          type="submit" 
+          className="register-form__submit-btn"
+          disabled={loading}
+        >
           <UserPlus className="w-4 h-4" />
-          Đăng ký tài khoản
+          {loading ? "Đang đăng ký..." : "Đăng ký tài khoản"}
         </button>
       </form>
 
