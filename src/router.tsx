@@ -10,7 +10,8 @@ import NotFoundPage from './pages/NotFoundPage';
 import AboutLibraryPage from './pages/AboutLibraryPage';
 import AboutHistoryPage from './pages/AboutHistoryPage';
 import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
+// Disabled temporarily - only admin accounts for now
+// import RegisterPage from './pages/RegisterPage';
 import DrivePage from './pages/DrivePage';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -42,15 +43,16 @@ const router = createBrowserRouter([
       </>
     ),
   },
-  {
-    path: '/dang-ky',
-    element: (
-      <>
-        <ScrollToTop />
-        <RegisterPage />
-      </>
-    ),
-  },
+  // Disabled temporarily - only admin accounts for now
+  // {
+  //   path: '/dang-ky',
+  //   element: (
+  //     <>
+  //       <ScrollToTop />
+  //       <RegisterPage />
+  //     </>
+  //   ),
+  // },
   {
     path: '/quan-ly-tep/:folderId?',
     element: (

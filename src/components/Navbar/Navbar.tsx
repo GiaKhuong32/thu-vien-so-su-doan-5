@@ -238,9 +238,10 @@ const menuItems = useMemo(
               <Link to="/dang-nhap" className="btn-auth btn-auth--login">
                 Đăng nhập
               </Link>
-              <Link to="/dang-ky" className="btn-auth btn-auth--register">
+              {/* Disabled temporarily - only admin accounts for now */}
+              {/* <Link to="/dang-ky" className="btn-auth btn-auth--register">
                 Đăng ký
-              </Link>
+              </Link> */}
             </div>
           )}
         </div>

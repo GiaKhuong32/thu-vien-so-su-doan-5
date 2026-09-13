@@ -92,7 +92,8 @@ export default function LoginForm({
         </button>
       </form>
 
-      <div className="login-form__divider">
+      {/* Disabled temporarily - only admin accounts for now */}
+      {/* <div className="login-form__divider">
         <div className="login-form__divider-line" />
         <span className="login-form__divider-text">Hoặc</span>
         <div className="login-form__divider-line" />
@@ -106,9 +107,8 @@ export default function LoginForm({
       >
         <UserPlus className="w-4 h-4" />
         Đăng ký tài khoản
-      </button>
+      </button> */}
 
-    
     </div>
   );
 }
