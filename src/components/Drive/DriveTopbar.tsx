@@ -5,7 +5,7 @@ import './DriveTopbar.css';
 type Props = {
   searchTerm: string;
   onSearchChange: (value: string) => void;
-  onUpload: (files: FileList) => void;
+  onUpload: (files: File[]) => void;
   onNewFolder: () => void;
 };
 
@@ -40,7 +40,10 @@ export default function DriveTopbar({ searchTerm, onSearchChange, onUpload, onNe
         multiple
         hidden
         onChange={(e) => {
-          if (e.target.files && e.target.files.length > 0) onUpload(e.target.files);
+          if (e.target.files && e.target.files.length > 0) {
+            const files = Array.from(e.target.files);
+            onUpload(files);
+          }
           e.target.value = '';
         }}
       />

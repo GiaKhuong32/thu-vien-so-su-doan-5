@@ -61,3 +61,14 @@
   background: linear-gradient(90deg, var(--drive-accent), var(--drive-accent-dark));
   transition: width 0.15s ease;
 }
+
+.drive-upload-task__fill.is-error {
+  background: #b91c1c;
+}
+
+.drive-upload-task__error {
+  margin-top: 5px;
+  font-size: 11px;
+  color: #b91c1c;
+  line-height: 1.3;
+}

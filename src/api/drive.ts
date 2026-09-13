@@ -115,14 +115,27 @@ export function mapFolderChildrenToNodes(folder: FolderResponse): DriveNode[] {
 }
 
 export const driveApi = {
+  getRootDirectory: async (): Promise<DriveNode> => {
+    const folder = await api.get<FolderResponseNoList>('/folder/rootDirectory');
+    return folderToNode(folder, null);
+  },
+
   getPublicRoots: async (): Promise<DriveNode[]> => {
-    const folders = await api.get<FolderResponse[]>('/folder/public/roots');
+    const folders = await api.get<FolderResponseNoList[]>('/folder/public/roots', {
+      auth: false,
+    });
+
     return folders.map((folder) => folderToNode(folder, null));
   },
 
+  getPrivateRoot: async (): Promise<DriveNode> => {
+    const folder = await api.get<FolderResponse>('/folder/private/my');
+    return folderToNode(folder, null);
+  },
+
   getPrivateRoots: async (): Promise<DriveNode[]> => {
-    const folders = await api.get<FolderResponse[]>('/folder/private/my');
-    return folders.map((folder) => folderToNode(folder, null));
+    const folder = await api.get<FolderResponse>('/folder/private/my');
+    return [folderToNode(folder, null)];
   },
 
   getChildren: async (folderId: string): Promise<DriveNode[]> => {
@@ -208,7 +221,8 @@ export const driveApi = {
     }
 
     const data = await response.json();
-    const result: FileResponse[] = data?.Result ?? data?.result ?? data;
+    const rawResult = data?.Result ?? data?.result ?? data;
+    const result: FileResponse[] = Array.isArray(rawResult) ? rawResult : [rawResult];
 
     return result.map((file) => fileToNode(file, folderId));
   },

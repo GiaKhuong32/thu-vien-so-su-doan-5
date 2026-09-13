@@ -49,7 +49,7 @@ export default function DriveInfoPanel({ open, node, nodes, folderSize, onClose 
                   ? 'Thùng rác'
                   : node.parentId
                     ? (nodes.find((n) => n.id === node.parentId)?.name ?? 'Ổ Mây')
-                    : 'Đám Mây'
+                    : 'Ổ Mây'
               }
             />
             <InfoRow label="Ưa thích" value={node.favourite ? 'Có' : 'Không'} />

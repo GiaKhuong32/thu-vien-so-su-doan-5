@@ -11,7 +11,7 @@ const CONTENT: Record<DriveSection, { icon: typeof Cloud; title: string; sub: st
   cloud: {
     icon: Cloud,
     title: 'Kéo và thả tệp tin vào đây',
-    sub: 'Chưa có gì trong Đám Mây của bạn',
+    sub: 'Chưa có gì trong Ổ Mây của bạn',
   },
   recent: {
     icon: Clock,

@@ -12,7 +12,7 @@ type Props = {
 };
 
 const NAV_ITEMS: { key: DriveSection; label: string; icon: typeof Cloud }[] = [
-  { key: 'cloud', label: 'Đám Mây', icon: Cloud },
+  { key: 'cloud', label: 'Ổ Mây', icon: Cloud },
   { key: 'recent', label: 'Gần Đây', icon: Clock },
   { key: 'favourite', label: 'Ưa Thích', icon: Heart },
   { key: 'trash', label: 'Thùng rác', icon: Trash2 },

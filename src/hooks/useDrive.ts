@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   CreateFolderInput,
   DriveBreadcrumb,
@@ -12,9 +12,8 @@ import type {
 } from '../types/drive';
 import { isAuthenticated } from '../api/auth';
 import { driveApi, type FolderVisibility } from '../api/drive';
-
-const STORAGE_TOTAL_BYTES = 20 * 1024 * 1024 * 1024;
-const STORAGE_PLAN_NAME = 'Dung lượng'; 
+const STORAGE_TOTAL_BYTES = 20 * 1024 * 1024 * 1024; 
+const STORAGE_PLAN_NAME = 'Miễn phí'; 
 
 function makeId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
@@ -42,6 +41,7 @@ export function useDrive() {
   const [viewMode, setViewMode] = useState<DriveViewMode>('grid');
   const [sort, setSort] = useState<DriveSort>({ key: 'name', order: 'asc' });
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [clipboard, setClipboard] = useState<DriveClipboard>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [infoOpen, setInfoOpen] = useState(false);
@@ -51,24 +51,52 @@ export function useDrive() {
   const [visibility, setVisibility] = useState<FolderVisibility>(
     isAuthenticated() ? 'private' : 'public',
   );
+  const [rootFolderId, setRootFolderId] = useState<string | null>(null);
 
   const setSection = useCallback((next: DriveSection) => {
     setSectionState(next);
     setSelectedId(null);
+    setSelectedIds(new Set());
   }, []);
+
+  const select = useCallback((id: string | null) => setSelectedId(id), []);
+
+  const toggleMultiSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const clearMultiSelect = useCallback(() => setSelectedIds(new Set()), []);
 
   const loadRoots = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const rootNodes = isAuthenticated()
-        ? await driveApi.getPrivateRoots()
-        : await driveApi.getPublicRoots();
+      const root = isAuthenticated()
+        ? await driveApi.getPrivateRoot()
+        : (await driveApi.getPublicRoots())[0];
 
       setVisibility(isAuthenticated() ? 'private' : 'public');
-      setNodes(rootNodes);
+      setRootFolderId(root?.id ?? null);
       setCurrentFolderId(null);
+
+      if (!root?.id) {
+        setNodes([]);
+        return;
+      }
+
+      const children = await driveApi.getChildren(root.id);
+      setNodes([
+        { ...root, parentId: null },
+        ...children.map((node) =>
+          node.parentId === root.id ? { ...node, parentId: null } : node,
+        ),
+      ]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không tải được thư mục');
     } finally {
@@ -76,10 +104,16 @@ export function useDrive() {
     }
   }, []);
 
+  const resolveBackendParentId = useCallback(
+    (parentId: string | null) => parentId ?? rootFolderId,
+    [rootFolderId],
+  );
+
   const navigateTo = useCallback(async (folderId: string | null) => {
     setSectionState('cloud');
     setCurrentFolderId(folderId);
     setSelectedId(null);
+    setSelectedIds(new Set());
 
     if (!folderId) {
       await loadRoots();
@@ -103,12 +137,11 @@ export function useDrive() {
     }
   }, [loadRoots]);
 
-  const select = useCallback((id: string | null) => setSelectedId(id), []);
-
   useEffect(() => {
     loadRoots();
   }, [loadRoots]);
 
+  /* ---------------- Dữ liệu dẫn xuất ---------------- */
 
   const breadcrumbs = useMemo<DriveBreadcrumb[]>(() => {
     if (section !== 'cloud') return [];
@@ -199,16 +232,29 @@ export function useDrive() {
 
   const createFolder = useCallback(
     async ({ parentId, name }: CreateFolderInput) => {
+      const backendParentId = resolveBackendParentId(parentId);
+
+      if (!backendParentId) {
+        throw new Error('Không tìm thấy thư mục gốc để tạo thư mục con');
+      }
+
       const node = await driveApi.createFolder(
         name.trim() || 'Thư mục mới',
-        parentId,
+        backendParentId,
         visibility,
       );
 
-      setNodes((prev) => [...prev, node]);
+      setNodes((prev) => [
+        ...prev,
+        {
+          ...node,
+          parentId,
+        },
+      ]);
+
       return node;
     },
-    [visibility],
+    [resolveBackendParentId, visibility],
   );
 
   const uploadFiles = useCallback(
@@ -223,8 +269,10 @@ export function useDrive() {
             ? currentFolderId
             : null;
 
-      if (!parentId) {
-        setError('Vui lòng mở một thư mục trước khi tải file lên');
+      const backendParentId = resolveBackendParentId(parentId);
+
+      if (!backendParentId) {
+        setError('Không tìm thấy thư mục gốc để tải file lên');
         return;
       }
 
@@ -239,8 +287,16 @@ export function useDrive() {
       setUploads((prev) => [...prev, ...tasks]);
 
       try {
-        const uploadedNodes = await driveApi.uploadFilesToFolder(parentId, list);
-        setNodes((prev) => [...prev, ...uploadedNodes]);
+        await driveApi.uploadFilesToFolder(backendParentId, list);
+
+        const children = await driveApi.getChildren(backendParentId);
+
+        setNodes((prev) => [
+          ...prev.filter((node) => node.parentId !== parentId),
+          ...children.map((node) =>
+            node.parentId === backendParentId ? { ...node, parentId } : node,
+          ),
+        ]);
 
         setUploads((prev) =>
           prev.map((task) =>
@@ -249,22 +305,27 @@ export function useDrive() {
               : task,
           ),
         );
-
-        setTimeout(() => {
-          setUploads((prev) => prev.filter((task) => !tasks.some((item) => item.id === task.id)));
-        }, 1200);
       } catch (err) {
+        setError(err instanceof Error ? err.message : 'Upload thất bại');
+
         setUploads((prev) =>
           prev.map((task) =>
             tasks.some((item) => item.id === task.id)
               ? {
                   ...task,
+                  progress: 100,
                   status: 'error',
                   error: err instanceof Error ? err.message : 'Upload thất bại',
                 }
               : task,
           ),
         );
+      } finally {
+        setTimeout(() => {
+          setUploads((prev) =>
+            prev.filter((task) => !tasks.some((item) => item.id === task.id)),
+          );
+        }, 1200);
       }
 
       if (section !== 'cloud') setSectionState('cloud');
@@ -276,77 +337,165 @@ export function useDrive() {
     setNodes((prev) => prev.map((n) => (n.id === id ? { ...n, favourite: !n.favourite } : n)));
   }, []);
 
-  const moveToTrash = useCallback(
-    (id: string) => {
-      const affected = new Set<string>([id]);
-      let grew = true;
-      while (grew) {
-        grew = false;
-        for (const n of nodes) {
-          if (n.parentId && affected.has(n.parentId) && !affected.has(n.id)) {
-            affected.add(n.id);
-            grew = true;
-          }
+  function collectDescendantIds(rootIds: string[], allNodes: DriveNode[]): string[] {
+    const affected = new Set(rootIds);
+    let grew = true;
+
+    while (grew) {
+      grew = false;
+
+      for (const node of allNodes) {
+        if (node.parentId && affected.has(node.parentId) && !affected.has(node.id)) {
+          affected.add(node.id);
+          grew = true;
         }
       }
-      const now = new Date().toISOString();
-      setNodes((prev) =>
-        prev.map((n) => (affected.has(n.id) ? { ...n, trashed: true, trashedAt: now } : n)),
-      );
-      setSelectedId((cur) => (cur && affected.has(cur) ? null : cur));
+    }
+
+    return Array.from(affected);
+  }
+
+  const refreshCurrentFolder = useCallback(async () => {
+    const backendParentId = resolveBackendParentId(currentFolderId);
+
+    if (!backendParentId) {
+      await loadRoots();
+      return;
+    }
+
+    const children = await driveApi.getChildren(backendParentId);
+
+    setNodes((prev) => [
+      ...prev.filter((node) => node.parentId !== currentFolderId),
+      ...children.map((node) =>
+        node.parentId === backendParentId ? { ...node, parentId: currentFolderId } : node,
+      ),
+    ]);
+  }, [currentFolderId, loadRoots, resolveBackendParentId]);
+
+  const moveToTrash = useCallback(
+    async (idOrIds: string | string[]) => {
+      const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+      const affectedIds = collectDescendantIds(ids, nodes);
+      const selectedNodes = nodes.filter((node) => ids.includes(node.id));
+
+      setError(null);
+
+      try {
+        await Promise.all(
+          selectedNodes.map((node) =>
+            node.type === 'folder'
+              ? driveApi.trashFolder(node.id)
+              : driveApi.trashFile(node.id),
+          ),
+        );
+
+        const now = new Date().toISOString();
+
+        setNodes((prev) =>
+          prev.map((node) =>
+            affectedIds.includes(node.id)
+              ? { ...node, trashed: true, trashedAt: now }
+              : node,
+          ),
+        );
+
+        setSelectedId((cur) => (cur && affectedIds.includes(cur) ? null : cur));
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          affectedIds.forEach((id) => next.delete(id));
+          return next;
+        });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Chuyển vào thùng rác thất bại');
+        await refreshCurrentFolder();
+        throw err;
+      }
     },
-    [nodes],
+    [nodes, refreshCurrentFolder],
   );
 
   const restore = useCallback(
-    (id: string) => {
-      const affected = new Set<string>([id]);
-      let grew = true;
-      while (grew) {
-        grew = false;
-        for (const n of nodes) {
-          if (n.parentId && affected.has(n.parentId) && !affected.has(n.id)) {
-            affected.add(n.id);
-            grew = true;
-          }
-        }
+    async (idOrIds: string | string[]) => {
+      const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+      const affectedIds = collectDescendantIds(ids, nodes);
+      const selectedNodes = nodes.filter((node) => ids.includes(node.id));
+
+      setError(null);
+
+      try {
+        await Promise.all(
+          selectedNodes.map((node) =>
+            node.type === 'folder'
+              ? driveApi.restoreFolder(node.id)
+              : driveApi.restoreFile(node.id),
+          ),
+        );
+
+        setNodes((prev) =>
+          prev.map((node) =>
+            affectedIds.includes(node.id)
+              ? { ...node, trashed: false, trashedAt: null }
+              : node,
+          ),
+        );
+
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          affectedIds.forEach((id) => next.delete(id));
+          return next;
+        });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Khôi phục thất bại');
+        throw err;
       }
-      setNodes((prev) =>
-        prev.map((n) => (affected.has(n.id) ? { ...n, trashed: false, trashedAt: null } : n)),
-      );
     },
     [nodes],
   );
 
   const deleteForever = useCallback(
-    (id: string) => {
-      const toRemove = new Set<string>([id]);
-      let grew = true;
-      while (grew) {
-        grew = false;
-        for (const n of nodes) {
-          if (n.parentId && toRemove.has(n.parentId) && !toRemove.has(n.id)) {
-            toRemove.add(n.id);
-            grew = true;
-          }
-        }
+    async (idOrIds: string | string[]) => {
+      const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+      const removeIds = collectDescendantIds(ids, nodes);
+      const selectedNodes = nodes.filter((node) => ids.includes(node.id));
+
+      setError(null);
+
+      try {
+        await Promise.all(
+          selectedNodes.map((node) =>
+            node.type === 'folder'
+              ? driveApi.hardDeleteFolder(node.id)
+              : driveApi.hardDeleteFile(node.id),
+          ),
+        );
+
+        setNodes((prev) => prev.filter((node) => !removeIds.includes(node.id)));
+        setSelectedId((cur) => (cur && removeIds.includes(cur) ? null : cur));
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          removeIds.forEach((id) => next.delete(id));
+          return next;
+        });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Xóa vĩnh viễn thất bại');
+        await refreshCurrentFolder();
+        throw err;
       }
-      setNodes((prev) => prev.filter((n) => !toRemove.has(n.id)));
-      setSelectedId((cur) => (cur && toRemove.has(cur) ? null : cur));
     },
-    [nodes],
+    [nodes, refreshCurrentFolder],
   );
 
   const emptyTrash = useCallback(() => {
     setNodes((prev) => prev.filter((n) => !n.trashed));
   }, []);
 
-  const copyToClipboard = useCallback((id: string) => {
-    setClipboard({ mode: 'copy', ids: [id] });
+  const copyToClipboard = useCallback((idOrIds: string | string[]) => {
+    setClipboard({ mode: 'copy', ids: Array.isArray(idOrIds) ? idOrIds : [idOrIds] });
   }, []);
 
-  const cutToClipboard = useCallback((id: string) => {
-    setClipboard({ mode: 'cut', ids: [id] });
+  const cutToClipboard = useCallback((idOrIds: string | string[]) => {
+    setClipboard({ mode: 'cut', ids: Array.isArray(idOrIds) ? idOrIds : [idOrIds] });
   }, []);
 
   const duplicateNode = useCallback(
@@ -378,6 +527,8 @@ export function useDrive() {
   const paste = useCallback(
     (targetParentId: string | null) => {
       if (!clipboard) return;
+      setSelectedIds(new Set());
+
       if (clipboard.mode === 'cut') {
         setNodes((prev) => {
           const isInsideOwnSubtree = (rootId: string, target: string | null): boolean => {
@@ -391,14 +542,23 @@ export function useDrive() {
           const now = new Date().toISOString();
           return prev.map((n) => {
             if (!clipboard.ids.includes(n.id)) return n;
+            // Không cho thả một thư mục vào chính bên trong nó.
             if (n.type === 'folder' && isInsideOwnSubtree(n.id, targetParentId)) return n;
-            const siblingNames = prev.filter((s) => s.parentId === targetParentId && !s.trashed && s.id !== n.id).map((s) => s.name);
-            return { ...n, parentId: targetParentId, name: nextAvailableName(n.name, siblingNames), updatedAt: now };
+            const siblingNames = prev
+              .filter((s) => s.parentId === targetParentId && !s.trashed && s.id !== n.id)
+              .map((s) => s.name);
+            return {
+              ...n,
+              parentId: targetParentId,
+              name: nextAvailableName(n.name, siblingNames),
+              updatedAt: now,
+            };
           });
         });
         setClipboard(null);
         return;
       }
+
       setNodes((prev) => {
         let result = prev;
         for (const id of clipboard.ids) {
@@ -426,6 +586,7 @@ export function useDrive() {
     viewMode,
     sort,
     selectedId,
+    selectedIds,
     selectedNode,
     clipboard,
     searchTerm,
@@ -434,6 +595,7 @@ export function useDrive() {
     loading,
     error,
     visibility,
+    rootFolderId,
     // derived
     breadcrumbs,
     visibleNodes,
@@ -448,6 +610,8 @@ export function useDrive() {
     setSearchTerm,
     setInfoOpen,
     select,
+    toggleMultiSelect,
+    clearMultiSelect,
     // actions
     createFolder,
     uploadFiles,

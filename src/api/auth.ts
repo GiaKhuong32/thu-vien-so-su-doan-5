@@ -48,12 +48,16 @@ export interface LoginResponse {
 export type RegisterResponse = AccountResponse;
 
 export async function login(credentials: LoginRequest): Promise<LoginResponse> {
+  removeToken();
+
   const payload: ApiLoginRequest = {
     userName: credentials.username,
     password: credentials.password,
   };
 
-  const response = await api.post<LoginResponse>('/auth/login', payload);
+  const response = await api.post<LoginResponse>('/auth/login', payload, {
+    auth: false,
+  });
 
   if (response.token) {
     setToken(response.token);

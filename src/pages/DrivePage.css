@@ -1,3 +1,9 @@
+/**
+ * Toàn bộ khu vực Lưu trữ dùng các biến --drive-* bên dưới, được ánh xạ từ
+ * bảng màu thương hiệu sẵn có của dự án (--c-primary, --c-secondary, --c-sand, ...
+ * định nghĩa trong src/styles/global.css) để đồng bộ tông màu đỏ/vàng đồng
+ * của thư viện. Muốn đổi tông màu chỉ cần sửa ở một chỗ duy nhất này.
+ */
 .drive-page {
   --drive-bg: var(--c-cream);
   --drive-panel: var(--c-white);

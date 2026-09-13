@@ -9,6 +9,8 @@ import DriveContextMenu from '../components/Drive/DriveContextMenu';
 import NewFolderModal from '../components/Drive/NewFolderModal';
 import DriveInfoPanel from '../components/Drive/DriveInfoPanel';
 import DriveUploadTray from '../components/Drive/DriveUploadTray';
+import DriveSelectionBar from '../components/Drive/Driveselectionbar';
+import ConfirmDialog from '../components/Drive/Confirmdialog';
 import type { DriveNode } from '../types/drive';
 import './DrivePage.css';
 
@@ -21,10 +23,9 @@ export default function DrivePage() {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [dropOverlay, setDropOverlay] = useState(false);
+  const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[] | null>(null);
   const dragCounter = useRef(0);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const cutIds = drive.clipboard?.mode === 'cut' ? new Set(drive.clipboard.ids) : undefined;
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -36,23 +37,32 @@ export default function DrivePage() {
     if (toastTimer.current) clearTimeout(toastTimer.current);
   }, []);
 
+  /* ---------------- Tải lên ---------------- */
+
   const handleUpload = useCallback(
-    async (files: FileList) => {
+    async (files: FileList | File[]) => {
+      const uploadCount = files.length;
+
       await drive.uploadFiles(files);
-      showToast(`Đã tải lên ${files.length} tệp`);
+
+      showToast(`Đã tải lên ${uploadCount} tệp`);
     },
     [drive, showToast],
   );
 
   const handleDropOnFolder = useCallback(
-    async (folderId: string, files: FileList) => {
+    async (folderId: string, files: FileList | File[]) => {
+      const uploadCount = files.length;
+
       await drive.uploadFiles(files, { parentId: folderId });
       await drive.navigateTo(folderId);
-      showToast(`Đã tải lên ${files.length} tệp`);
+
+      showToast(`Đã tải lên ${uploadCount} tệp`);
     },
     [drive, showToast],
   );
 
+  /* Kéo-thả tệp từ máy tính vào bất kỳ đâu trong khu vực nội dung */
   const onDragEnter = (e: React.DragEvent) => {
     if (!e.dataTransfer.types.includes('Files')) return;
     e.preventDefault();
@@ -76,12 +86,78 @@ export default function DrivePage() {
     if (e.dataTransfer.files.length) handleUpload(e.dataTransfer.files);
   };
 
+  /* ---------------- Thư mục mới ---------------- */
+
   const handleCreateFolder = async (name: string) => {
-    await drive.createFolder({ parentId: drive.section === 'cloud' ? drive.currentFolderId : null, name });
-    setFolderModalOpen(false);
-    showToast('Đã tạo thư mục');
+    try {
+      await drive.createFolder({
+        parentId: drive.section === 'cloud' ? drive.currentFolderId : null,
+        name,
+      });
+
+      setFolderModalOpen(false);
+      showToast('Đã tạo thư mục');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Tạo thư mục thất bại');
+    }
   };
+
+  /* ---------------- Menu chuột phải ---------------- */
+
   const closeCtxMenu = () => setCtxMenu(null);
+
+  const cutIds = drive.clipboard?.mode === 'cut' ? new Set(drive.clipboard.ids) : undefined;
+
+  /* ---------------- Xóa vĩnh viễn (có xác nhận) ---------------- */
+
+  const requestDeleteForever = (ids: string[]) => setConfirmDeleteIds(ids);
+
+  const confirmDeleteForever = async () => {
+    if (!confirmDeleteIds) return;
+
+    try {
+      await drive.deleteForever(confirmDeleteIds);
+      showToast(
+        confirmDeleteIds.length > 1
+          ? `Đã xóa vĩnh viễn ${confirmDeleteIds.length} mục`
+          : 'Đã xóa vĩnh viễn',
+      );
+      setConfirmDeleteIds(null);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Xóa vĩnh viễn thất bại');
+    }
+  };
+
+  const confirmDeleteName =
+    confirmDeleteIds?.length === 1 ? drive.nodes.find((n) => n.id === confirmDeleteIds[0])?.name : null;
+
+  /* ---------------- Chọn nhiều (thanh hành động hàng loạt) ---------------- */
+
+  const handleBulkCut = () => {
+    const ids = Array.from(drive.selectedIds);
+    drive.cutToClipboard(ids);
+    showToast(`Đã cắt ${ids.length} mục — vào thư mục đích rồi bấm "Dán"`);
+  };
+
+  const handleBulkTrash = async () => {
+    const ids = Array.from(drive.selectedIds);
+    try {
+      await drive.moveToTrash(ids);
+      showToast(`Đã chuyển ${ids.length} mục vào thùng rác`);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Chuyển vào thùng rác thất bại');
+    }
+  };
+
+  const handleBulkRestore = async () => {
+    const ids = Array.from(drive.selectedIds);
+    try {
+      await drive.restore(ids);
+      showToast(`Đã khôi phục ${ids.length} mục`);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Khôi phục thất bại');
+    }
+  };
 
   return (
     <div className="drive-page">
@@ -121,6 +197,16 @@ export default function DrivePage() {
               </div>
             )}
 
+            <DriveSelectionBar
+              count={drive.selectedIds.size}
+              section={drive.section}
+              onClear={drive.clearMultiSelect}
+              onCut={handleBulkCut}
+              onTrash={handleBulkTrash}
+              onRestore={handleBulkRestore}
+              onDeleteForever={() => requestDeleteForever(Array.from(drive.selectedIds))}
+            />
+
             <DriveItemsView
               section={drive.section}
               nodes={drive.visibleNodes}
@@ -145,10 +231,26 @@ export default function DrivePage() {
                 setRenamingId(null);
               }}
               renamingId={renamingId}
-              onTrash={(id) => { drive.moveToTrash(id); showToast('Đã chuyển vào thùng rác'); }}
-              onRestore={(id) => { drive.restore(id); showToast('Đã khôi phục'); }}
-              onDeleteForever={(id) => { drive.deleteForever(id); showToast('Đã xóa vĩnh viễn'); }}
+              onTrash={async (id) => {
+                try {
+                  await drive.moveToTrash(id);
+                  showToast('Đã chuyển vào thùng rác');
+                } catch (err) {
+                  showToast(err instanceof Error ? err.message : 'Chuyển vào thùng rác thất bại');
+                }
+              }}
+              onRestore={async (id) => {
+                try {
+                  await drive.restore(id);
+                  showToast('Đã khôi phục');
+                } catch (err) {
+                  showToast(err instanceof Error ? err.message : 'Khôi phục thất bại');
+                }
+              }}
+              onDeleteForever={(id) => requestDeleteForever([id])}
               cutIds={cutIds}
+              selectedIds={drive.selectedIds}
+              onToggleMultiSelect={drive.toggleMultiSelect}
             />
           </div>
 
@@ -179,23 +281,28 @@ export default function DrivePage() {
           }}
           onToggleFavourite={() => ctxMenu.node && drive.toggleFavourite(ctxMenu.node.id)}
           onShowInfo={() => drive.setInfoOpen(true)}
-          onTrash={() => {
+          onTrash={async () => {
             if (ctxMenu.node) {
-              drive.moveToTrash(ctxMenu.node.id);
-              showToast('Đã chuyển vào thùng rác');
+              try {
+                await drive.moveToTrash(ctxMenu.node.id);
+                showToast('Đã chuyển vào thùng rác');
+              } catch (err) {
+                showToast(err instanceof Error ? err.message : 'Chuyển vào thùng rác thất bại');
+              }
             }
           }}
-          onRestore={() => {
+          onRestore={async () => {
             if (ctxMenu.node) {
-              drive.restore(ctxMenu.node.id);
-              showToast('Đã khôi phục');
+              try {
+                await drive.restore(ctxMenu.node.id);
+                showToast('Đã khôi phục');
+              } catch (err) {
+                showToast(err instanceof Error ? err.message : 'Khôi phục thất bại');
+              }
             }
           }}
           onDeleteForever={() => {
-            if (ctxMenu.node) {
-              drive.deleteForever(ctxMenu.node.id);
-              showToast('Đã xóa vĩnh viễn');
-            }
+            if (ctxMenu.node) requestDeleteForever([ctxMenu.node.id]);
           }}
           onNewFolder={() => setFolderModalOpen(true)}
         />
@@ -204,6 +311,22 @@ export default function DrivePage() {
       <NewFolderModal open={folderModalOpen} onClose={() => setFolderModalOpen(false)} onCreate={handleCreateFolder} />
 
       <DriveUploadTray tasks={drive.uploads} />
+
+      <ConfirmDialog
+        open={confirmDeleteIds !== null}
+        title="Xóa vĩnh viễn?"
+        message={
+          confirmDeleteIds && confirmDeleteIds.length > 1
+            ? `${confirmDeleteIds.length} mục sẽ bị xóa vĩnh viễn và không thể khôi phục.`
+            : confirmDeleteName
+              ? `"${confirmDeleteName}" sẽ bị xóa vĩnh viễn và không thể khôi phục.`
+              : 'Mục này sẽ bị xóa vĩnh viễn và không thể khôi phục.'
+        }
+        confirmLabel="Xóa vĩnh viễn"
+        danger
+        onConfirm={confirmDeleteForever}
+        onCancel={() => setConfirmDeleteIds(null)}
+      />
 
       <div className={`drive-toast${toast ? ' is-show' : ''}`}>{toast}</div>
     </div>

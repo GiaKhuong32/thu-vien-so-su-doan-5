@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { mainMenu, type MenuItem } from '../../data/navigation';
+import { isAuthenticated, logout } from '../../api/auth';
+import UserMenu from '../UserMenu/UserMenu';
 import './Navbar.css';
 import logo from '../../assets/skin/logo.png';
 
@@ -79,8 +81,45 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [stuck, setStuck] = useState(false);
+  const [isAuthenticatedUser, setIsAuthenticatedUser] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [userRole, setUserRole] = useState('Người dùng');
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setIsAuthenticatedUser(isAuthenticated());
+    const storedUserName = localStorage.getItem('user_name');
+    if (storedUserName) {
+      setUserName(storedUserName);
+    }
+
+    // Parse JWT token to get user role
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const scope = payload.scope;
+        if (scope === 'ROLE_Admin') {
+          setUserRole('Quản trị viên');
+        } else if (scope === 'ROLE_User') {
+          setUserRole('Người dùng');
+        } else {
+          setUserRole(scope || 'Người dùng');
+        }
+      } catch (err) {
+        console.error('Error parsing JWT:', err);
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    setIsAuthenticatedUser(false);
+    setUserName('');
+    setUserRole('Người dùng');
+    navigate('/');
+  };
 
   useEffect(() => {
     const onScroll = () => setStuck(window.scrollY > 8);
@@ -176,14 +215,22 @@ export default function Navbar() {
           >
             <SearchIcon />
           </button>
-          <div className="auth-buttons">
-            <Link to="/dang-nhap" className="btn-auth btn-auth--login">
-              Đăng nhập
-            </Link>
-            <Link to="/dang-ky" className="btn-auth btn-auth--register">
-              Đăng ký
-            </Link>
-          </div>
+          {isAuthenticatedUser ? (
+            <UserMenu
+              name={userName || 'Người dùng'}
+              role={userRole}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <div className="auth-buttons">
+              <Link to="/dang-nhap" className="btn-auth btn-auth--login">
+                Đăng nhập
+              </Link>
+              <Link to="/dang-ky" className="btn-auth btn-auth--register">
+                Đăng ký
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 

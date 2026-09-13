@@ -16,6 +16,8 @@ export default function LoginPage() {
 
     try {
       await login({ username, password });
+      // Lưu username vào localStorage để hiển thị trong UserMenu
+      localStorage.setItem('user_name', username);
       // Đăng nhập thành công, chuyển về trang chủ
       navigate("/");
     } catch (err) {

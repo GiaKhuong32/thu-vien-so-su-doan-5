@@ -1,0 +1,75 @@
+.drive-selection-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 9px 12px 9px 8px;
+  background: var(--drive-sand);
+  border: 1px solid var(--drive-border-strong);
+  border-radius: var(--drive-radius-lg);
+  flex-wrap: wrap;
+}
+
+.drive-selection-bar__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--drive-accent-dark);
+}
+
+.drive-selection-bar__clear {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--drive-text-muted);
+  flex-shrink: 0;
+}
+
+.drive-selection-bar__clear:hover {
+  background: var(--drive-bg);
+  color: var(--drive-text);
+}
+
+.drive-selection-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.drive-selection-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: 8px;
+  border: 1px solid var(--drive-border-strong);
+  background: #fff;
+  color: var(--drive-text);
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.drive-selection-btn:hover {
+  background: var(--drive-bg);
+}
+
+.drive-selection-btn.is-danger {
+  color: var(--drive-danger);
+  border-color: #f2c7c1;
+}
+
+.drive-selection-btn.is-danger:hover {
+  background: var(--drive-danger-soft);
+}

@@ -13,11 +13,21 @@ export default function DriveUploadTray({ tasks }: { tasks: DriveUploadTask[] })
           <div className="drive-upload-task__body">
             <div className="drive-upload-task__row">
               <span className="drive-upload-task__name">{task.name}</span>
-              <span className="drive-upload-task__size">{formatBytes(task.size)}</span>
+              <span className="drive-upload-task__size">
+                {task.status === 'error' ? 'Lỗi' : formatBytes(task.size)}
+              </span>
             </div>
             <div className="drive-upload-task__track">
-              <div className="drive-upload-task__fill" style={{ width: `${task.progress}%` }} />
+              <div
+                className={`drive-upload-task__fill ${
+                  task.status === 'error' ? 'is-error' : ''
+                }`}
+                style={{ width: `${task.progress}%` }}
+              />
             </div>
+            {task.status === 'error' && task.error && (
+              <div className="drive-upload-task__error">{task.error}</div>
+            )}
           </div>
         </div>
       ))}

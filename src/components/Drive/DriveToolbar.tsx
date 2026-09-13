@@ -16,7 +16,7 @@ type Props = {
 };
 
 const SECTION_TITLE: Record<DriveSection, string> = {
-  cloud: 'Đám Mây',
+  cloud: 'Ổ Mây',
   recent: 'Gần Đây',
   favourite: 'Ưa Thích',
   trash: 'Thùng rác',
@@ -40,7 +40,9 @@ function SortDropdown({ sort, onChange }: { sort: DriveSort; onChange: (sort: Dr
     const handleClick = (e: MouseEvent) => {
       if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
     };
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
     document.addEventListener('mousedown', handleClick);
     document.addEventListener('keydown', handleKey);
     return () => {
@@ -61,7 +63,10 @@ function SortDropdown({ sort, onChange }: { sort: DriveSort; onChange: (sort: Dr
             <div
               key={opt.value}
               className={`drive-sort__option${opt.value === current.value ? ' is-active' : ''}`}
-              onClick={() => { onChange(opt.sort); setOpen(false); }}
+              onClick={() => {
+                onChange(opt.sort);
+                setOpen(false);
+              }}
             >
               {opt.label}
             </div>
@@ -92,7 +97,7 @@ export default function DriveToolbar({
               className={`drive-crumb${breadcrumbs.length === 0 ? ' is-current' : ''}`}
               onClick={() => onNavigate(null)}
             >
-              Đám Mây
+              Ổ Mây
             </span>
             {breadcrumbs.map((crumb, idx) => (
               <span key={crumb.id ?? 'root'}>

@@ -1,0 +1,76 @@
+.drive-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 20, 10, 0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 160;
+}
+
+.drive-confirm-box {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px 24px 20px 24px;
+  width: 380px;
+  max-width: 90vw;
+  box-shadow: var(--drive-shadow-menu);
+}
+
+.drive-confirm-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--drive-text);
+  margin-bottom: 10px;
+}
+
+.drive-confirm-message {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--drive-text-muted);
+  margin: 0 0 22px 0;
+}
+
+.drive-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.drive-confirm-btn {
+  padding: 9px 18px;
+  border-radius: var(--drive-radius);
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  border: none;
+  font: inherit;
+}
+
+.drive-confirm-btn.is-cancel {
+  background: var(--drive-bg);
+  color: var(--drive-text);
+}
+
+.drive-confirm-btn.is-cancel:hover {
+  background: var(--drive-border);
+}
+
+.drive-confirm-btn.is-confirm {
+  background: var(--drive-accent);
+  color: #fff;
+}
+
+.drive-confirm-btn.is-confirm:hover {
+  background: var(--drive-accent-dark);
+}
+
+.drive-confirm-btn.is-danger {
+  background: var(--drive-danger);
+  color: #fff;
+}
+
+.drive-confirm-btn.is-danger:hover {
+  background: #8a2a20;
+}

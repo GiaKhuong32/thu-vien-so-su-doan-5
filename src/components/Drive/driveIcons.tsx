@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import type { DriveFileKind, DriveNode } from '../../types/drive';
 
-/** Suy ra "nhóm" tệp tin từ mimeType/đuôi file, dùng để chọn icon phù hợp. */
 export function getFileKind(node: DriveNode): DriveFileKind {
   if (node.type === 'folder') return 'folder';
   const mime = node.mimeType ?? '';
@@ -43,7 +42,6 @@ const KIND_ICON: Record<DriveFileKind, LucideIcon> = {
   other: FileIcon,
 };
 
-/** Màu icon theo tông thương hiệu (đỏ/vàng đồng) để mỗi loại tệp có sắc riêng nhưng vẫn hài hoà. */
 const KIND_COLOR: Record<DriveFileKind, string> = {
   folder: 'var(--drive-gold)',
   pdf: 'var(--drive-accent)',

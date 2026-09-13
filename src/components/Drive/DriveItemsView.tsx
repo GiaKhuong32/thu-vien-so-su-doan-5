@@ -23,7 +23,11 @@ type Props = {
   onTrash: (id: string) => void;
   onRestore: (id: string) => void;
   onDeleteForever: (id: string) => void;
+  /** id của các mục đang chờ "cắt" (clipboard.mode === 'cut') — hiển thị mờ đi cho tới khi được dán. */
   cutIds?: Set<string>;
+  /** id của các mục đang được chọn nhiều (checkbox) để thao tác hàng loạt. */
+  selectedIds: Set<string>;
+  onToggleMultiSelect: (id: string) => void;
 };
 
 function FavButton({ node, onToggleFavourite }: { node: DriveNode; onToggleFavourite: (id: string) => void }) {
@@ -48,7 +52,10 @@ function TrashButton({ node, onTrash }: { node: DriveNode; onTrash: (id: string)
       type="button"
       className="drive-trash-btn"
       title="Chuyển vào thùng rác"
-      onClick={(e) => { e.stopPropagation(); onTrash(node.id); }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onTrash(node.id);
+      }}
     >
       <Trash2 size={14} strokeWidth={2} />
     </button>
@@ -57,8 +64,15 @@ function TrashButton({ node, onTrash }: { node: DriveNode; onTrash: (id: string)
 
 function RestoreButton({ node, onRestore }: { node: DriveNode; onRestore: (id: string) => void }) {
   return (
-    <button type="button" className="drive-restore-btn" title="Khôi phục"
-      onClick={(e) => { e.stopPropagation(); onRestore(node.id); }}>
+    <button
+      type="button"
+      className="drive-restore-btn"
+      title="Khôi phục"
+      onClick={(e) => {
+        e.stopPropagation();
+        onRestore(node.id);
+      }}
+    >
       <RotateCcw size={14} strokeWidth={2} />
     </button>
   );
@@ -66,8 +80,15 @@ function RestoreButton({ node, onRestore }: { node: DriveNode; onRestore: (id: s
 
 function DeleteForeverButton({ node, onDeleteForever }: { node: DriveNode; onDeleteForever: (id: string) => void }) {
   return (
-    <button type="button" className="drive-trash-btn" title="Xóa vĩnh viễn"
-      onClick={(e) => { e.stopPropagation(); onDeleteForever(node.id); }}>
+    <button
+      type="button"
+      className="drive-trash-btn"
+      title="Xóa vĩnh viễn"
+      onClick={(e) => {
+        e.stopPropagation();
+        onDeleteForever(node.id);
+      }}
+    >
       <Trash2 size={14} strokeWidth={2} />
     </button>
   );
@@ -121,6 +142,8 @@ export default function DriveItemsView({
   onRestore,
   onDeleteForever,
   cutIds,
+  selectedIds,
+  onToggleMultiSelect,
 }: Props) {
   const [dragOverId, setDragOverId] = useState<string | null>(null);
 
@@ -161,7 +184,7 @@ export default function DriveItemsView({
         {nodes.map((node) => (
           <div
             key={node.id}
-            className={`drive-card${node.id === selectedId ? ' is-selected' : ''}${node.favourite ? ' is-fav' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}${cutIds?.has(node.id) ? ' is-cut' : ''}`}
+            className={`drive-card${node.id === selectedId ? ' is-selected' : ''}${node.favourite ? ' is-fav' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}${cutIds?.has(node.id) ? ' is-cut' : ''}${selectedIds.has(node.id) ? ' is-multi-selected' : ''}`}
             onClick={(e) => {
               e.stopPropagation();
               onSelect(node.id);
@@ -175,6 +198,13 @@ export default function DriveItemsView({
             }}
             {...folderDragHandlers(node)}
           >
+            <label className="drive-card__checkbox" onClick={(e) => e.stopPropagation()}>
+              <input
+                type="checkbox"
+                checked={selectedIds.has(node.id)}
+                onChange={() => onToggleMultiSelect(node.id)}
+              />
+            </label>
             <div className="drive-card__thumb">
               {node.type === 'file' && node.previewUrl ? (
                 <img src={node.previewUrl} alt="" />
@@ -210,6 +240,7 @@ export default function DriveItemsView({
   return (
     <div onClick={() => onSelect(null)} onContextMenu={section === 'cloud' ? onContextMenuEmpty : undefined}>
       <div className="drive-list-head">
+        <span />
         <span>Tên</span>
         <span>Ngày</span>
         <span>Dung lượng</span>
@@ -218,7 +249,7 @@ export default function DriveItemsView({
       {nodes.map((node) => (
         <div
           key={node.id}
-          className={`drive-list-row${node.id === selectedId ? ' is-selected' : ''}${node.favourite ? ' is-fav' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}${cutIds?.has(node.id) ? ' is-cut' : ''}`}
+          className={`drive-list-row${node.id === selectedId ? ' is-selected' : ''}${node.favourite ? ' is-fav' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}${cutIds?.has(node.id) ? ' is-cut' : ''}${selectedIds.has(node.id) ? ' is-multi-selected' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
             onSelect(node.id);
@@ -232,6 +263,13 @@ export default function DriveItemsView({
           }}
           {...folderDragHandlers(node)}
         >
+          <label className="drive-list-checkbox" onClick={(e) => e.stopPropagation()}>
+            <input
+              type="checkbox"
+              checked={selectedIds.has(node.id)}
+              onChange={() => onToggleMultiSelect(node.id)}
+            />
+          </label>
           <div className="drive-list-name">
             <span className="drive-list-name__icon">
               <DriveNodeIcon node={node} size={16} />
