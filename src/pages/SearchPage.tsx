@@ -4,8 +4,9 @@ import BookGrid from '../components/BookGrid/BookGrid';
 import PageBanner from '../components/PageBanner/PageBanner';
 import PageLayout from '../components/PageLayout/PageLayout';
 import Sidebar from '../components/Sidebar/Sidebar';
-import { bookCategories, bookTopics, libraryBanner } from '../data/library';
+import { bookTopics, libraryBanner } from '../data/library';
 import { useBooks, useBooksByType } from '../hooks/useBooks';
+import { useCategories } from '../hooks/useCategories';
 import useReveal from '../hooks/useReveal';
 
 const PER_PAGE = 12;
@@ -14,7 +15,8 @@ export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
   const page = parseInt(searchParams.get('page') || '1', 10);
-  const [categoriesWithCount, setCategoriesWithCount] = useState(bookCategories);
+  const dbCategories = useCategories({ includeAll: true });
+  const [categoriesWithCount, setCategoriesWithCount] = useState(dbCategories);
   const [topicsWithCount, setTopicsWithCount] = useState(bookTopics);
 
   const { data: allBooks, loading, error } = useBooks();
@@ -55,7 +57,7 @@ export default function SearchPage() {
      
       const categoryCounts = new Map<string, number>();
 
-      bookCategories.forEach(cat => {
+      dbCategories.forEach(cat => {
         if (cat.label === 'Tất cả') {
           categoryCounts.set(cat.label, allBooks.length);
           return;
@@ -78,7 +80,7 @@ export default function SearchPage() {
         categoryCounts.set(cat.label, count);
       });
 
-      const categoriesWithCounts = bookCategories.map(cat => ({
+      const categoriesWithCounts = dbCategories.map(cat => ({
         ...cat,
         count: categoryCounts.get(cat.label) || 0
       }));

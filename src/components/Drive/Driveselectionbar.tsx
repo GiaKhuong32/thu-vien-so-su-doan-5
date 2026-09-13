@@ -1,19 +1,23 @@
-import { RotateCcw, Scissors, Trash2, X } from 'lucide-react';
+import { CheckSquare, RotateCcw, Scissors, Trash2, X } from 'lucide-react';
 import type { DriveSection } from '../../types/drive';
 import './DriveSelectionBar.css';
 
 type Props = {
   count: number;
+  totalCount: number;
   section: DriveSection;
   onClear: () => void;
+  onSelectAll: () => void;
   onCut: () => void;
   onTrash: () => void;
   onRestore: () => void;
   onDeleteForever: () => void;
 };
 
-export default function DriveSelectionBar({ count, section, onClear, onCut, onTrash, onRestore, onDeleteForever }: Props) {
+export default function DriveSelectionBar({ count, totalCount, section, onClear, onSelectAll, onCut, onTrash, onRestore, onDeleteForever }: Props) {
   if (count === 0) return null;
+
+  const isAllSelected = count === totalCount && totalCount > 0;
 
   return (
     <div className="drive-selection-bar">
@@ -25,6 +29,11 @@ export default function DriveSelectionBar({ count, section, onClear, onCut, onTr
       </div>
 
       <div className="drive-selection-bar__actions">
+        <button type="button" className="drive-selection-btn" onClick={onSelectAll} title={isAllSelected ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}>
+          <CheckSquare size={14} strokeWidth={2} />
+          {isAllSelected ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+        </button>
+
         {section === 'trash' ? (
           <>
             <button type="button" className="drive-selection-btn" onClick={onRestore}>

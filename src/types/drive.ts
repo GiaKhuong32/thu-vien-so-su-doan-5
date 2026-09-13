@@ -40,6 +40,7 @@ export type DriveNode = {
   trashedAt?: string | null;
   openedAt?: string | null;
   previewUrl?: string | null;
+  visibility?: 'private' | 'public';
 };
 
 export type DriveStorage = {

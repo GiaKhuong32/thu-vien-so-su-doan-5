@@ -5,9 +5,11 @@ import PageBanner from '../components/PageBanner/PageBanner';
 import PageLayout from '../components/PageLayout/PageLayout';
 import Pagination from '../components/Pagination/Pagination';
 import Sidebar from '../components/Sidebar/Sidebar';
-import { bookCategories, bookTopics, libraryBanner } from '../data/library';
+import { bookTopics, libraryBanner } from '../data/library';
 import type { Author } from '../data/library';
 import { useBooks, useBooksByType } from '../hooks/useBooks';
+import { useCategories } from '../hooks/useCategories';
+import { categoryHref } from '../api/categories';
 import useReveal from '../hooks/useReveal';
 
 const PER_PAGE = 12;
@@ -25,7 +27,8 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
   const type = searchParams.get('type');
   const author = searchParams.get('author');
   const [authors, setAuthors] = useState<Author[]>([]);
-  const [categoriesWithCount, setCategoriesWithCount] = useState(bookCategories);
+  const dbCategories = useCategories({ includeAll: true });
+  const [categoriesWithCount, setCategoriesWithCount] = useState(dbCategories);
   const [topicsWithCount, setTopicsWithCount] = useState(bookTopics);
 
   const { data: allBooks } = useBooks();
@@ -48,7 +51,7 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
     if (type === 'audiobooks') return 'Sách nói';
     if (type === 'videobooks') return 'Phim tài liệu';
     if (category) {
-      const cat = bookCategories.find((c) => c.href.includes(category));
+      const cat = dbCategories.find((c) => c.href.includes(category));
       if (cat) return cat.label;
     }
     return title;
@@ -68,36 +71,12 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
     }
 
     if (category && books) {
-      const categorySlug = category.replace(/\/$/, ''); 
+      const currentHref = `/sach/${category.replace(/\/$/, '')}/`;
 
-      const categoryMap: Record<string, string> = {
-        'tai-lieu-huan-luyen': 'Tài liệu huấn luyện',
-        'tai-lieu-chinh-tri': 'Tài liệu chính trị',
-        'lich-su': 'Lịch sử',
-        'van-hoc': 'Văn học',
-        'khoa-hoc': 'Khoa học',
-        'ngon-ngu-hoc': 'Ngôn ngữ học',
-        'phim-tai-lieu': 'Phim tài liệu',
-        'tai-lieu-khac': 'Tài liệu khác',
-      };
-
-      const categoryName = categoryMap[categorySlug];
-
-      books = books.filter(book => {
-        if (!categoryName) return false;
-
-        if (book.category && book.category === categoryName) {
-          return true;
-        }
-
-        if (book.category && book.category.toLowerCase().includes(categoryName.toLowerCase())) {
-          return true;
-        }
-
-        return false;
+      books = books.filter((book) => {
+        if (!book.category) return false;
+        return categoryHref(book.category) === currentHref;
       });
-
-      console.log(`Filter by category: ${category} (${categoryName}), found ${books.length} books`);
     }
 
     if (author && books) {
@@ -150,6 +129,10 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
   ]);
 
   useEffect(() => {
+    setCategoriesWithCount(dbCategories);
+  }, [dbCategories]);
+
+  useEffect(() => {
     if (allBooks && allBooks.length > 0) {
       const uniqueAuthors = new Map<string, string>();
 
@@ -177,7 +160,7 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
 
       const categoryCounts = new Map<string, number>();
 
-      bookCategories.forEach(cat => {
+      dbCategories.forEach(cat => {
         if (cat.label === 'Tất cả') {
           categoryCounts.set(cat.label, allBooks.length);
           return;
@@ -200,7 +183,7 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
         categoryCounts.set(cat.label, count);
       });
 
-      const categoriesWithCounts = bookCategories.map(cat => ({
+      const categoriesWithCounts = dbCategories.map(cat => ({
         ...cat,
         count: categoryCounts.get(cat.label) || 0
       }));

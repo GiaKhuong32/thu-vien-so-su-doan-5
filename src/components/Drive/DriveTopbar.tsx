@@ -7,22 +7,27 @@ type Props = {
   onSearchChange: (value: string) => void;
   onUpload: (files: File[]) => void;
   onNewFolder: () => void;
+  isRootLevel: boolean;
 };
 
-export default function DriveTopbar({ searchTerm, onSearchChange, onUpload, onNewFolder }: Props) {
+export default function DriveTopbar({ searchTerm, onSearchChange, onUpload, onNewFolder, isRootLevel }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <div className="drive-topbar">
-      <button type="button" className="btn btn-primary drive-btn" onClick={() => fileInputRef.current?.click()}>
-        <Upload size={15} strokeWidth={2.3} />
-        Tải lên
-      </button>
+      {!isRootLevel && (
+        <button type="button" className="btn btn-primary drive-btn" onClick={() => fileInputRef.current?.click()}>
+          <Upload size={15} strokeWidth={2.3} />
+          Tải lên
+        </button>
+      )}
 
-      <button type="button" className="btn btn-outline-primary drive-btn" onClick={onNewFolder}>
-        <FolderPlus size={15} strokeWidth={2} />
-        Thư mục mới
-      </button>
+      {!isRootLevel && (
+        <button type="button" className="btn btn-outline-primary drive-btn" onClick={onNewFolder}>
+          <FolderPlus size={15} strokeWidth={2} />
+          Thư mục mới
+        </button>
+      )}
 
       <div className="drive-search">
         <Search size={15} strokeWidth={2} />

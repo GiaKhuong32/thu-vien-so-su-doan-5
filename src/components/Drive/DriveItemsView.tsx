@@ -187,6 +187,10 @@ export default function DriveItemsView({
             className={`drive-card${node.id === selectedId ? ' is-selected' : ''}${node.favourite ? ' is-fav' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}${cutIds?.has(node.id) ? ' is-cut' : ''}${selectedIds.has(node.id) ? ' is-multi-selected' : ''}`}
             onClick={(e) => {
               e.stopPropagation();
+              if (node.type === 'folder' && section === 'cloud' && !node.trashed) {
+                onOpenFolder(node);
+                return;
+              }
               onSelect(node.id);
             }}
             onDoubleClick={() => node.type === 'folder' && onOpenFolder(node)}
@@ -252,6 +256,10 @@ export default function DriveItemsView({
           className={`drive-list-row${node.id === selectedId ? ' is-selected' : ''}${node.favourite ? ' is-fav' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}${cutIds?.has(node.id) ? ' is-cut' : ''}${selectedIds.has(node.id) ? ' is-multi-selected' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
+            if (node.type === 'folder' && section === 'cloud' && !node.trashed) {
+              onOpenFolder(node);
+              return;
+            }
             onSelect(node.id);
           }}
           onDoubleClick={() => node.type === 'folder' && onOpenFolder(node)}

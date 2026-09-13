@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, Info, LayoutGrid, List } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronDown, Home, Info, LayoutGrid, List } from 'lucide-react';
 import type { DriveBreadcrumb, DriveSection, DriveSort, DriveViewMode } from '../../types/drive';
 import './DriveToolbar.css';
 
@@ -88,6 +89,12 @@ export default function DriveToolbar({
   infoOpen,
   onToggleInfo,
 }: Props) {
+  const navigate = useNavigate();
+
+  const goToHome = () => {
+    navigate('/');
+  };
+
   return (
     <div className="drive-toolbar">
       <div className="drive-crumbs">
@@ -117,6 +124,16 @@ export default function DriveToolbar({
       </div>
 
       <div className="drive-tools-right">
+        <button
+          type="button"
+          className="drive-home-btn"
+          title="Về trang chủ"
+          onClick={goToHome}
+        >
+          <Home size={15} strokeWidth={2.2} />
+          <span>Về trang chủ</span>
+        </button>
+
         <SortDropdown sort={sort} onChange={onSortChange} />
 
         <button

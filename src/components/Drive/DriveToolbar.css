@@ -38,6 +38,44 @@
   margin: 0 4px;
 }
 
+.drive-home-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--drive-text-muted);
+  background: var(--drive-panel);
+  border: 1px solid var(--drive-border);
+  border-radius: var(--drive-radius);
+  padding: 7px 12px 7px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.drive-home-btn:hover {
+  background: var(--drive-bg);
+  color: var(--drive-text);
+  border-color: var(--drive-border-strong);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.drive-home-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.drive-home-btn svg {
+  color: var(--drive-accent);
+  transition: color 0.15s ease;
+}
+
+.drive-home-btn:hover svg {
+  color: var(--drive-accent-dark);
+}
+
 .drive-tools-right {
   display: flex;
   align-items: center;

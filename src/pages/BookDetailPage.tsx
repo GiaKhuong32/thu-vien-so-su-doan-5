@@ -14,7 +14,7 @@ import Sidebar from '../components/Sidebar/Sidebar';
 import type { BookAction } from '../data/detail';
 import type { Author } from '../data/library';
 
-import { bookCategories, bookTopics, libraryBanner } from '../data/library';
+import { bookTopics, libraryBanner } from '../data/library';
 
 import NotFoundPage from './NotFoundPage';
 
@@ -23,6 +23,7 @@ import {
   useRelatedBooks,
   useBooks,
 } from '../hooks/useBooks';
+import { useCategories } from '../hooks/useCategories';
 import useReveal from '../hooks/useReveal';
 
 import {
@@ -61,7 +62,8 @@ export default function BookDetailPage() {
   const [bookActions, setBookActions] = useState<BookAction[]>([]);
   const [authors, setAuthors] = useState<Author[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
-  const [categoriesWithCount, setCategoriesWithCount] = useState(bookCategories);
+  const dbCategories = useCategories({ includeAll: true });
+  const [categoriesWithCount, setCategoriesWithCount] = useState(dbCategories);
   const [topicsWithCount, setTopicsWithCount] = useState(bookTopics);
 
 useEffect(() => {
@@ -149,7 +151,7 @@ useEffect(() => {
     // Calculate category counts - use same logic as filter
     const categoryCounts = new Map<string, number>();
 
-    bookCategories.forEach(cat => {
+    dbCategories.forEach(cat => {
       if (cat.label === 'Tất cả') {
         categoryCounts.set(cat.label, allBooks.length);
         return;
@@ -175,7 +177,7 @@ useEffect(() => {
       categoryCounts.set(cat.label, count);
     });
 
-    const categoriesWithCounts = bookCategories.map(cat => ({
+    const categoriesWithCounts = dbCategories.map(cat => ({
       ...cat,
       count: categoryCounts.get(cat.label) || 0
     }));

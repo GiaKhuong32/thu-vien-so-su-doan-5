@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Upload } from 'lucide-react';
 import { useDrive } from '../hooks/useDrive';
 import DriveSidebar from '../components/Drive/DriveSidebar';
@@ -17,7 +18,10 @@ import './DrivePage.css';
 type CtxMenuState = { x: number; y: number; node: DriveNode | null } | null;
 
 export default function DrivePage() {
-  const drive = useDrive();
+  const params = useParams();
+  const folderId = params.folderId || params['*']?.split('/').filter(Boolean)[0];
+  const navigate = useNavigate();
+  const drive = useDrive(folderId ?? null);
   const [ctxMenu, setCtxMenu] = useState<CtxMenuState>(null);
   const [folderModalOpen, setFolderModalOpen] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -37,6 +41,10 @@ export default function DrivePage() {
     if (toastTimer.current) clearTimeout(toastTimer.current);
   }, []);
 
+  const goToFolder = (id: string | null) => {
+    navigate(id ? `/quan-ly-tep/${id}` : '/quan-ly-tep');
+  };
+
   /* ---------------- Tải lên ---------------- */
 
   const handleUpload = useCallback(
@@ -55,11 +63,11 @@ export default function DrivePage() {
       const uploadCount = files.length;
 
       await drive.uploadFiles(files, { parentId: folderId });
-      await drive.navigateTo(folderId);
+      goToFolder(folderId);
 
       showToast(`Đã tải lên ${uploadCount} tệp`);
     },
-    [drive, showToast],
+    [drive, showToast, goToFolder],
   );
 
   /* Kéo-thả tệp từ máy tính vào bất kỳ đâu trong khu vực nội dung */
@@ -174,12 +182,13 @@ export default function DrivePage() {
           onSearchChange={drive.setSearchTerm}
           onUpload={handleUpload}
           onNewFolder={() => setFolderModalOpen(true)}
+          isRootLevel={drive.currentFolderId === null}
         />
 
         <DriveToolbar
           section={drive.section}
           breadcrumbs={drive.breadcrumbs}
-          onNavigate={drive.navigateTo}
+          onNavigate={goToFolder}
           sort={drive.sort}
           onSortChange={drive.setSort}
           viewMode={drive.viewMode}
@@ -199,8 +208,10 @@ export default function DrivePage() {
 
             <DriveSelectionBar
               count={drive.selectedIds.size}
+              totalCount={drive.visibleNodes.length}
               section={drive.section}
               onClear={drive.clearMultiSelect}
+              onSelectAll={drive.selectAll}
               onCut={handleBulkCut}
               onTrash={handleBulkTrash}
               onRestore={handleBulkRestore}
@@ -213,7 +224,7 @@ export default function DrivePage() {
               viewMode={drive.viewMode}
               selectedId={drive.selectedId}
               onSelect={drive.select}
-              onOpenFolder={(node) => drive.navigateTo(node.id)}
+              onOpenFolder={(node) => goToFolder(node.id)}
               onToggleFavourite={drive.toggleFavourite}
               onContextMenu={(e, node) => {
                 drive.select(node.id);

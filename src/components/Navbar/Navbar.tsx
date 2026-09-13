@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { mainMenu, type MenuItem } from '../../data/navigation';
 import { isAuthenticated, logout } from '../../api/auth';
+import { useCategories } from '../../hooks/useCategories';
 import UserMenu from '../UserMenu/UserMenu';
 import './Navbar.css';
 import logo from '../../assets/skin/logo.png';
@@ -86,6 +87,17 @@ export default function Navbar() {
   const [userRole, setUserRole] = useState('Người dùng');
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+ const categories = useCategories();
+
+const menuItems = useMemo(
+  () =>
+    mainMenu.map((item) =>
+      item.href === '/sach/'
+        ? { ...item, children: categories }
+        : item,
+    ),
+  [categories],
+);
 
   useEffect(() => {
     setIsAuthenticatedUser(isAuthenticated());
@@ -170,7 +182,7 @@ export default function Navbar() {
 
         <nav className="nav-desktop" aria-label="Menu chính">
           <ul className="nav-list">
-            {mainMenu.map((item) => (
+            {menuItems.map((item) => (
               <DesktopItem key={item.href} item={item} />
             ))}
           </ul>
@@ -248,7 +260,7 @@ export default function Navbar() {
         </div>
         <div className="nav-mobile__body">
           <ul className="m-list">
-            {mainMenu.map((item) => (
+            {menuItems.map((item) => (
               <MobileItem key={item.href} item={item} />
             ))}
           </ul>

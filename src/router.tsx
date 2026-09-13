@@ -52,7 +52,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/quan-ly-tep',
+    path: '/quan-ly-tep/:folderId?',
     element: (
       <>
         <ScrollToTop />
