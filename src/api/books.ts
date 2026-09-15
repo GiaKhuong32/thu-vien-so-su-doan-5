@@ -27,7 +27,7 @@ export interface ApiBook {
   totalCopies: number;
   availableCopies: number;
   categoryEntity?: CategoryEntity;
-  document: {
+  document?: {
     idDocument: string;
     title: string;
     typeDocument: string;
@@ -245,8 +245,10 @@ export const booksApi = {
   },
 
   getNew: async (limit = 10): Promise<Book[]> => {
-    const allBooks = await booksApi.getAll();
-    return allBooks.slice(0, limit);
+    const newestBooks = await api.get<ApiBook[]>('/books/newest');
+    return (Array.isArray(newestBooks) ? newestBooks : [])
+      .map(mapApiBookToBook)
+      .slice(0, limit);
   },
 
   getSuggested: async (limit = 6): Promise<Book[]> => {

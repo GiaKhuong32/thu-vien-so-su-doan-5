@@ -22,11 +22,13 @@ export default function HomePage() {
     videobooksData?.length,
   ]);
 
-  const displayNewBooks = newBooksData || [];
-  const displaySuggestedBooks = suggestedBooksData || [];
-  const displayEbooks = ebooksData || [];
-  const displayAudiobooks = audiobooksData || [];
-  const displayVideobooks = videobooksData || [];
+const HOME_SECTION_LIMIT = 10;
+
+const displayNewBooks = (newBooksData || []).slice(0, HOME_SECTION_LIMIT);
+const displaySuggestedBooks = suggestedBooksData || [];
+const displayEbooks = (ebooksData || []).slice(0, HOME_SECTION_LIMIT);
+const displayAudiobooks = (audiobooksData || []).slice(0, HOME_SECTION_LIMIT);
+const displayVideobooks = videobooksData || [];
 
   return (
     <>
