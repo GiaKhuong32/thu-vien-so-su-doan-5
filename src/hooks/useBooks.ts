@@ -15,13 +15,21 @@ export function useBookDetail(slug: string) {
   );
 }
 
-export function useRelatedBooks(slug: string, limit = 5) {
+export function useRelatedBooks(slug: string, limit = 5, idCategory?: string) {
   return useApi(
     async () => {
-      return booksApi.getRelated(slug, limit);
+      return booksApi.getRelated(slug, limit, idCategory);
     },
-    !!slug,
-    [slug, limit]
+    !!slug && !!idCategory,
+    [slug, limit, idCategory]
+  );
+}
+
+export function useBooksByCategory(ids: string[]) {
+  return useApi(
+    () => booksApi.getByCategoryIds(ids),
+    ids.length > 0,
+    [ids.join(',')],
   );
 }
 

@@ -7,9 +7,12 @@ import Pagination from '../components/Pagination/Pagination';
 import Sidebar from '../components/Sidebar/Sidebar';
 import { bookTopics, libraryBanner } from '../data/library';
 import type { Author } from '../data/library';
-import { useBooks, useBooksByType } from '../hooks/useBooks';
+import { useBooks, useBooksByCategory, useBooksByType } from '../hooks/useBooks';
 import { useCategories } from '../hooks/useCategories';
-import { categoryHref } from '../api/categories';
+import {
+  collectCategoryIds,
+  findCategoryPath,
+} from '../api/categories';
 import useReveal from '../hooks/useReveal';
 
 const PER_PAGE = 12;
@@ -19,7 +22,7 @@ type Props = {
   activeHref?: string;
 };
 
-export default function BookListPage({ title = 'Sách số', activeHref }: Props) {
+export default function BookListPage({ title = 'Thư viện', activeHref }: Props) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { category } = useParams();
 
@@ -31,7 +34,18 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
   const [categoriesWithCount, setCategoriesWithCount] = useState(dbCategories);
   const [topicsWithCount, setTopicsWithCount] = useState(bookTopics);
 
+  const categoryPath = useMemo(
+    () => (category ? findCategoryPath(dbCategories, category) : []),
+    [category, dbCategories],
+  );
+  const currentCategory = categoryPath[categoryPath.length - 1];
+  const categoryIds = useMemo(
+    () => (currentCategory ? collectCategoryIds(currentCategory) : []),
+    [currentCategory],
+  );
+
   const { data: allBooks } = useBooks();
+  const { data: categoryBooks } = useBooksByCategory(categoryIds);
   const { data: ebooksData } = useBooksByType('ebooks');
   const { data: audiobooksData } = useBooksByType('audiobooks');
   const { data: videobooksData } = useBooksByType('videobooks');
@@ -50,17 +64,16 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
     if (type === 'ebooks') return 'Sách số';
     if (type === 'audiobooks') return 'Sách nói';
     if (type === 'videobooks') return 'Phim tài liệu';
-    if (category) {
-      const cat = dbCategories.find((c) => c.href.includes(category));
-      if (cat) return cat.label;
-    }
+    if (currentCategory) return currentCategory.label;
     return title;
-  }, [type, category, author, title]);
+  }, [type, author, title, currentCategory]);
 
   const filteredBooks = useMemo(() => {
     let books: typeof allBooks = [];
 
-    if (type === 'ebooks') {
+    if (category) {
+      books = categoryBooks || [];
+    } else if (type === 'ebooks') {
       books = ebooksData || [];
     } else if (type === 'audiobooks') {
       books = audiobooksData || [];
@@ -68,15 +81,6 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
       books = videobooksData || [];
     } else {
       books = allBooks || [];
-    }
-
-    if (category && books) {
-      const currentHref = `/sach/${category.replace(/\/$/, '')}/`;
-
-      books = books.filter((book) => {
-        if (!book.category) return false;
-        return categoryHref(book.category) === currentHref;
-      });
     }
 
     if (author && books) {
@@ -103,7 +107,7 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
     }
 
     return books;
-  }, [type, category, author, allBooks, ebooksData, audiobooksData, videobooksData]);
+  }, [type, category, author, allBooks, categoryBooks, ebooksData, audiobooksData, videobooksData]);
 
   const totalPages = Math.max(1, Math.ceil(filteredBooks.length / PER_PAGE));
 
@@ -166,26 +170,21 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
           return;
         }
 
-        const count = allBooks.filter(book => {
-          if (!book.category) return false;
-
-          if (book.category === cat.label) {
-            return true;
-          }
-
-          if (book.category.toLowerCase().includes(cat.label.toLowerCase())) {
-            return true;
-          }
-
-          return false;
-        }).length;
+        const labels = [cat.label, ...(cat.children?.map((child) => child.label) ?? [])];
+        const count = allBooks.filter((book) =>
+          Boolean(book.category && labels.includes(book.category)),
+        ).length;
 
         categoryCounts.set(cat.label, count);
       });
 
       const categoriesWithCounts = dbCategories.map(cat => ({
         ...cat,
-        count: categoryCounts.get(cat.label) || 0
+        count: categoryCounts.get(cat.label) || 0,
+        children: cat.children?.map((child) => ({
+          ...child,
+          count: allBooks.filter((book) => book.category === child.label).length,
+        })),
       }));
       setCategoriesWithCount(categoriesWithCounts);
 
@@ -201,19 +200,26 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
       }));
       setTopicsWithCount(topicsWithCounts);
     }
-  }, [allBooks, ebooksData, audiobooksData, videobooksData]);
+  }, [allBooks, dbCategories, ebooksData, audiobooksData, videobooksData]);
 
-  const typeLabel = type === 'audiobooks' ? 'Sách nói' : type === 'videobooks' ? 'Phim tài liệu' : 'Sách số';
-  const breadcrumbItems = category
-    ? [
-        { label: 'Trang chủ', href: '/' },
-        { label: typeLabel, href: '/sach/' },
-        { label: displayTitle },
-      ]
-    : [
-        { label: 'Trang chủ', href: '/' },
-        { label: displayTitle },
-      ];
+  const breadcrumbItems = [
+    { label: 'Trang chủ', href: '/' },
+    { label: 'Thư viện', href: '/sach/' },
+    ...(type
+      ? [{ label: displayTitle }]
+      : [
+          ...categoryPath.slice(0, -1).map((item) => ({
+            label: item.label,
+            href: item.href,
+          })),
+          ...(author || currentCategory || displayTitle !== 'Thư viện'
+            ? [{ label: displayTitle }]
+            : []),
+        ]),
+  ];
+
+  const sidebarActiveHref =
+    activeHref || currentCategory?.href || (author ? `/sach/?author=${author}` : '/sach/');
 
   return (
     <>
@@ -229,7 +235,8 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
               categories={categoriesWithCount}
               topics={topicsWithCount}
               authors={authors}
-              activeHref={activeHref}
+              activeHref={sidebarActiveHref}
+              activeTopicHref={type ? `/sach/?type=${type}` : undefined}
               activeAuthorHref={author ? `/sach/?author=${author}` : undefined}
             />
           }
@@ -249,7 +256,11 @@ export default function BookListPage({ title = 'Sách số', activeHref }: Props
               if (type) params.set('type', type);
               if (author) params.set('author', author);
               params.set('page', p.toString());
-              return `/sach/?${params.toString()}`;
+              const basePath = currentCategory
+                ? currentCategory.href
+                : '/sach/';
+              const query = params.toString();
+              return `${basePath}${basePath.includes('?') ? '&' : '?'}${query}`;
             }}
             onChange={handlePageChange}
           />

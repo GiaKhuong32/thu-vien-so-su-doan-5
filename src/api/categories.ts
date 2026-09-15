@@ -31,6 +31,49 @@ export function categoryHref(categoryName: string): string {
   return `/sach/${slugifyCategory(categoryName)}/`;
 }
 
+export function flattenCategories(items: CategoryMenuItem[]): CategoryMenuItem[] {
+  return items.flatMap((item) => [
+    item,
+    ...(item.children?.length ? flattenCategories(item.children) : []),
+  ]);
+}
+
+export function categorySlugFromParam(value: string): string {
+  return value.replace(/\/$/, '').replace(/^\/sach\//, '');
+}
+
+export function findCategoryPath(
+  items: CategoryMenuItem[],
+  slug: string,
+): CategoryMenuItem[] {
+  const normalized = categorySlugFromParam(slug);
+  if (!normalized) return [];
+
+  for (const item of items) {
+    if (item.id === 'all') continue;
+
+    const itemSlug = slugifyCategory(item.label);
+    if (itemSlug === normalized) {
+      return [item];
+    }
+
+    if (item.children?.length) {
+      const nested = findCategoryPath(item.children, normalized);
+      if (nested.length) {
+        return [item, ...nested];
+      }
+    }
+  }
+
+  return [];
+}
+
+export function collectCategoryIds(item: CategoryMenuItem): string[] {
+  const ids = item.id && item.id !== 'all' ? [item.id] : [];
+  if (!item.children?.length) return ids;
+  return [...ids, ...item.children.flatMap(collectCategoryIds)];
+}
+
 function mapCategory(category: ApiCategory): CategoryMenuItem {
   return {
     id: category.idCategory,

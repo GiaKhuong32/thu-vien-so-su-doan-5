@@ -14,7 +14,7 @@ export type BookDetail = {
   img: string;
   rating: number;
   formats: string[];
-  category?: { label: string; href: string };
+  category?: { id?: string; label: string; href: string };
   actions: BookAction[];
   catalog: string[];
   summary: string[];

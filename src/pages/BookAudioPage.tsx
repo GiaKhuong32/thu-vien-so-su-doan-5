@@ -4,6 +4,8 @@ import BookSection from '../components/BookSection';
 import PageBanner from '../components/PageBanner/PageBanner';
 import NotFoundPage from './NotFoundPage';
 import { useBookDetail, useRelatedBooks } from '../hooks/useBooks';
+import { useCategories } from '../hooks/useCategories';
+import { findCategoryPath } from '../api/categories';
 import { libraryBanner } from '../data/library';
 import AudioPlayer, { type AudioTrack } from '../components/AudioPlayer/AudioPlayer';
 import {
@@ -15,7 +17,8 @@ import {
 export default function BookAudioPage() {
   const { slug } = useParams();
   const { data: bookData } = useBookDetail(slug || '');
-  const { data: relatedData } = useRelatedBooks(slug || '', 5);
+  const { data: relatedData } = useRelatedBooks(slug || '', 5, bookData?.category?.id);
+  const dbCategories = useCategories();
   const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -71,6 +74,14 @@ export default function BookAudioPage() {
   const book = bookData;
   const related = relatedData || [];
   const relatedMoreHref = book.category ? book.category.href : '/sach/';
+  const categoryPath = book.category
+    ? findCategoryPath(dbCategories, book.category.href)
+    : [];
+  const breadcrumbCategories = categoryPath.length
+    ? categoryPath
+    : book.category
+      ? [book.category]
+      : [];
 
   return (
     <>
@@ -78,8 +89,11 @@ export default function BookAudioPage() {
         img={libraryBanner}
         crumbs={[
           { label: 'Trang chủ', href: '/' },
-          { label: 'Sách nói', href: '/sach/' },
-          ...(book.category ? [{ label: book.category.label, href: book.category.href }] : []),
+          { label: 'Thư viện', href: '/sach/' },
+          ...breadcrumbCategories.map((item) => ({
+            label: item.label,
+            href: item.href,
+          })),
           { label: book.title, href: `/sach/${book.slug}.html` },
           { label: `Audio - ${book.title}` },
         ]}

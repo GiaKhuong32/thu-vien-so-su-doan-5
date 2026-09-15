@@ -8,6 +8,7 @@ export type Book = {
   href: string;
   rating?: number;
   category?: string;
+  idCategory?: string;
   publishYear?: number;
 };
 

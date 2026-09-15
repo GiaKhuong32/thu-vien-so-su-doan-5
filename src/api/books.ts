@@ -2,6 +2,7 @@ import { api } from './client';
 import type { Book } from '../components/BookCard';
 import type { BookDetail } from '../data/detail';
 import { toApiUrl } from '../config/api';
+import { categoryHref } from './categories';
 import {
   getDocumentFiles,
   isAudioFile,
@@ -94,6 +95,7 @@ function mapApiBookToBook(apiBook: ApiBook): Book {
     href: `/sach/${slug}.html`,
     rating: 0,
     category: apiBook.categoryEntity?.categoryName,
+    idCategory: apiBook.categoryEntity?.idCategory,
     publishYear: apiBook.publishYear,
   };
 }
@@ -105,34 +107,8 @@ function mapApiBookToBookDetail(apiBook: ApiBookDetail): BookDetail {
   const isAudiobook = apiBook.document?.typeDocument?.toUpperCase() === 'AUDIO' ||
                       (apiBook.thumbnail && apiBook.thumbnail.toLowerCase().includes('audio'));
 
-  const categoryMap: Record<string, string> = {
-    'Tài liệu huấn luyện': '/sach/tai-lieu-huan-luyen/',
-    'Tài liệu chính trị': '/sach/tai-lieu-chinh-tri/',
-    'Lịch sử': '/sach/lich-su/',
-    'Văn học': '/sach/van-hoc/',
-    'Khoa học': '/sach/khoa-hoc/',
-    'Ngôn ngữ học': '/sach/ngon-ngu-hoc/',
-    'Phim tài liệu': '/sach/phim-tai-lieu/',
-    'Tài liệu khác': '/sach/tai-lieu-khac/',
-  };
-
-  const categoryName = apiBook.categoryEntity?.categoryName || 'Sách';
-  let categoryHref = '/sach/';
-
-  if (categoryMap[categoryName]) {
-    categoryHref = categoryMap[categoryName];
-  } else {
-   
-    const normalizedCategoryName = categoryName.toLowerCase();
-    for (const [key, value] of Object.entries(categoryMap)) {
-      if (key.toLowerCase() === normalizedCategoryName) {
-        categoryHref = value;
-        break;
-      }
-    }
-  }
-
-  console.log(`Book: ${apiBook.title}, Category: ${categoryName}, Href: ${categoryHref}`);
+  const categoryName = apiBook.categoryEntity?.categoryName;
+  const idCategory = apiBook.categoryEntity?.idCategory;
 
   return {
     slug,
@@ -142,10 +118,13 @@ function mapApiBookToBookDetail(apiBook: ApiBookDetail): BookDetail {
     img: toImageUrl(rawImage),
     rating: 0,
     formats: [],
-    category: {
-      label: categoryName,
-      href: categoryHref,
-    },
+    category: categoryName
+      ? {
+          id: idCategory,
+          label: categoryName,
+          href: categoryHref(categoryName),
+        }
+      : undefined,
     actions: isAudiobook ? [
       {
         label: 'Audio',
@@ -189,34 +168,80 @@ export const booksApi = {
     }
 
     try {
-      return await booksApi.getById(apiBook.idBook);
+      const detail = await booksApi.getById(apiBook.idBook);
+      if (detail.category?.id || !apiBook.categoryEntity) {
+        return detail;
+      }
+
+      return {
+        ...detail,
+        category: {
+          id: apiBook.categoryEntity.idCategory,
+          label: apiBook.categoryEntity.categoryName,
+          href: categoryHref(apiBook.categoryEntity.categoryName),
+        },
+      };
     } catch {
       return mapApiBookToBookDetail(apiBook);
     }
   },
 
-  getRelated: async (slug: string, limit = 5): Promise<Book[]> => {
-    const allBooks = await booksApi.getAll();
+  getByCategory: async (idCategory: string): Promise<Book[]> => {
+    const response = await api.get<ApiBook[]>(`/books/category/${idCategory}`);
+    return (Array.isArray(response) ? response : []).map(mapApiBookToBook);
+  },
 
+  getByCategoryIds: async (ids: string[]): Promise<Book[]> => {
+    const uniqueIds = [...new Set(ids.filter(Boolean))];
+    const lists = await Promise.allSettled(uniqueIds.map((id) => booksApi.getByCategory(id)));
+    const seen = new Set<string>();
+    const merged: Book[] = [];
+
+    for (const result of lists) {
+      if (result.status !== 'fulfilled') continue;
+      for (const book of result.value) {
+        if (seen.has(book.href)) continue;
+        seen.add(book.href);
+        merged.push(book);
+      }
+    }
+
+    return merged;
+  },
+
+  getRelated: async (
+    slug: string,
+    limit = 5,
+    idCategory?: string,
+  ): Promise<Book[]> => {
+    const excludeCurrent = (book: Book) => getSlugFromHref(book.href) !== slug;
+
+    if (idCategory) {
+      try {
+        const books = await booksApi.getByCategory(idCategory);
+        return books.filter(excludeCurrent).slice(0, limit);
+      } catch (error) {
+        console.error('Không lấy được sách theo thể loại:', error);
+      }
+    }
+
+    const allBooks = await booksApi.getAll();
     const current = allBooks.find((book) => getSlugFromHref(book.href) === slug);
 
+    if (current?.idCategory) {
+      const books = await booksApi.getByCategory(current.idCategory);
+      return books.filter(excludeCurrent).slice(0, limit);
+    }
+
     if (!current?.category) {
-      return allBooks
-        .filter((book) => getSlugFromHref(book.href) !== slug)
-        .slice(0, limit);
+      return allBooks.filter(excludeCurrent).slice(0, limit);
     }
 
     const currentCategory = normalizeText(current.category);
 
-    const sameCategory = allBooks.filter((book) => {
-      const bookSlug = getSlugFromHref(book.href);
-
-      if (bookSlug === slug) return false;
-
-      return normalizeText(book.category) === currentCategory;
-    });
-
-    return sameCategory.slice(0, limit);
+    return allBooks
+      .filter((book) => excludeCurrent(book) && normalizeText(book.category) === currentCategory)
+      .slice(0, limit);
   },
 
   getNew: async (limit = 10): Promise<Book[]> => {
