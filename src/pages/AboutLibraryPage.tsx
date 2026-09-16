@@ -9,11 +9,11 @@ export default function AboutLibraryPage() {
     <>
       <PageBanner
         img={aboutBanner}
-        crumbs={[
-          { label: 'Trang chủ', href: '/' },
-          { label: 'Giới thiệu', href: '/gioi-thieu/' },
-          { label: 'Thư viện số Sư đoàn bộ binh 5' },
-        ]}
+       crumbs={[
+  { label: 'Trang chủ', href: '/' },
+  { label: 'Giới thiệu' },
+  { label: 'Thư viện số Sư đoàn bộ binh 5' },
+]}
       />
 
       <div className="container about-title-wrap">

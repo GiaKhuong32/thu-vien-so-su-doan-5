@@ -63,11 +63,11 @@ export default function AboutHistoryPage() {
     <>
       <PageBanner
         img={historyBanner}
-        crumbs={[
-          { label: 'Trang chủ', href: '/' },
-          { label: 'Giới thiệu', href: '/gioi-thieu/' },
-          { label: 'Lịch sử và truyền thống Sư đoàn 5' },
-        ]}
+      crumbs={[
+  { label: 'Trang chủ', href: '/' },
+  { label: 'Giới thiệu' },
+  { label: 'Lịch sử và truyền thống Sư đoàn 5' },
+]}
       />
 
       <div className="container history-title-wrap">

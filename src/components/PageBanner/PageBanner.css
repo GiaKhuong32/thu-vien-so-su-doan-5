@@ -61,6 +61,11 @@
   color: var(--c-white);
 }
 
+.breadcrumb-item:not(.is-active) span {
+  opacity: 0.9;
+  cursor: default;
+}
+
 .breadcrumb-item a,
 .breadcrumb-item span {
   color: inherit;
