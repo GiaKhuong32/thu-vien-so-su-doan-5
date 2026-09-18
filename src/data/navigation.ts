@@ -62,7 +62,7 @@ export const footerInfoLinks: MenuItem[] = [
   { label: 'Trang chủ', href: '/' },
   { label: 'Giới thiệu', href: '/gioi-thieu/' },
   { label: 'Thư viện', href: '/sach/' },
-  { label: 'Liên hệ', href: '/lien-he.html' },
+  { label: 'Thư mục', href: '/quan-ly-tep' },
 ];
 
 export const footerAboutLinks: MenuItem[] = [

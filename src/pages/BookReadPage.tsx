@@ -9,13 +9,7 @@ import {
   getDocumentFiles,
 } from '../api/bookFiles';
 
-/**
- * Trang đọc sách toàn màn hình.
- *
- * Nguồn PDF được lấy theo thứ tự ưu tiên:
- *   1. Query `?file=<url>` — tiện cho việc test hoặc link trực tiếp.
- *   2. File PDF trong `/files/document/{idDocument}` của backend.
- */
+
 export default function BookReadPage() {
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
@@ -64,13 +58,18 @@ export default function BookReadPage() {
     };
   }, [book?.idDocument, fileFromQuery]);
 
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, []);
+ useEffect(() => {
+  const prevBodyOverflow = document.body.style.overflow;
+  const prevHtmlOverflow = document.documentElement.style.overflow;
+
+  document.body.style.overflow = 'hidden';
+  document.documentElement.style.overflow = 'hidden';
+
+  return () => {
+    document.body.style.overflow = prevBodyOverflow;
+    document.documentElement.style.overflow = prevHtmlOverflow;
+  };
+}, []);
 
   const backUrl = useMemo(
     () => (slug ? `/sach/${slug}.html` : '/sach/'),

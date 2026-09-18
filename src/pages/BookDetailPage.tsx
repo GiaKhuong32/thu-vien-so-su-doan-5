@@ -22,6 +22,7 @@ import {
   useBookDetail,
   useRelatedBooks,
   useBooks,
+  useBooksByType,
 } from '../hooks/useBooks';
 import { useCategories } from '../hooks/useCategories';
 import { findCategoryPath } from '../api/categories';
@@ -52,6 +53,9 @@ export default function BookDetailPage() {
   } = useRelatedBooks(slug || '', 5, bookData?.category?.id);
 
   const { data: allBooks } = useBooks();
+  const { data: ebooksData } = useBooksByType('ebooks');
+  const { data: audiobooksData } = useBooksByType('audiobooks');
+  const { data: videobooksData } = useBooksByType('videobooks');
 
 
   const book = bookData;
@@ -184,14 +188,19 @@ useEffect(() => {
     }));
     setCategoriesWithCount(categoriesWithCounts);
 
-    // Calculate topic counts - set to 0 for now since we don't have the format data
-    const topicsWithCounts = bookTopics.map(topic => ({
+    const topicCountsByHref: Record<string, number> = {
+      '/sach/?type=ebooks': ebooksData?.length || 0,
+      '/sach/?type=audiobooks': audiobooksData?.length || 0,
+      '/sach/?type=videobooks': videobooksData?.length || 0,
+    };
+
+    const topicsWithCounts = bookTopics.map((topic) => ({
       ...topic,
-      count: 0
+      count: topicCountsByHref[topic.href] || 0,
     }));
     setTopicsWithCount(topicsWithCounts);
   }
-}, [allBooks]);
+}, [allBooks, dbCategories, ebooksData, audiobooksData, videobooksData]);
 
 
   const onUnavailable = useCallback(
