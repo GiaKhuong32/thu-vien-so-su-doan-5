@@ -135,6 +135,23 @@ export default function BookBrief({ book, onUnavailable }: Props) {
             <div className="list-button">
               {book.actions.map((a) => {
                 const cls = `btn ${a.primary ? 'btn-primary' : 'btn-outline-primary'}`;
+                const isExternalHref = /^https?:\/\//i.test(a.href);
+
+                if (a.href && isExternalHref) {
+                  return (
+                    <a
+                      key={a.label}
+                      href={a.href}
+                      className={cls}
+                      title={book.title}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <ActionIcon kind={a.kind} />
+                      {a.label}
+                    </a>
+                  );
+                }
 
                 if (a.href) {
                   return (

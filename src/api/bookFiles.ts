@@ -1,7 +1,11 @@
 import { API_BASE_URL } from '../config/api';
+import { api } from './client';
 
 export interface BookFile {
   bookFile?: string;
+  createdAt?: string;
+  deletedAt?: string | null;
+  expireAt?: string | null;
   fileName?: string;
   idFile?: string;
   partFile?: string;
@@ -9,6 +13,14 @@ export interface BookFile {
   typeFile?: string;
   fileUrl?: string;
   filePath?: string;
+}
+
+export async function getCategoryFiles(idCategory?: string): Promise<BookFile[]> {
+  if (!idCategory) return [];
+
+  const response = await api.get<BookFile[]>(`/files/category/${idCategory}`);
+
+  return Array.isArray(response) ? response : [];
 }
 
 export async function getDocumentFiles(idDocument?: string): Promise<BookFile[]> {
@@ -84,12 +96,35 @@ export function isThumbnailFile(file: BookFile): boolean {
   return normalizeBookFile(file.bookFile).includes('thumbnail');
 }
 
+export function isVideoFile(file: BookFile): boolean {
+  const bookFile = normalizeBookFile(file.bookFile);
+  const typeFile = (file.typeFile || '').toLowerCase();
+  const fileName = (file.fileName || '').toLowerCase();
+  const partFile = (file.partFile || '').toLowerCase();
+  const fileUrl = (file.fileUrl || '').toLowerCase();
+  const filePath = (file.filePath || '').toLowerCase();
+
+  return (
+    bookFile.includes('phim') ||
+    typeFile === 'mp4' ||
+    typeFile.includes('video') ||
+    fileName.endsWith('.mp4') ||
+    partFile.endsWith('.mp4') ||
+    fileUrl.endsWith('.mp4') ||
+    filePath.endsWith('.mp4')
+  );
+}
+
 export function findPdfFile(files: BookFile[]): BookFile | undefined {
   return files.find(isPdfFile);
 }
 
 export function hasAudioFile(files: BookFile[]): boolean {
   return files.some(isAudioFile);
+}
+
+export function findVideoFile(files: BookFile[]): BookFile | undefined {
+  return files.find(isVideoFile);
 }
 
 export function getBookFileUrl(file?: BookFile): string | null {

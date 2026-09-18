@@ -76,8 +76,8 @@ useEffect(() => {
     const idDocument = bookData?.idDocument;
 
     if (!idDocument) {
-      setBookFormats([]);
-      setBookActions([]);
+      setBookFormats(bookData?.formats || []);
+      setBookActions(bookData?.actions || []);
       return;
     }
 
@@ -154,16 +154,17 @@ useEffect(() => {
     setAuthors(authorArray);
 
     // Calculate category counts - use same logic as filter
+    const countableBooks = [...allBooks, ...(videobooksData || [])];
     const categoryCounts = new Map<string, number>();
 
     dbCategories.forEach(cat => {
       if (cat.label === 'Tất cả') {
-        categoryCounts.set(cat.label, allBooks.length);
+        categoryCounts.set(cat.label, countableBooks.length);
         return;
       }
 
       // Count books matching this category using same logic as filter
-      const count = allBooks.filter(book => {
+      const count = countableBooks.filter(book => {
         if (!book.category) return false;
 
         // Check exact match

@@ -14,8 +14,33 @@ import {
   findCategoryPath,
 } from '../api/categories';
 import useReveal from '../hooks/useReveal';
+import type { Book } from '../components/BookCard';
 
 const PER_PAGE = 12;
+
+function normalizeCountText(value?: string): string {
+  return (value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+function bookMatchesCategory(book: Book, categoryId: string, labels: string[]): boolean {
+  if (book.idCategory && book.idCategory === categoryId) return true;
+  if (!book.category) return false;
+
+  const bookCategory = normalizeCountText(book.category);
+
+  return labels.some((label) => {
+    const categoryLabel = normalizeCountText(label);
+    return (
+      bookCategory === categoryLabel ||
+      bookCategory.includes(categoryLabel) ||
+      categoryLabel.includes(bookCategory)
+    );
+  });
+}
 
 type Props = {
   title?: string;
@@ -162,17 +187,19 @@ export default function BookListPage({ title = 'Thư viện', activeHref }: Prop
 
       setAuthors(authorArray);
 
+      const countableBooks = [...allBooks, ...(videobooksData || [])];
       const categoryCounts = new Map<string, number>();
 
       dbCategories.forEach(cat => {
         if (cat.label === 'Tất cả') {
-          categoryCounts.set(cat.label, allBooks.length);
+          categoryCounts.set(cat.label, countableBooks.length);
           return;
         }
 
         const labels = [cat.label, ...(cat.children?.map((child) => child.label) ?? [])];
-        const count = allBooks.filter((book) =>
-          Boolean(book.category && labels.includes(book.category)),
+        const categoryIds = [cat.id, ...(cat.children?.map((child) => child.id) ?? [])];
+        const count = countableBooks.filter((book) =>
+          categoryIds.some((id) => bookMatchesCategory(book, id, labels)),
         ).length;
 
         categoryCounts.set(cat.label, count);
@@ -183,7 +210,9 @@ export default function BookListPage({ title = 'Thư viện', activeHref }: Prop
         count: categoryCounts.get(cat.label) || 0,
         children: cat.children?.map((child) => ({
           ...child,
-          count: allBooks.filter((book) => book.category === child.label).length,
+          count: countableBooks.filter((book) =>
+            bookMatchesCategory(book, child.id, [child.label]),
+          ).length,
         })),
       }));
       setCategoriesWithCount(categoriesWithCounts);

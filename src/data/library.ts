@@ -18,17 +18,7 @@ export type Author = {
   count?: number;
 };
 
-export const bookCategories: Category[] = [
-  { label: 'Tất cả', href: '/sach/' },
-  { label: 'Tài liệu huấn luyện', href: '/sach/tai-lieu-huan-luyen/' },
-  { label: 'Tài liệu chính trị', href: '/sach/tai-lieu-chinh-tri/' },
-  { label: 'Lịch sử', href: '/sach/lich-su/' },
-  { label: 'Văn học', href: '/sach/van-hoc/' },
-  { label: 'Khoa học', href: '/sach/khoa-hoc/' },
-  { label: 'Ngôn ngữ học', href: '/sach/ngon-ngu-hoc/' },
-  { label: 'Phim tài liệu', href: '/sach/phim-tai-lieu/' },
-  { label: 'Tài liệu khác', href: '/sach/tai-lieu-khac/' },
-];
+
 
 export const bookTopics: Topic[] = [
   { label: 'Sách số', href: '/sach/?type=ebooks' },

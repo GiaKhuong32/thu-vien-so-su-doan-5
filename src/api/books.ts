@@ -4,11 +4,20 @@ import type { BookDetail } from '../data/detail';
 import { toApiUrl } from '../config/api';
 import { categoryHref } from './categories';
 import {
+  type BookFile,
+  findVideoFile,
+  getBookFileUrl,
+  getCategoryFiles,
   getDocumentFiles,
   isAudioFile,
   isPdfFile,
   isThumbnailFile,
+  isVideoFile,
 } from './bookFiles';
+
+const VIDEO_CATEGORY_ID = 'bcfad00b-b624-4dd7-aad3-21581049b10c';
+const VIDEO_CATEGORY_LABEL = 'Phim t\u00e0i li\u1ec7u';
+const VIDEO_CATEGORY_HREF = '/sach/phim-tai-lieu/';
 
 export interface CategoryEntity {
   idCategory: string;
@@ -148,6 +157,82 @@ function mapApiBookToBookDetail(apiBook: ApiBookDetail): BookDetail {
   };
 }
 
+function fileTitle(file: BookFile): string {
+  const name = file.fileName || file.bookFile || 'Phim tài liệu';
+  return name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
+}
+
+function fileDateYear(file: BookFile): number | undefined {
+  const year = file.createdAt ? new Date(file.createdAt).getFullYear() : NaN;
+  return Number.isFinite(year) ? year : undefined;
+}
+
+function mapVideoFileToBook(file: BookFile): Book {
+  const title = fileTitle(file);
+
+  return {
+    title,
+    author: '',
+    img: toImageUrl(file.thumbnail),
+    href: `/sach/${slugify(title)}.html`,
+    rating: 0,
+    category: VIDEO_CATEGORY_LABEL,
+    idCategory: VIDEO_CATEGORY_ID,
+    publishYear: fileDateYear(file),
+  };
+}
+
+function mapVideoFileToBookDetail(file: BookFile): BookDetail {
+  const title = fileTitle(file);
+  const slug = slugify(title);
+  const videoUrl = getBookFileUrl(findVideoFile([file]));
+
+  return {
+    slug,
+    title,
+    author: '',
+    img: toImageUrl(file.thumbnail),
+    rating: 0,
+    formats: [VIDEO_CATEGORY_LABEL, file.typeFile || 'MP4'],
+    category: {
+      id: VIDEO_CATEGORY_ID,
+      label: VIDEO_CATEGORY_LABEL,
+      href: VIDEO_CATEGORY_HREF,
+    },
+    actions: videoUrl
+      ? [
+          {
+            label: 'Xem phim',
+            kind: 'video',
+            primary: true,
+            href: videoUrl,
+          },
+        ]
+      : [],
+    catalog: [
+      ...(file.idFile ? [`Mã file: ${file.idFile}`] : []),
+      ...(file.typeFile ? [`Định dạng: ${file.typeFile}`] : []),
+      ...(file.createdAt ? [`Ngày tạo: ${new Date(file.createdAt).toLocaleDateString('vi-VN')}`] : []),
+    ],
+    summary: [],
+    related: [],
+    publishYear: fileDateYear(file),
+  };
+}
+
+async function getVideoBooks(): Promise<Book[]> {
+  const files = await getCategoryFiles(VIDEO_CATEGORY_ID);
+
+  return files.filter(isVideoFile).map(mapVideoFileToBook);
+}
+
+async function getVideoDetailBySlug(slugParam: string): Promise<BookDetail | null> {
+  const files = await getCategoryFiles(VIDEO_CATEGORY_ID);
+  const file = files.find((item) => isVideoFile(item) && slugify(fileTitle(item)) === slugParam);
+
+  return file ? mapVideoFileToBookDetail(file) : null;
+}
+
 export const booksApi = {
   getAll: async (): Promise<Book[]> => {
     const response = await api.get<ApiBook[]>('/books/getAll');
@@ -164,6 +249,12 @@ export const booksApi = {
     const apiBook = response.find((book) => slugify(book.title) === slugParam);
 
     if (!apiBook) {
+      const videoDetail = await getVideoDetailBySlug(slugParam);
+
+      if (videoDetail) {
+        return videoDetail;
+      }
+
       throw new Error('Book not found');
     }
 
@@ -187,6 +278,10 @@ export const booksApi = {
   },
 
   getByCategory: async (idCategory: string): Promise<Book[]> => {
+    if (idCategory === VIDEO_CATEGORY_ID) {
+      return getVideoBooks();
+    }
+
     const response = await api.get<ApiBook[]>(`/books/category/${idCategory}`);
     return (Array.isArray(response) ? response : []).map(mapApiBookToBook);
   },
@@ -218,6 +313,11 @@ export const booksApi = {
 
     if (idCategory) {
       try {
+        if (idCategory === VIDEO_CATEGORY_ID) {
+          const videos = await getVideoBooks();
+          return videos.filter(excludeCurrent).slice(0, limit);
+        }
+
         const books = await booksApi.getByCategory(idCategory);
         return books.filter(excludeCurrent).slice(0, limit);
       } catch (error) {
@@ -287,8 +387,20 @@ export const booksApi = {
       })
     );
 
-    return matchedBooks
+    const bookVideos = matchedBooks
       .filter((book): book is ApiBook => Boolean(book))
       .map(mapApiBookToBook);
+
+    if (type !== 'videobooks') {
+      return bookVideos;
+    }
+
+    const fileVideos = await getVideoBooks();
+    const seen = new Set(fileVideos.map((book) => book.href));
+
+    return [
+      ...fileVideos,
+      ...bookVideos.filter((book) => !seen.has(book.href)),
+    ];
   },
 };
