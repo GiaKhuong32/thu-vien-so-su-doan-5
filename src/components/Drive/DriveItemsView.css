@@ -48,7 +48,7 @@
 }
 
 .drive-card__name {
-  font-size: 12.5px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--drive-text);
   line-height: 1.35;

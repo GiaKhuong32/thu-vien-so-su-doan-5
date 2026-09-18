@@ -51,43 +51,6 @@ Không chỉ là nơi lưu giữ tài liệu, Thư viện số còn tạo điề
               </p>
               </div>
             </InfoPane>
-
-            <div className="about-members-section">
-              <h2 className="about-section-title">CÁC THÀNH VIÊN SÁNG LẬP RA THƯ VIỆN SỐ SƯ ĐOÀN 5</h2>
-              <div className="members-grid">
-                <div className="member-card">
-                  <div className="member-image">
-                    <img src="/assets/images/member1.jpg" alt="Thành viên 1" />
-                  </div>
-                  <div className="member-info">
-                    <h3 className="member-name">Ngô Văn Nghĩa</h3>
-                    <p className="member-title">Quản lý trạm bdkt</p>
-                    <p className="member-affiliation">Sư đoàn 5/QK7</p>
-                  </div>
-                </div>
-                <div className="member-card">
-                  <div className="member-image">
-                    <img src="/assets/images/member2.jpg" alt="Thành viên 2" />
-                  </div>
-                  <div className="member-info">
-                    <h3 className="member-name">Trần Thanh Hải</h3>
-                    <p className="member-title">Trợ lý thông tin</p>
-                    <p className="member-affiliation">Sư đoàn 5/QK7</p>
-                  </div>
-                </div>
-                <div className="member-card">
-                  <div className="member-image">
-                    <img src="/assets/images/member3.jpg" alt="Thành viên 3" />
-                  </div>
-                  <div className="member-info">
-                    <h3 className="member-name">Phạm Thành Phát</h3>
-                    <p className="member-title">Nhân viên trạm bdkt</p>
-                    <p className="member-affiliation">Sư đoàn 5/QK7</p>
-                  </div>
-                </div>
-          
-              </div>
-            </div>
           </div>
         </PageLayout>
       </main>

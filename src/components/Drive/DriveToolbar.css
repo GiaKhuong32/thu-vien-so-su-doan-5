@@ -14,7 +14,7 @@
   gap: 6px;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 16px;
+  font-size: 18px;
   flex-wrap: wrap;
 }
 
@@ -44,7 +44,7 @@
   gap: 8px;
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 15px;
   color: var(--drive-text-muted);
   background: var(--drive-panel);
   border: 1px solid var(--drive-border);

@@ -188,17 +188,18 @@ export default function BookListPage({ title = 'Thư viện', activeHref }: Prop
       }));
       setCategoriesWithCount(categoriesWithCounts);
 
-      const topicCounts = {
-        'Sách số': ebooksData?.length || 0,
-        'Sách nói': audiobooksData?.length || 0,
-        'Phim tài liệu': videobooksData?.length || 0
-      };
+      const topicCountsByHref: Record<string, number> = {
+  '/sach/?type=ebooks': ebooksData?.length || 0,
+  '/sach/?type=audiobooks': audiobooksData?.length || 0,
+  '/sach/?type=videobooks': videobooksData?.length || 0,
+};
 
-      const topicsWithCounts = bookTopics.map(topic => ({
-        ...topic,
-        count: (topicCounts as Record<string, number>)[topic.label] || 0
-      }));
-      setTopicsWithCount(topicsWithCounts);
+const topicsWithCounts = bookTopics.map((topic) => ({
+  ...topic,
+  count: topicCountsByHref[topic.href] || 0,
+}));
+
+setTopicsWithCount(topicsWithCounts);
     }
   }, [allBooks, dbCategories, ebooksData, audiobooksData, videobooksData]);
 
