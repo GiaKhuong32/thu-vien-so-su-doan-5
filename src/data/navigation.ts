@@ -49,10 +49,6 @@ export const mainMenu: MenuItem[] = [
         label: 'Phim tài liệu',
         href: '/sach/phim-tai-lieu/',
       },
-      {
-        label: 'Tài liệu khác',
-        href: '/sach/tai-lieu-khac/',
-      },
     ],
   },
   { label: 'Thư mục', href: '/quan-ly-tep' },

@@ -24,7 +24,7 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 32px 40px;
+  padding: 16px;
 }
 
 .brief__info {
@@ -199,7 +199,7 @@
   }
 
   .brief__thumb img {
-    padding: 48px 60px;
+    padding: 24px;
   }
 }
 

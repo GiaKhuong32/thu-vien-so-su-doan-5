@@ -13,6 +13,20 @@ function withAll(includeAll: boolean, items: CategoryMenuItem[]) {
   return includeAll ? [allCategory, ...items] : items;
 }
 
+function moveOtherToEnd(items: CategoryMenuItem[]): CategoryMenuItem[] {
+  const otherItem = items.find(item =>
+    item.label === 'Khác' || item.label === 'Tài liệu khác'
+  );
+
+  if (!otherItem) return items;
+
+  const filtered = items.filter(item =>
+    item.label !== 'Khác' && item.label !== 'Tài liệu khác'
+  );
+
+  return [...filtered, otherItem];
+}
+
 function readCachedCategories(): CategoryMenuItem[] {
   try {
     const raw = sessionStorage.getItem(CATEGORY_CACHE_KEY);
@@ -38,7 +52,7 @@ export function useCategories(options?: { includeAll?: boolean }) {
 
   const [categories, setCategories] = useState<CategoryMenuItem[]>(() => {
     const cached = readCachedCategories();
-    return withAll(includeAll, cached);
+    return moveOtherToEnd(withAll(includeAll, cached));
   });
 
   useEffect(() => {
@@ -51,14 +65,14 @@ export function useCategories(options?: { includeAll?: boolean }) {
         if (cancelled) return;
 
         saveCachedCategories(tree);
-        setCategories(withAll(includeAll, tree));
+        setCategories(moveOtherToEnd(withAll(includeAll, tree)));
       } catch (err) {
         console.error('[useCategories] Không tải được danh mục:', err);
 
         if (cancelled) return;
 
         const cached = readCachedCategories();
-        setCategories(withAll(includeAll, cached));
+        setCategories(moveOtherToEnd(withAll(includeAll, cached)));
       }
     }
 
