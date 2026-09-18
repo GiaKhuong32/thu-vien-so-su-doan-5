@@ -13,10 +13,16 @@ function DesktopItem({ item }: { item: MenuItem }) {
   const hasChildren = !!item.children?.length;
   return (
     <li className={`nav-item${hasChildren ? ' has-sub' : ''}`}>
-      <Link to={item.href} title={item.label}>
-        <span>{item.label}</span>
-        {hasChildren && <i className="caret" aria-hidden="true" />}
-      </Link>
+      {hasChildren ? (
+        <span title={item.label}>
+          <span>{item.label}</span>
+          <i className="caret" aria-hidden="true" />
+        </span>
+      ) : (
+        <Link to={item.href} title={item.label}>
+          <span>{item.label}</span>
+        </Link>
+      )}
       {hasChildren && (
         <ul className="nav-sub">
           {item.children!.map((child) => (
@@ -51,9 +57,13 @@ function MobileItem({ item }: { item: MenuItem }) {
   return (
     <li className={open ? 'is-open' : ''}>
       <div className="m-row">
-        <Link to={item.href} title={item.label}>
-          {item.label}
-        </Link>
+        {hasChildren ? (
+          <span>{item.label}</span>
+        ) : (
+          <Link to={item.href} title={item.label}>
+            {item.label}
+          </Link>
+        )}
         {hasChildren && (
           <button
             type="button"

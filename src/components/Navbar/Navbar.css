@@ -78,7 +78,8 @@
 }
 
 /* --- Các mục chính: ĐÃ XÓA GẠCH CHÂN (::after) --- */
-.nav-item > a {
+.nav-item > a,
+.nav-item > span {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -90,9 +91,11 @@
   text-transform: uppercase;
   color: var(--c-brown);
   transition: color 0.25s var(--ease);
+  cursor: pointer;
 }
 
 .nav-item:hover > a,
+.nav-item:hover > span,
 .nav-item.is-active > a {
   color: var(--c-primary);
 }
@@ -106,7 +109,8 @@
   transition: transform 0.3s var(--ease);
 }
 
-.nav-item:hover > a .caret {
+.nav-item:hover > a .caret,
+.nav-item:hover > span .caret {
   transform: rotate(225deg) translateY(-2px);
 }
 
@@ -136,6 +140,10 @@
   opacity: 1;
   visibility: visible;
   transform: none;
+}
+
+.nav-item.has-sub:hover {
+  cursor: default;
 }
 
 .nav-sub li {
