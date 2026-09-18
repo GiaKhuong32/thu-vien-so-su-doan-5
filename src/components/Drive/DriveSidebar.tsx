@@ -51,13 +51,9 @@ export default function DriveSidebar({ section, onSectionChange, counts, storage
       <div className="drive-storage">
         <div className="drive-storage__label">
           <span>{storage.planName}</span>
-          <span>{pctLabel}%</span>
-        </div>
-        <div className="drive-storage__track">
-          <div className="drive-storage__fill" style={{ width: `${pct}%` }} />
         </div>
         <div className="drive-storage__sub">
-          đã dùng {formatBytes(storage.used)} trong tổng {formatBytes(storage.total)}
+          Đã dùng: <strong>{formatBytes(storage.used)}</strong>
         </div>
       </div>
     </aside>
