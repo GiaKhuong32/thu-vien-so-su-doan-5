@@ -223,13 +223,7 @@ useEffect(() => {
 
 
   if (bookLoading && !book) {
-
-    return (
-      <div>
-        Loading...
-      </div>
-    );
-
+    return null;
   }
 
 

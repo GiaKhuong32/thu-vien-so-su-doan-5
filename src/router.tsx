@@ -14,11 +14,22 @@ import LoginPage from './pages/LoginPage';
 // import RegisterPage from './pages/RegisterPage';
 import DrivePage from './pages/DrivePage';
 import ScrollToTop from './components/ScrollToTop';
+import LoadingScreen from './components/LoadingScreen';
 
 function RootRoute() {
   return (
     <>
       <ScrollToTop />
+      <App />
+    </>
+  );
+}
+
+function LoadingRoute() {
+  return (
+    <>
+      <ScrollToTop />
+      <LoadingScreen />
       <App />
     </>
   );
@@ -63,7 +74,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    element: <RootRoute />,
+    element: <LoadingRoute />,
     children: [
       {
         path: '/',
