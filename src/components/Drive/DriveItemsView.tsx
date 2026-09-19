@@ -30,6 +30,10 @@ type Props = {
   onToggleMultiSelect: (id: string) => void;
 };
 
+function isProtectedRootFolder(section: DriveSection, node: DriveNode) {
+  return section === 'cloud' && node.type === 'folder' && node.parentId === null && !node.trashed;
+}
+
 function FavButton({ node, onToggleFavourite }: { node: DriveNode; onToggleFavourite: (id: string) => void }) {
   return (
     <button
@@ -181,54 +185,64 @@ export default function DriveItemsView({
         onClick={() => onSelect(null)}
         onContextMenu={section === 'cloud' ? onContextMenuEmpty : undefined}
       >
-        {nodes.map((node) => (
-          <div
-            key={node.id}
-            className={`drive-card${node.id === selectedId ? ' is-selected' : ''}${node.favourite ? ' is-fav' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}${cutIds?.has(node.id) ? ' is-cut' : ''}${selectedIds.has(node.id) ? ' is-multi-selected' : ''}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (node.type === 'folder' && section === 'cloud' && !node.trashed) {
-                onOpenFolder(node);
-                return;
-              }
-              onSelect(node.id);
-            }}
-            onDoubleClick={() => node.type === 'folder' && onOpenFolder(node)}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onSelect(node.id);
-              onContextMenu(e, node);
-            }}
-            {...folderDragHandlers(node)}
-          >
-            <label className="drive-card__checkbox" onClick={(e) => e.stopPropagation()}>
-              <input
-                type="checkbox"
-                checked={selectedIds.has(node.id)}
-                onChange={() => onToggleMultiSelect(node.id)}
-              />
-            </label>
-            <div className="drive-card__thumb">
-              {node.type === 'file' && node.previewUrl ? (
-                <img src={node.previewUrl} alt="" />
-              ) : (
-                <DriveNodeIcon node={node} size={30} />
+        {nodes.map((node) => {
+          const protectedRoot = isProtectedRootFolder(section, node);
+
+          return (
+            <div
+              key={node.id}
+              className={`drive-card${node.id === selectedId ? ' is-selected' : ''}${node.favourite ? ' is-fav' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}${cutIds?.has(node.id) ? ' is-cut' : ''}${selectedIds.has(node.id) ? ' is-multi-selected' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (node.type === 'folder' && section === 'cloud' && !node.trashed) {
+                  onOpenFolder(node);
+                  return;
+                }
+                onSelect(node.id);
+              }}
+              onDoubleClick={() => node.type === 'folder' && onOpenFolder(node)}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (protectedRoot) return;
+
+                onSelect(node.id);
+                onContextMenu(e, node);
+              }}
+              {...folderDragHandlers(node)}
+            >
+              {!protectedRoot && (
+                <label className="drive-card__checkbox" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(node.id)}
+                    onChange={() => onToggleMultiSelect(node.id)}
+                  />
+                </label>
               )}
-            </div>
-            <div className={`drive-card__actions${node.trashed ? ' is-visible' : ''}`}>
-              {node.trashed ? (
-                <>
-                  <RestoreButton node={node} onRestore={onRestore} />
-                  <DeleteForeverButton node={node} onDeleteForever={onDeleteForever} />
-                </>
-              ) : (
-                <>
-                  <FavButton node={node} onToggleFavourite={onToggleFavourite} />
-                  <TrashButton node={node} onTrash={onTrash} />
-                </>
-              )}
-            </div>
+              <div className="drive-card__thumb">
+                {node.type === 'file' && node.previewUrl ? (
+                  <img src={node.previewUrl} alt="" />
+                ) : (
+                  <DriveNodeIcon node={node} size={30} />
+                )}
+              </div>
+              <div className={`drive-card__actions${node.trashed ? ' is-visible' : ''}`}>
+                {!protectedRoot && (
+                  node.trashed ? (
+                    <>
+                      <RestoreButton node={node} onRestore={onRestore} />
+                      <DeleteForeverButton node={node} onDeleteForever={onDeleteForever} />
+                    </>
+                  ) : (
+                    <>
+                      <FavButton node={node} onToggleFavourite={onToggleFavourite} />
+                      <TrashButton node={node} onTrash={onTrash} />
+                    </>
+                  )
+                )}
+              </div>
             {renamingId === node.id ? (
               <EditableName node={node} onCommit={onRenameCommit} className="drive-card__name-input" />
             ) : (
@@ -236,7 +250,8 @@ export default function DriveItemsView({
             )}
             <div className="drive-card__meta">{node.type === 'folder' ? 'Thư mục' : formatBytes(node.size)}</div>
           </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
@@ -250,61 +265,72 @@ export default function DriveItemsView({
         <span>Dung lượng</span>
         <span />
       </div>
-      {nodes.map((node) => (
-        <div
-          key={node.id}
-          className={`drive-list-row${node.id === selectedId ? ' is-selected' : ''}${node.favourite ? ' is-fav' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}${cutIds?.has(node.id) ? ' is-cut' : ''}${selectedIds.has(node.id) ? ' is-multi-selected' : ''}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (node.type === 'folder' && section === 'cloud' && !node.trashed) {
-              onOpenFolder(node);
-              return;
-            }
-            onSelect(node.id);
-          }}
-          onDoubleClick={() => node.type === 'folder' && onOpenFolder(node)}
-          onContextMenu={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onSelect(node.id);
-            onContextMenu(e, node);
-          }}
-          {...folderDragHandlers(node)}
-        >
-          <label className="drive-list-checkbox" onClick={(e) => e.stopPropagation()}>
-            <input
-              type="checkbox"
-              checked={selectedIds.has(node.id)}
-              onChange={() => onToggleMultiSelect(node.id)}
-            />
-          </label>
-          <div className="drive-list-name">
-            <span className="drive-list-name__icon">
-              <DriveNodeIcon node={node} size={16} />
-            </span>
-            {renamingId === node.id ? (
-              <EditableName node={node} onCommit={onRenameCommit} className="drive-list-name__input" />
-            ) : (
-              <span>{node.name}</span>
+      {nodes.map((node) => {
+        const protectedRoot = isProtectedRootFolder(section, node);
+
+        return (
+          <div
+            key={node.id}
+            className={`drive-list-row${node.id === selectedId ? ' is-selected' : ''}${node.favourite ? ' is-fav' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}${cutIds?.has(node.id) ? ' is-cut' : ''}${selectedIds.has(node.id) ? ' is-multi-selected' : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (node.type === 'folder' && section === 'cloud' && !node.trashed) {
+                onOpenFolder(node);
+                return;
+              }
+              onSelect(node.id);
+            }}
+            onDoubleClick={() => node.type === 'folder' && onOpenFolder(node)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+
+              if (protectedRoot) return;
+
+              onSelect(node.id);
+              onContextMenu(e, node);
+            }}
+            {...folderDragHandlers(node)}
+          >
+            {!protectedRoot && (
+              <label className="drive-list-checkbox" onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(node.id)}
+                  onChange={() => onToggleMultiSelect(node.id)}
+                />
+              </label>
             )}
+            <div className="drive-list-name">
+              <span className="drive-list-name__icon">
+                <DriveNodeIcon node={node} size={16} />
+              </span>
+              {renamingId === node.id ? (
+                <EditableName node={node} onCommit={onRenameCommit} className="drive-list-name__input" />
+              ) : (
+                <span>{node.name}</span>
+              )}
+            </div>
+            <div className="drive-list-sub">{formatDate(node.updatedAt)}</div>
+            <div className="drive-list-sub">{node.type === 'folder' ? '—' : formatBytes(node.size)}</div>
+            <div className="drive-list-actions">
+              {!protectedRoot && (
+                node.trashed ? (
+                  <>
+                    <RestoreButton node={node} onRestore={onRestore} />
+                    <DeleteForeverButton node={node} onDeleteForever={onDeleteForever} />
+                  </>
+                ) : (
+                  <>
+                    <FavButton node={node} onToggleFavourite={onToggleFavourite} />
+                    <TrashButton node={node} onTrash={onTrash} />
+                  </>
+                )
+              )}
+            </div>
           </div>
-          <div className="drive-list-sub">{formatDate(node.updatedAt)}</div>
-          <div className="drive-list-sub">{node.type === 'folder' ? '—' : formatBytes(node.size)}</div>
-          <div className="drive-list-actions">
-            {node.trashed ? (
-              <>
-                <RestoreButton node={node} onRestore={onRestore} />
-                <DeleteForeverButton node={node} onDeleteForever={onDeleteForever} />
-              </>
-            ) : (
-              <>
-                <FavButton node={node} onToggleFavourite={onToggleFavourite} />
-                <TrashButton node={node} onTrash={onTrash} />
-              </>
-            )}
-          </div>
-        </div>
-      ))}
+          );
+        })}
     </div>
   );
 }

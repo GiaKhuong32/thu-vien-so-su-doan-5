@@ -141,14 +141,25 @@ export default function DrivePage() {
 
   /* ---------------- Chọn nhiều (thanh hành động hàng loạt) ---------------- */
 
+  const isProtectedRootFolder = (node: DriveNode) =>
+    drive.section === 'cloud' && node.type === 'folder' && node.parentId === null && !node.trashed;
+
+  const getActionableSelectedIds = () =>
+    Array.from(drive.selectedIds).filter((id) => {
+      const node = drive.nodes.find((n) => n.id === id);
+      return node && !isProtectedRootFolder(node);
+    });
+
   const handleBulkCut = () => {
-    const ids = Array.from(drive.selectedIds);
+    const ids = getActionableSelectedIds();
+    if (ids.length === 0) return;
     drive.cutToClipboard(ids);
     showToast(`Đã cắt ${ids.length} mục — vào thư mục đích rồi bấm "Dán"`);
   };
 
   const handleBulkTrash = async () => {
-    const ids = Array.from(drive.selectedIds);
+    const ids = getActionableSelectedIds();
+    if (ids.length === 0) return;
     try {
       await drive.moveToTrash(ids);
       showToast(`Đã chuyển ${ids.length} mục vào thùng rác`);
@@ -158,7 +169,8 @@ export default function DrivePage() {
   };
 
   const handleBulkRestore = async () => {
-    const ids = Array.from(drive.selectedIds);
+    const ids = getActionableSelectedIds();
+    if (ids.length === 0) return;
     try {
       await drive.restore(ids);
       showToast(`Đã khôi phục ${ids.length} mục`);
@@ -215,7 +227,10 @@ export default function DrivePage() {
               onCut={handleBulkCut}
               onTrash={handleBulkTrash}
               onRestore={handleBulkRestore}
-              onDeleteForever={() => requestDeleteForever(Array.from(drive.selectedIds))}
+              onDeleteForever={() => {
+                const ids = getActionableSelectedIds();
+                if (ids.length) requestDeleteForever(ids);
+              }}
             />
 
             <DriveItemsView
@@ -281,6 +296,14 @@ export default function DrivePage() {
           y={ctxMenu.y}
           node={ctxMenu.node}
           canPaste={!!drive.clipboard}
+          canTrash={
+            !(
+              drive.section === 'cloud' &&
+              ctxMenu.node?.type === 'folder' &&
+              ctxMenu.node.parentId === null &&
+              !ctxMenu.node.trashed
+            )
+          }
           onClose={closeCtxMenu}
           onRename={() => ctxMenu.node && setRenamingId(ctxMenu.node.id)}
           onCopy={() => ctxMenu.node && drive.copyToClipboard(ctxMenu.node.id)}

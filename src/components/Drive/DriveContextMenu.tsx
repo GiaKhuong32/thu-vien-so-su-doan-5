@@ -8,6 +8,7 @@ type Props = {
   y: number;
   node: DriveNode | null;
   canPaste: boolean;
+  canTrash?: boolean;
   onClose: () => void;
   onRename: () => void;
   onCopy: () => void;
@@ -26,6 +27,7 @@ export default function DriveContextMenu({
   y,
   node,
   canPaste,
+  canTrash = true,
   onClose,
   onRename,
   onCopy,
@@ -104,7 +106,7 @@ export default function DriveContextMenu({
           {item(node.favourite ? 'Bỏ ưa thích' : 'Thêm vào ưa thích', Heart, onToggleFavourite)}
           {item('Thông tin', Info, onShowInfo)}
           <div className="drive-ctx-sep" />
-          {item('Chuyển vào thùng rác', Trash2, onTrash, { danger: true })}
+          {canTrash && item('Chuyển vào thùng rác', Trash2, onTrash, { danger: true })}
         </>
       )}
     </div>
