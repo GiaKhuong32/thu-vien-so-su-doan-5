@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Copy, FolderPlus, Heart, Info, Pencil, RotateCcw, Scissors, Trash2, ClipboardPaste } from 'lucide-react';
+import { Copy, Download, Eye, FolderPlus, Info, Pencil, RotateCcw, Scissors, Trash2, ClipboardPaste } from 'lucide-react';
 import type { DriveNode } from '../../types/drive';
 import './DriveContextMenu.css';
 
@@ -14,12 +14,13 @@ type Props = {
   onCopy: () => void;
   onCut: () => void;
   onPaste: () => void;
-  onToggleFavourite: () => void;
+  onDownloadFile: () => void;
   onShowInfo: () => void;
   onTrash: () => void;
   onRestore: () => void;
   onDeleteForever: () => void;
   onNewFolder: () => void;
+  onView: () => void;
 };
 
 export default function DriveContextMenu({
@@ -33,12 +34,13 @@ export default function DriveContextMenu({
   onCopy,
   onCut,
   onPaste,
-  onToggleFavourite,
+  onDownloadFile,
   onShowInfo,
   onTrash,
   onRestore,
   onDeleteForever,
   onNewFolder,
+  onView,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ left: x, top: y });
@@ -99,11 +101,12 @@ export default function DriveContextMenu({
 
       {node && !node.trashed && (
         <>
+          {node.type === 'file' && item('Xem', Eye, onView)}
+          {node.type === 'file' && item('Tải xuống', Download, onDownloadFile)}
           {item('Đổi tên', Pencil, onRename)}
           {item('Sao chép', Copy, onCopy)}
           {item('Cắt', Scissors, onCut)}
           {item('Dán vào đây', ClipboardPaste, onPaste, { disabled: !canPaste })}
-          {item(node.favourite ? 'Bỏ ưa thích' : 'Thêm vào ưa thích', Heart, onToggleFavourite)}
           {item('Thông tin', Info, onShowInfo)}
           <div className="drive-ctx-sep" />
           {canTrash && item('Chuyển vào thùng rác', Trash2, onTrash, { danger: true })}

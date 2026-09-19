@@ -52,7 +52,6 @@ export default function DriveInfoPanel({ open, node, nodes, folderSize, onClose 
                     : 'Ổ Mây'
               }
             />
-            <InfoRow label="Ưa thích" value={node.favourite ? 'Có' : 'Không'} />
           </>
         )}
       </div>

@@ -393,4 +393,100 @@ export const driveApi = {
 
     return result.map((file) => fileToNode(file, folderId));
   },
+
+  getViewUrl: (id: string) => {
+    return toApiUrl(`/files/view/${encodeURIComponent(id)}`);
+  },
+
+  getDownloadUrl: (id: string) => {
+    return toApiUrl(`/files/download/${encodeURIComponent(id)}`);
+  },
+
+  fetchFileBlob: async (id: string): Promise<{ objectUrl: string; contentType: string }> => {
+    const token = getToken();
+    const headers: Record<string, string> = {
+      Accept: '*/*',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+
+    const tryFetch = async (url: string) => {
+      const response = await fetch(url, { method: 'GET', headers });
+      const contentType = response.headers.get('content-type') || '';
+      const buffer = await response.arrayBuffer();
+
+      if (contentType.includes('application/json')) {
+        const text = new TextDecoder().decode(buffer);
+        let message = 'Không xem được file';
+        try {
+          const json = JSON.parse(text);
+          message = json.message || json.Message || message;
+        } catch {
+          /* ignore */
+        }
+        throw new Error(message);
+      }
+
+      if (!response.ok) {
+        throw new Error(`Không xem được file: ${response.status}`);
+      }
+
+      const blob = new Blob([buffer], {
+        type: contentType || 'application/octet-stream',
+      });
+
+      return {
+        objectUrl: URL.createObjectURL(blob),
+        contentType: blob.type,
+      };
+    };
+
+    try {
+      return await tryFetch(driveApi.getViewUrl(id));
+    } catch {
+      return tryFetch(driveApi.getDownloadUrl(id));
+    }
+  },
+
+  downloadFile: async (id: string, fileName?: string): Promise<void> => {
+    const token = getToken();
+    const headers: Record<string, string> = {
+      Accept: '*/*',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+    const response = await fetch(driveApi.getDownloadUrl(id), {
+      method: 'GET',
+      headers,
+    });
+    const contentType = response.headers.get('content-type') || '';
+    const buffer = await response.arrayBuffer();
+    if (contentType.includes('application/json')) {
+      const text = new TextDecoder().decode(buffer);
+      let message = 'Tải file thất bại';
+      try {
+        const json = JSON.parse(text);
+        message = json.message || json.Message || message;
+      } catch {
+        /* ignore */
+      }
+      throw new Error(message);
+    }
+    if (!response.ok) {
+      throw new Error(`Tải file thất bại: ${response.status}`);
+    }
+    const disposition = response.headers.get('content-disposition') || '';
+    const utf8Name = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+    const asciiName = disposition.match(/filename="?([^"]+)"?/i)?.[1];
+    const downloadedName = decodeURIComponent(utf8Name || asciiName || fileName || 'download');
+    const blob = new Blob([buffer], {
+      type: contentType || 'application/octet-stream',
+    });
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = downloadedName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+  },
 };

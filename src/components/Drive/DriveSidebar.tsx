@@ -1,4 +1,4 @@
-import { Cloud, Clock, Heart, Trash2 } from 'lucide-react';
+import { Cloud, Clock, Trash2 } from 'lucide-react';
 import type { DriveSection, DriveStorage } from '../../types/drive';
 import { formatBytes } from './driveFormat';
 import './DriveSidebar.css';
@@ -14,7 +14,6 @@ type Props = {
 const NAV_ITEMS: { key: DriveSection; label: string; icon: typeof Cloud }[] = [
   { key: 'cloud', label: 'Ổ Mây', icon: Cloud },
   { key: 'recent', label: 'Gần Đây', icon: Clock },
-  { key: 'favourite', label: 'Ưa Thích', icon: Heart },
   { key: 'trash', label: 'Thùng rác', icon: Trash2 },
 ];
 
@@ -33,7 +32,7 @@ export default function DriveSidebar({ section, onSectionChange, counts, storage
 
       <ul className="drive-nav">
         {NAV_ITEMS.map(({ key, label, icon: Icon }) => {
-          const count = key === 'cloud' ? counts.cloud : key === 'favourite' ? counts.favourite : key === 'trash' ? counts.trash : undefined;
+          const count = key === 'cloud' ? counts.cloud : key === 'trash' ? counts.trash : undefined;
           return (
             <li
               key={key}

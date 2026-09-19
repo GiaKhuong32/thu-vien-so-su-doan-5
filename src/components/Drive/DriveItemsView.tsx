@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, RotateCcw, Trash2 } from 'lucide-react';
+import { Download, RotateCcw, Trash2 } from 'lucide-react';
 import type { DriveNode, DriveSection, DriveViewMode } from '../../types/drive';
 import { DriveNodeIcon } from './driveIcons';
 import { formatBytes, formatDate } from './driveFormat';
@@ -13,7 +13,8 @@ type Props = {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   onOpenFolder: (node: DriveNode) => void;
-  onToggleFavourite: (id: string) => void;
+  onOpenFile: (node: DriveNode) => void;
+  onDownloadFile: (node: DriveNode) => void;
   onContextMenu: (e: React.MouseEvent, node: DriveNode) => void;
   onContextMenuEmpty: (e: React.MouseEvent) => void;
   onDropFilesToFolder: (folderId: string, files: FileList) => void;
@@ -34,18 +35,25 @@ function isProtectedRootFolder(section: DriveSection, node: DriveNode) {
   return section === 'cloud' && node.type === 'folder' && node.parentId === null && !node.trashed;
 }
 
-function FavButton({ node, onToggleFavourite }: { node: DriveNode; onToggleFavourite: (id: string) => void }) {
+function DownloadButton({
+  node,
+  onDownloadFile,
+}: {
+  node: DriveNode;
+  onDownloadFile: (node: DriveNode) => void;
+}) {
+  if (node.type !== 'file') return null;
   return (
     <button
       type="button"
-      className="drive-fav-btn"
-      title={node.favourite ? 'Bỏ ưa thích' : 'Thêm vào ưa thích'}
+      className="drive-download-btn"
+      title="Tải xuống"
       onClick={(e) => {
         e.stopPropagation();
-        onToggleFavourite(node.id);
+        onDownloadFile(node);
       }}
     >
-      <Heart size={14} strokeWidth={2} fill={node.favourite ? 'currentColor' : 'none'} />
+      <Download size={14} strokeWidth={2} />
     </button>
   );
 }
@@ -135,7 +143,8 @@ export default function DriveItemsView({
   selectedId,
   onSelect,
   onOpenFolder,
-  onToggleFavourite,
+  onOpenFile,
+  onDownloadFile,
   onContextMenu,
   onContextMenuEmpty,
   onDropFilesToFolder,
@@ -191,7 +200,7 @@ export default function DriveItemsView({
           return (
             <div
               key={node.id}
-              className={`drive-card${node.id === selectedId ? ' is-selected' : ''}${node.favourite ? ' is-fav' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}${cutIds?.has(node.id) ? ' is-cut' : ''}${selectedIds.has(node.id) ? ' is-multi-selected' : ''}`}
+              className={`drive-card${node.id === selectedId ? ' is-selected' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}${cutIds?.has(node.id) ? ' is-cut' : ''}${selectedIds.has(node.id) ? ' is-multi-selected' : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
                 if (node.type === 'folder' && section === 'cloud' && !node.trashed) {
@@ -200,7 +209,10 @@ export default function DriveItemsView({
                 }
                 onSelect(node.id);
               }}
-              onDoubleClick={() => node.type === 'folder' && onOpenFolder(node)}
+              onDoubleClick={() => {
+                if (node.type === 'folder') onOpenFolder(node);
+                else onOpenFile(node);
+              }}
               onContextMenu={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -237,7 +249,7 @@ export default function DriveItemsView({
                     </>
                   ) : (
                     <>
-                      <FavButton node={node} onToggleFavourite={onToggleFavourite} />
+                      <DownloadButton node={node} onDownloadFile={onDownloadFile} />
                       <TrashButton node={node} onTrash={onTrash} />
                     </>
                   )
@@ -271,7 +283,7 @@ export default function DriveItemsView({
         return (
           <div
             key={node.id}
-            className={`drive-list-row${node.id === selectedId ? ' is-selected' : ''}${node.favourite ? ' is-fav' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}${cutIds?.has(node.id) ? ' is-cut' : ''}${selectedIds.has(node.id) ? ' is-multi-selected' : ''}`}
+            className={`drive-list-row${node.id === selectedId ? ' is-selected' : ''}${dragOverId === node.id ? ' is-drop-target' : ''}${cutIds?.has(node.id) ? ' is-cut' : ''}${selectedIds.has(node.id) ? ' is-multi-selected' : ''}`}
             onClick={(e) => {
               e.stopPropagation();
               if (node.type === 'folder' && section === 'cloud' && !node.trashed) {
@@ -280,7 +292,10 @@ export default function DriveItemsView({
               }
               onSelect(node.id);
             }}
-            onDoubleClick={() => node.type === 'folder' && onOpenFolder(node)}
+            onDoubleClick={() => {
+              if (node.type === 'folder') onOpenFolder(node);
+              else onOpenFile(node);
+            }}
             onContextMenu={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -322,7 +337,7 @@ export default function DriveItemsView({
                   </>
                 ) : (
                   <>
-                    <FavButton node={node} onToggleFavourite={onToggleFavourite} />
+                    <DownloadButton node={node} onDownloadFile={onDownloadFile} />
                     <TrashButton node={node} onTrash={onTrash} />
                   </>
                 )

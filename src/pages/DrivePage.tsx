@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Upload } from 'lucide-react';
 import { useDrive } from '../hooks/useDrive';
+import { driveApi } from '../api/drive';
 import DriveSidebar from '../components/Drive/DriveSidebar';
 import DriveTopbar from '../components/Drive/DriveTopbar';
 import DriveToolbar from '../components/Drive/DriveToolbar';
@@ -12,6 +13,7 @@ import DriveInfoPanel from '../components/Drive/DriveInfoPanel';
 import DriveUploadTray from '../components/Drive/DriveUploadTray';
 import DriveSelectionBar from '../components/Drive/Driveselectionbar';
 import ConfirmDialog from '../components/Drive/Confirmdialog';
+import DriveFilePreviewModal from '../components/Drive/DriveFilePreviewModal';
 import type { DriveNode } from '../types/drive';
 import './DrivePage.css';
 
@@ -28,6 +30,7 @@ export default function DrivePage() {
   const [toast, setToast] = useState<string | null>(null);
   const [dropOverlay, setDropOverlay] = useState(false);
   const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[] | null>(null);
+  const [previewFile, setPreviewFile] = useState<DriveNode | null>(null);
   const dragCounter = useRef(0);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -179,6 +182,21 @@ export default function DrivePage() {
     }
   };
 
+  const handleDownloadFile = async (node: DriveNode) => {
+    if (node.type !== 'file') return;
+    try {
+      showToast('Đang tải file...');
+      await driveApi.downloadFile(node.id, node.name);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Tải file thất bại');
+    }
+  };
+
+  const getPreviewUrl = (file: DriveNode | null) => {
+    if (!file) return null;
+    return file.id;
+  };
+
   return (
     <div className="drive-page">
       <DriveSidebar
@@ -240,7 +258,8 @@ export default function DrivePage() {
               selectedId={drive.selectedId}
               onSelect={drive.select}
               onOpenFolder={(node) => goToFolder(node.id)}
-              onToggleFavourite={drive.toggleFavourite}
+              onOpenFile={(node) => setPreviewFile(node)}
+              onDownloadFile={handleDownloadFile}
               onContextMenu={(e, node) => {
                 drive.select(node.id);
                 setCtxMenu({ x: e.clientX, y: e.clientY, node });
@@ -305,6 +324,14 @@ export default function DrivePage() {
             )
           }
           onClose={closeCtxMenu}
+          onView={() => {
+            if (ctxMenu.node?.type === 'file') {
+              setPreviewFile(ctxMenu.node);
+            }
+          }}
+          onDownloadFile={() => {
+            if (ctxMenu.node) void handleDownloadFile(ctxMenu.node);
+          }}
           onRename={() => ctxMenu.node && setRenamingId(ctxMenu.node.id)}
           onCopy={() => ctxMenu.node && drive.copyToClipboard(ctxMenu.node.id)}
           onCut={() => ctxMenu.node && drive.cutToClipboard(ctxMenu.node.id)}
@@ -313,7 +340,6 @@ export default function DrivePage() {
             drive.paste(drive.section === 'cloud' ? targetId : null);
             showToast('Đã dán');
           }}
-          onToggleFavourite={() => ctxMenu.node && drive.toggleFavourite(ctxMenu.node.id)}
           onShowInfo={() => drive.setInfoOpen(true)}
           onTrash={async () => {
             if (ctxMenu.node) {
@@ -360,6 +386,12 @@ export default function DrivePage() {
         danger
         onConfirm={confirmDeleteForever}
         onCancel={() => setConfirmDeleteIds(null)}
+      />
+
+      <DriveFilePreviewModal
+        open={!!previewFile}
+        file={previewFile}
+        onClose={() => setPreviewFile(null)}
       />
 
       <div className={`drive-toast${toast ? ' is-show' : ''}`}>{toast}</div>
