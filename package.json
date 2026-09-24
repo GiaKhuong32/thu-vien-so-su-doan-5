@@ -15,11 +15,14 @@
     "@hookform/resolvers": "^5.4.0",
     "axios": "^1.18.1",
     "lucide-react": "^1.24.0",
+    "mammoth": "^1.12.3",
     "pdfjs-dist": "^4.10.38",
+    "pptx-preview": "^1.0.7",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-hook-form": "^7.81.0",
     "react-router-dom": "^7.18.1",
+    "xlsx": "^0.18.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {

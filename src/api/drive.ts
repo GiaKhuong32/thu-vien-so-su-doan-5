@@ -374,7 +374,14 @@ export const driveApi = {
 
   uploadFilesToFolder: async (folderId: string, files: File[]): Promise<DriveNode[]> => {
     const formData = new FormData();
-    files.forEach((file) => formData.append('file', file));
+    files.forEach((file) => {
+      const lower = file.name.toLowerCase();
+      let type = file.type;
+      if (lower.endsWith('.zip') && (!type || type === 'application/octet-stream')) {
+        type = 'application/zip';
+      }
+      formData.append('file', type && type !== file.type ? new File([file], file.name, { type }) : file);
+    });
 
     const token = getToken();
     const response = await fetch(`${API_BASE_URL}/files/upload/folder/${folderId}`, {
@@ -384,7 +391,8 @@ export const driveApi = {
     });
 
     if (!response.ok) {
-      throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+      const text = await response.text();
+      throw new Error(`Upload failed: ${response.status} ${text || response.statusText}`);
     }
 
     const data = await response.json();
@@ -402,7 +410,9 @@ export const driveApi = {
     return toApiUrl(`/files/download/${encodeURIComponent(id)}`);
   },
 
-  fetchFileBlob: async (id: string): Promise<{ objectUrl: string; contentType: string }> => {
+  fetchFileBlob: async (
+    id: string,
+  ): Promise<{ objectUrl: string; contentType: string; blob: Blob }> => {
     const token = getToken();
     const headers: Record<string, string> = {
       Accept: '*/*',
@@ -437,6 +447,7 @@ export const driveApi = {
       return {
         objectUrl: URL.createObjectURL(blob),
         contentType: blob.type,
+        blob,
       };
     };
 

@@ -11,20 +11,64 @@ import {
 } from 'lucide-react';
 import type { DriveFileKind, DriveNode } from '../../types/drive';
 
+function extOf(name: string) {
+  const i = name.lastIndexOf('.');
+  return i >= 0 ? name.slice(i + 1).toLowerCase() : '';
+}
+
 export function getFileKind(node: DriveNode): DriveFileKind {
   if (node.type === 'folder') return 'folder';
-  const mime = node.mimeType ?? '';
+  const mime = (node.mimeType ?? '').toLowerCase().trim();
   const name = node.name.toLowerCase();
+  const ext = extOf(name);
 
-  if (mime.startsWith('image/')) return 'image';
-  if (mime.startsWith('audio/')) return 'audio';
-  if (mime.startsWith('video/')) return 'video';
-  if (mime === 'application/pdf' || name.endsWith('.pdf')) return 'pdf';
-  if (/\.(xlsx?|csv)$/.test(name)) return 'sheet';
-  if (/\.(pptx?|key)$/.test(name)) return 'slide';
-  if (/\.(docx?|rtf|odt)$/.test(name)) return 'doc';
-  if (/\.(zip|rar|7z|tar|gz)$/.test(name)) return 'archive';
-  if (/\.(txt|md)$/.test(name)) return 'text';
+  const isVideo =
+    mime.startsWith('video/') ||
+    ['mp4', 'webm', 'mkv', 'mov', 'avi', 'm4v', 'mpeg', 'mpg'].includes(mime) ||
+    ['mp4', 'webm', 'mkv', 'mov', 'avi', 'm4v', 'mpeg', 'mpg'].includes(ext);
+
+  const isAudio =
+    mime.startsWith('audio/') ||
+    ['mp3', 'wav', 'ogg', 'aac', 'm4a', 'flac'].includes(mime) ||
+    ['mp3', 'wav', 'ogg', 'aac', 'm4a', 'flac'].includes(ext);
+
+  const isImage =
+    mime.startsWith('image/') ||
+    ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'].includes(mime) ||
+    ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
+
+  if (isImage) return 'image';
+  if (isAudio) return 'audio';
+  if (isVideo) return 'video';
+  if (mime === 'application/pdf' || mime === 'pdf' || ext === 'pdf') return 'pdf';
+  if (
+    mime.includes('spreadsheet') ||
+    mime.includes('excel') ||
+    ['xls', 'xlsx', 'csv'].includes(mime) ||
+    ['xls', 'xlsx', 'csv'].includes(ext)
+  ) return 'sheet';
+  if (
+    mime.includes('word') ||
+    mime.includes('officedocument.wordprocessing') ||
+    ['doc', 'docx', 'rtf', 'odt'].includes(mime) ||
+    ['doc', 'docx', 'rtf', 'odt'].includes(ext)
+  ) return 'doc';
+
+  const isSlide =
+    mime.includes('presentation') ||
+    mime.includes('powerpoint') ||
+    ['ppt', 'pptx', 'key'].includes(mime) ||
+    ['ppt', 'pptx', 'key'].includes(ext);
+
+  if (isSlide) return 'slide';
+
+  if (
+    mime === 'application/zip' ||
+    mime === 'application/x-zip-compressed' ||
+    ['zip', 'rar', '7z', 'tar', 'gz'].includes(mime) ||
+    ['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)
+  ) return 'archive';
+  if (['txt', 'md'].includes(ext)) return 'text';
   return 'other';
 }
 

@@ -110,3 +110,32 @@
     border-radius: 0;
   }
 }
+
+.drive-preview__html {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 24px 32px;
+  background: #fff;
+  color: #21150f;
+  overflow: auto;
+}
+
+.drive-preview__html table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+
+.drive-preview__html td,
+.drive-preview__html th {
+  border: 1px solid #eadfce;
+  padding: 6px 8px;
+}
+
+.drive-preview__pptx {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 16px;
+  overflow: auto;
+  background: #fff;
+}
