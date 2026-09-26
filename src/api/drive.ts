@@ -69,16 +69,6 @@ function normalizeDate(value?: string): string {
   return value || new Date().toISOString();
 }
 
-function asFolderList(raw: unknown): FolderResponseNoList[] {
-  if (Array.isArray(raw)) return raw as FolderResponseNoList[];
-
-  const folder = raw as FolderResponse | null;
-  if (folder?.childFolder) return folder.childFolder;
-  if (folder?.idFolder) return [folder];
-
-  return [];
-}
-
 function asDeletedFolderList(raw: unknown): FolderResponse[] {
   if (Array.isArray(raw)) return raw as FolderResponse[];
   if (raw && typeof raw === 'object' && 'idFolder' in (raw as FolderResponse)) {
@@ -476,6 +466,7 @@ export const driveApi = {
         const json = JSON.parse(text);
         message = json.message || json.Message || message;
       } catch {
+        /* ignore */
       }
       throw new Error(message);
     }

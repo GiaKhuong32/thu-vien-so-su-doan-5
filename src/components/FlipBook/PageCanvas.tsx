@@ -52,7 +52,7 @@ export default function PageCanvas({
       drawW,
       drawH
     );
-  }, [page, width, height]);
+  }, [page?.el, page?.width, page?.height, width, height]);
 
   return (
     <canvas

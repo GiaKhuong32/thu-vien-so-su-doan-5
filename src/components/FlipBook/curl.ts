@@ -43,7 +43,9 @@ export function drawCurl(frame: CurlFrame): void {
   } = frame;
 
   const progress = clamp(frame.progress, 0, 1);
-  const columns = frame.columns ?? Math.max(48, Math.min(160, Math.round(leafW / 5)));
+  // Khoảng 60–96 lát đủ mượt ở kích thước hiển thị nhưng nhẹ hơn đáng kể so
+  // với mức tối đa 160 lát trước đây, đặc biệt trên màn hình DPR cao.
+  const columns = frame.columns ?? Math.max(56, Math.min(96, Math.round(leafW / 8)));
 
   ctx.clearRect(0, 0, canvasW, canvasH);
   if (leafW <= 0 || leafH <= 0) return;
@@ -111,7 +113,13 @@ export function drawCurl(frame: CurlFrame): void {
     const sx = su0 * face.width;
     const sw = Math.max((su1 - su0) * face.width, 0.01);
 
-    ctx.drawImage(face.el, sx, 0, sw, face.height, left, top, width + 1, h);
+    try {
+      ctx.drawImage(face.el, sx, 0, sw, face.height, left, top, width + 1, h);
+    } catch {
+      // Nguồn ảnh có thể vừa bị trình duyệt giải phóng khi tài liệu đóng.
+      // Bỏ qua lát này nhưng vẫn tiếp tục animation để không khóa điều hướng.
+      continue;
+    }
 
     const lambert = Math.cos(psi - Math.PI / 2.6) * (useBack ? -1 : 1);
     const shade = clamp(-lambert, 0, 1) * 0.42;

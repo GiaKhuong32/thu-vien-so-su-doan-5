@@ -64,6 +64,7 @@ const MIN_ZOOM = 0.5;
 const FLIP_MS = 820;
 const CURL_PAD = 90;
 const CORNER_ZONE = 130;
+const CLICK_MOVE_TOLERANCE = 12;
 
 export default function FlipBook({
   src,
@@ -172,16 +173,6 @@ export default function FlipBook({
     | null
   >(null);
 
-  const [drag, setDrag] = useState<{
-    dir: FlipDirection;
-    progress: number;
-    front?: ReturnType<typeof book.getPage>;
-    back?: ReturnType<typeof book.getPage>;
-    underLeft: number;
-    underRight: number;
-    target: number;
-  } | null>(null);
-
   const [hint, setHint] = useState<{ side: FlipDirection; amount: number } | null>(
     null
   );
@@ -258,7 +249,7 @@ export default function FlipBook({
 
   const flipTo = useCallback(
     (dir: FlipDirection) => {
-      if (flip || drag) return;
+      if (flip) return;
 
       const delta = step(dir);
       const target = dir === 'next' ? page + delta : page - delta;
@@ -266,7 +257,7 @@ export default function FlipBook({
 
       startFlip(dir, target);
     },
-    [flip, drag, step, page, numPages, startFlip]
+    [flip, step, page, numPages, startFlip]
   );
 
   const goNext = useCallback(() => flipTo('next'), [flipTo]);
@@ -609,69 +600,54 @@ export default function FlipBook({
     originX: number;
     originY: number;
     moved: boolean;
-    /** Kéo góc giấy để lật, thay vì kéo để pan. */
+    /** Góc được nhấn; chỉ lật khi người dùng click rồi thả ở cùng góc. */
     corner: FlipDirection | null;
-    target: number;
-    faces: {
-      frontPage: number;
-      backPage: number;
-      underLeft: number;
-      underRight: number;
-    } | null;
   } | null>(null);
 
   const [panning, setPanning] = useState(false);
 
-  /**
-   * Hình học của sách trên màn hình — một nguồn duy nhất cho cả vùng nhận góc
-   * giấy và phép quy đổi vị trí con trỏ thành mức lật.
-   *
-   * Phải suy ra từ đúng `spreadShift` mà phần render đang dùng. Trước đây hai
-   * hàm dưới tự tính lại khung sách và bỏ sót chế độ bìa sau, nên vùng bấm lệch
-   * nửa trang so với trang đang thấy.
-   */
+  /** Hình học thực tế sau khi đã áp dụng zoom, pan và dịch vị trí bìa. */
   const bookBox = useCallback(() => {
     const stage = stageRef.current;
     if (!stage || leafW <= 0) return null;
 
-    const rect = stage.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
+    const spreadElement = stage.querySelector<HTMLElement>('.fb-spread');
+    if (!spreadElement) return null;
 
-    // Khổ đôi luôn rộng 2 trang, canh giữa khung rồi dịch ngang spreadShift.
-    const spreadLeft = cx - (spread ? leafW : leafW / 2) + spreadShift;
+    const rect = spreadElement.getBoundingClientRect();
+    const renderedLeafWidth = rect.width / (spread ? 2 : 1);
 
-    // Bìa trước nằm ở ô phải, bìa sau ở ô trái; cả hai đứng một mình.
-    const alone = !spread || coverMode || backCoverMode;
-    const left = coverMode ? spreadLeft + leafW : spreadLeft;
-    const right = left + (alone ? leafW : leafW * 2);
+    // Bìa trước chỉ chiếm ô phải; bìa sau chỉ chiếm ô trái.
+    const left = coverMode ? rect.left + renderedLeafWidth : rect.left;
+    const right = backCoverMode ? rect.left + renderedLeafWidth : rect.right;
 
-    /** Gáy sách — trục quay của tờ giấy đang lật. */
-    const spineOf = (dir: FlipDirection) => {
-      if (!spread) return dir === 'next' ? left : right;
-      if (coverMode) return left; // gáy ở mép trái của bìa trước
-      if (backCoverMode) return right; // gáy ở mép phải của bìa sau
-      return spreadLeft + leafW;
+    return {
+      left,
+      right,
+      top: rect.top,
+      bottom: rect.bottom,
+      middle: (left + right) / 2,
+      renderedLeafWidth,
     };
-
-    return { left, right, bottom: cy + leafH / 2, spineOf };
-  }, [leafW, leafH, spread, spreadShift, coverMode, backCoverMode]);
+  }, [leafW, spread, coverMode, backCoverMode]);
 
   /** Xác định con trỏ có đang ở vùng góc dưới của trang hay không. */
   const cornerAt = useCallback(
     (clientX: number, clientY: number): FlipDirection | null => {
-      if (!ready || zoom > 1) return null;
+      if (!ready) return null;
 
       const box = bookBox();
       if (!box) return null;
 
-      // Chỉ nhận ở dải sát mép dưới.
-      if (clientY < box.bottom - CORNER_ZONE || clientY > box.bottom + 24) return null;
+      const zone = Math.min(CORNER_ZONE * zoom, box.renderedLeafWidth * 0.42);
 
-      if (clientX > box.right - CORNER_ZONE && clientX < box.right + 24) {
+      // Chỉ nhận ở dải sát mép dưới.
+      if (clientY < box.bottom - zone || clientY > box.bottom + 24) return null;
+
+      if (clientX > box.right - zone && clientX < box.right + 24) {
         return canNext ? 'next' : null;
       }
-      if (clientX < box.left + CORNER_ZONE && clientX > box.left - 24) {
+      if (clientX < box.left + zone && clientX > box.left - 24) {
         return canPrev ? 'prev' : null;
       }
       return null;
@@ -679,20 +655,37 @@ export default function FlipBook({
     [ready, zoom, bookBox, canNext, canPrev]
   );
 
-  /** Quy đổi vị trí con trỏ thành mức lật 0 → 1. */
-  const progressFromPointer = useCallback(
-    (clientX: number, dir: FlipDirection) => {
+  /** Khi phóng to, toàn bộ trang trái/phải đều có thể click để lật. */
+  const pageSideAt = useCallback(
+    (clientX: number, clientY: number): FlipDirection | null => {
+      if (!ready) return null;
+
       const box = bookBox();
-      if (!box) return 0;
+      if (
+        !box ||
+        clientX < box.left ||
+        clientX > box.right ||
+        clientY < box.top ||
+        clientY > box.bottom
+      ) {
+        return null;
+      }
 
-      // Mép ngoài của tờ giấy đi từ cách gáy 1 trang sang phía đối diện 1 trang.
-      const spineX = box.spineOf(dir);
-      const travelled =
-        dir === 'next' ? spineX + leafW - clientX : clientX - (spineX - leafW);
+      if (coverMode) return canNext ? 'next' : null;
+      if (backCoverMode) return canPrev ? 'prev' : null;
 
-      return Math.min(Math.max(travelled / (leafW * 2), 0), 1);
+      if (clientX < box.middle) return canPrev ? 'prev' : null;
+      return canNext ? 'next' : null;
     },
-    [bookBox, leafW]
+    [ready, bookBox, coverMode, backCoverMode, canNext, canPrev]
+  );
+
+  const clickDirectionAt = useCallback(
+    (clientX: number, clientY: number) =>
+      zoom > 1
+        ? pageSideAt(clientX, clientY)
+        : cornerAt(clientX, clientY),
+    [zoom, pageSideAt, cornerAt]
   );
 
   const onPointerDown = useCallback(
@@ -700,26 +693,21 @@ export default function FlipBook({
       if (e.button !== 0) return;
       if (flip) return;
 
-      const corner = cornerAt(e.clientX, e.clientY);
-
-      let faces = null as
-        | null
-        | { frontPage: number; backPage: number; underLeft: number; underRight: number };
-      let target = page;
+      const corner = clickDirectionAt(e.clientX, e.clientY);
+      if (zoom === 1 && !corner) return;
 
       if (corner) {
         const delta = step(corner);
-        target = corner === 'next' ? page + delta : page - delta;
+        const target = corner === 'next' ? page + delta : page - delta;
 
-        if (target < 1 || target > numPages) {
-          faces = null;
-        } else {
-          faces = buildFlipFaces(page, target, corner);
-          requestPage(faces.frontPage, 200);
-          requestPage(faces.backPage, 200);
-          requestPage(faces.underLeft, 150);
-          requestPage(faces.underRight, 150);
-        }
+        if (target < 1 || target > numPages) return;
+
+        const faces = buildFlipFaces(page, target, corner);
+        requestPage(faces.frontPage, 240);
+        requestPage(faces.backPage, 240);
+        requestPage(faces.underLeft, 200);
+        requestPage(faces.underRight, 200);
+        if (zoom === 1) setHint({ side: corner, amount: 1 });
       }
 
       dragRef.current = {
@@ -729,9 +717,7 @@ export default function FlipBook({
         originX: pan.x,
         originY: pan.y,
         moved: false,
-        corner: faces ? corner : null,
-        target,
-        faces,
+        corner,
       };
 
       if (zoom > 1) setPanning(true);
@@ -739,7 +725,7 @@ export default function FlipBook({
     },
     [
       flip,
-      cornerAt,
+      clickDirectionAt,
       page,
       step,
       numPages,
@@ -774,27 +760,19 @@ export default function FlipBook({
       const dx = e.clientX - d.startX;
       const dy = e.clientY - d.startY;
 
-      if (Math.abs(dx) > 6 || Math.abs(dy) > 6) d.moved = true;
+      if (Math.abs(dx) > CLICK_MOVE_TOLERANCE || Math.abs(dy) > CLICK_MOVE_TOLERANCE) {
+        d.moved = true;
+      }
 
-      // Kéo góc giấy → lật theo tay.
-      if (d.corner && d.faces && zoom === 1) {
-        const p = progressFromPointer(e.clientX, d.corner);
-
-        setDrag({
-          dir: d.corner,
-          progress: p,
-          front: book.getPage(d.faces.frontPage),
-          back: book.getPage(d.faces.backPage),
-          underLeft: d.faces.underLeft,
-          underRight: d.faces.underRight,
-          target: d.target,
-        });
+      // Ở mức zoom thường, kéo chuột không còn điều khiển trang giấy.
+      if (zoom === 1) {
+        if (d.moved && hint) setHint(null);
         return;
       }
 
-      if (zoom > 1) setPan({ x: d.originX + dx, y: d.originY + dy });
+      setPan({ x: d.originX + dx, y: d.originY + dy });
     },
-    [flip, zoom, hint, cornerAt, progressFromPointer, book]
+    [flip, zoom, hint, cornerAt]
   );
 
   const onPointerUp = useCallback(
@@ -805,59 +783,14 @@ export default function FlipBook({
 
       if (!d?.active) return;
 
-      // Kết thúc cú kéo góc giấy.
-      if (d.corner && d.faces) {
-        const p = progressFromPointer(e.clientX, d.corner);
-        setDrag(null);
-
-        // Kéo quá nửa → lật tiếp cho xong; chưa tới → nhả về chỗ cũ.
-        if (p > 0.42) {
-          startFlip(d.corner, d.target, p);
-        } else if (p > 0.02) {
-          flipSeq.current += 1;
-          setFlip({
-            id: flipSeq.current,
-            dir: d.corner === 'next' ? 'prev' : 'next',
-            front: book.getPage(d.faces.backPage),
-            back: book.getPage(d.faces.frontPage),
-            underLeft: leftPage,
-            underRight: rightPage,
-            from: 1 - p,
-            duration: Math.round(FLIP_MS * 0.55),
-          });
-        }
-        return;
+      if (d.corner && !d.moved) {
+        const releasedCorner = clickDirectionAt(e.clientX, e.clientY);
+        if (releasedCorner === d.corner) flipTo(d.corner);
       }
 
-      const dx = e.clientX - d.startX;
-      const dy = e.clientY - d.startY;
-
-      if (zoom === 1 && Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.4) {
-        if (dx < 0) goNext();
-        else goPrev();
-        return;
-      }
-
-      if (!d.moved && zoom === 1) {
-        const stage = stageRef.current;
-        if (!stage) return;
-        const rect = stage.getBoundingClientRect();
-        const rel = (e.clientX - rect.left) / rect.width;
-
-        if (rel > 0.55) goNext();
-        else if (rel < 0.45) goPrev();
-      }
+      setHint(null);
     },
-    [
-      progressFromPointer,
-      startFlip,
-      book,
-      leftPage,
-      rightPage,
-      zoom,
-      goNext,
-      goPrev,
-    ]
+    [clickDirectionAt, flipTo]
   );
 
   const wheelLock = useRef(0);
@@ -1005,10 +938,10 @@ export default function FlipBook({
   const sliderRatio =
     numPages > 1 ? ((dragPage ?? page) - 1) / (numPages - 1) : 0;
   const previewPage = dragPage ?? page;
-  const uiHidden = zoom > 1;
+  const uiHidden = false; // Giữ UI hiển thị khi zoom để có thể zoom out/back
 
   // ---- Trang nào hiện dưới lớp lật ---------------------------------------
-  const active = flip ?? drag;
+  const active = flip;
 
   const underLeft = active ? active.underLeft : leftPage;
   const underRight = active ? active.underRight : rightPage;
@@ -1253,7 +1186,7 @@ export default function FlipBook({
         onPointerCancel={() => {
           dragRef.current = null;
           setPanning(false);
-          setDrag(null);
+          setHint(null);
         }}
         onWheel={onWheel}
       >
@@ -1300,7 +1233,6 @@ export default function FlipBook({
                   spread={spread}
                   pad={CURL_PAD}
                   request={flip}
-                  drag={drag}
                   hint={hint}
                   onFlipEnd={onFlipEnd}
                 />
@@ -1314,9 +1246,9 @@ export default function FlipBook({
 
       <button
         type="button"
-        className="fb-edge fb-edge--prev"
+        className={`fb-edge fb-edge--prev${zoom > 1 ? ' is-zoomed' : ''}`}
         aria-label="Trang trước"
-        disabled={!canPrev || zoom > 1}
+        disabled={!canPrev}
         onClick={goPrev}
       >
         <IcPrev />
@@ -1324,9 +1256,9 @@ export default function FlipBook({
 
       <button
         type="button"
-        className="fb-edge fb-edge--next"
+        className={`fb-edge fb-edge--next${zoom > 1 ? ' is-zoomed' : ''}`}
         aria-label="Trang sau"
-        disabled={!canNext || zoom > 1}
+        disabled={!canNext}
         onClick={goNext}
       >
         <IcNext />

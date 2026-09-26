@@ -245,7 +245,10 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
               releaseCanvas(entry ?? undefined);
               return;
             }
-            releaseCanvas(fullCache.current.get(pageNumber));
+            // Không đặt canvas cũ về 0x0 tại đây: FlipCanvas có thể vẫn đang
+            // dùng nó trong một lượt lật khi trang được nâng độ phân giải sau
+            // khi zoom. Map bỏ tham chiếu là đủ để trình duyệt tự thu hồi sau
+            // khi animation kết thúc.
             fullCache.current.set(pageNumber, entry);
             trimCache(fullCache.current, FULL_CACHE, hotPages.current);
             bump();

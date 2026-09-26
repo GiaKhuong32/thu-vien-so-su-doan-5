@@ -18,14 +18,6 @@ type FlipCanvasProps = {
   spread: boolean;
   pad: number;
   request: FlipRequest | null;
-
-  drag: {
-    dir: CurlDirection;
-    progress: number;
-    front?: PageDrawable;
-    back?: PageDrawable;
-  } | null;
-
   hint: { side: CurlDirection; amount: number } | null;
   onFlipEnd: (id: number) => void;
 };
@@ -36,7 +28,6 @@ export default function FlipCanvas({
   spread,
   pad,
   request,
-  drag,
   hint,
   onFlipEnd,
 }: FlipCanvasProps) {
@@ -51,7 +42,9 @@ export default function FlipCanvas({
   const prepare = (canvas: HTMLCanvasElement | null) => {
     if (!canvas || canvasW <= 0 || canvasH <= 0) return null;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Canvas động không cần mật độ cao như trang tĩnh. Giới hạn DPR giúp giảm
+    // đáng kể lượng pixel phải vẽ trong mỗi frame trên màn hình Retina.
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const pxW = Math.round(canvasW * dpr);
     const pxH = Math.round(canvasH * dpr);
 
@@ -64,6 +57,8 @@ export default function FlipCanvas({
     if (!ctx) return null;
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'medium';
     return ctx;
   };
 
@@ -101,8 +96,10 @@ export default function FlipCanvas({
         return;
       }
 
-      ctx.clearRect(0, 0, canvasW, canvasH);
       doneRef.current = request.id;
+      // Giữ frame cuối cho tới khi React đã cập nhật trang nằm dưới canvas.
+      // Xóa canvas ngay tại đây từng làm lộ trang cũ trong một frame và tạo
+      // cảm giác nháy/giật sau khi lật xong.
       onFlipEnd(request.id);
     };
 
@@ -120,31 +117,14 @@ export default function FlipCanvas({
     const ctx = prepare(flipRef.current);
     if (!ctx) return;
 
-    if (!drag) {
-      if (!request) ctx.clearRect(0, 0, canvasW, canvasH);
-      return;
-    }
-
-    drawCurl({
-      ctx,
-      canvasW,
-      canvasH,
-      pad,
-      leafW,
-      leafH,
-      spread,
-      dir: drag.dir,
-      progress: drag.progress,
-      front: drag.front,
-      back: drag.back,
-    });
-  }, [drag, request, leafW, leafH, spread, pad, canvasW, canvasH]);
+    if (!request) ctx.clearRect(0, 0, canvasW, canvasH);
+  }, [request, leafW, leafH, spread, pad, canvasW, canvasH]);
 
   useEffect(() => {
     const ctx = prepare(hintRef.current);
     if (!ctx) return;
 
-    if (!hint || drag || request) {
+    if (!hint || request) {
       ctx.clearRect(0, 0, canvasW, canvasH);
       return;
     }
@@ -160,7 +140,7 @@ export default function FlipCanvas({
       side: hint.side,
       amount: hint.amount,
     });
-  }, [hint, drag, request, leafW, leafH, spread, pad, canvasW, canvasH]);
+  }, [hint, request, leafW, leafH, spread, pad, canvasW, canvasH]);
 
   if (leafW <= 0 || leafH <= 0) return null;
 
