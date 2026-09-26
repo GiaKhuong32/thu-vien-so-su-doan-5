@@ -86,9 +86,10 @@ function PhoneIcon() {
 type Props = {
   book: BookDetail;
   onUnavailable: (action: BookAction) => void;
+  onPlayVideo?: (action: BookAction) => void;
 };
 
-export default function BookBrief({ book, onUnavailable }: Props) {
+export default function BookBrief({ book, onUnavailable, onPlayVideo }: Props) {
   return (
     <div className="brief">
       <div className="brief__media">
@@ -136,6 +137,21 @@ export default function BookBrief({ book, onUnavailable }: Props) {
               {book.actions.map((a) => {
                 const cls = `btn ${a.primary ? 'btn-primary' : 'btn-outline-primary'}`;
                 const isExternalHref = /^https?:\/\//i.test(a.href);
+
+                if (a.kind === 'video' && a.href && onPlayVideo) {
+                  return (
+                    <button
+                      key={a.label}
+                      type="button"
+                      className={cls}
+                      title={book.title}
+                      onClick={() => onPlayVideo(a)}
+                    >
+                      <ActionIcon kind={a.kind} />
+                      {a.label}
+                    </button>
+                  );
+                }
 
                 if (a.href && isExternalHref) {
                   return (

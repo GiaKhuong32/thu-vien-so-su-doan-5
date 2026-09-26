@@ -5,6 +5,7 @@ import BookBrief from '../components/BookBrief/BookBrief';
 import BookSection from '../components/BookSection';
 import InfoPane from '../components/InfoPane/InfoPane';
 import Modal from '../components/Modal/Modal';
+import VideoModal from '../components/VideoModal';
 import PageBanner from '../components/PageBanner/PageBanner';
 import PageLayout from '../components/PageLayout/PageLayout';
 import ReviewForm from '../components/ReviewForm/ReviewForm';
@@ -67,6 +68,7 @@ export default function BookDetailPage() {
   const [bookActions, setBookActions] = useState<BookAction[]>([]);
   const [authors, setAuthors] = useState<Author[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
+  const [videoModal, setVideoModal] = useState<{ src: string; title: string } | null>(null);
   const dbCategories = useCategories({ includeAll: true });
   const [categoriesWithCount, setCategoriesWithCount] = useState(dbCategories);
   const [topicsWithCount, setTopicsWithCount] = useState(bookTopics);
@@ -133,12 +135,10 @@ useEffect(() => {
     allBooks.forEach((book) => {
       if (book.author && book.author.trim()) {
         const authorName = book.author.trim();
-        // Tạo slug nhưng giữ lại dấu tiếng Việt
         const authorSlug = authorName
           .toLowerCase()
-          .replace(/\s+/g, '-') // chỉ thay space bằng dấu gạch
-          .replace(/[^a-z0-9-àáạảãâầấậẩẫèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỉỹđ]/g, '') // xóa ký tự đặc biệt
-          .replace(/^-+|-+$/g, '');
+          .replace(/\s+/g, '-') 
+          .replace(/[^a-z0-9-àáạảãâầấậẩẫèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỉỹđ]/g, '') 
         
         if (!uniqueAuthors.has(authorName)) {
           uniqueAuthors.set(authorName, `/sach/?author=${authorSlug}`);
@@ -153,7 +153,6 @@ useEffect(() => {
 
     setAuthors(authorArray);
 
-    // Calculate category counts - use same logic as filter
     const countableBooks = [...allBooks, ...(videobooksData || [])];
     const categoryCounts = new Map<string, number>();
 
@@ -163,7 +162,6 @@ useEffect(() => {
         return;
       }
 
-      // Count books matching this category using same logic as filter
       const count = countableBooks.filter(book => {
         if (!book.category) return false;
 
@@ -219,6 +217,14 @@ useEffect(() => {
       setNotice('Dự án đang được triển khai');
     },
     [navigate]
+  );
+
+  const onPlayVideo = useCallback(
+    (action: BookAction) => {
+      if (!action.href) return;
+      setVideoModal({ src: action.href, title: book?.title || action.label });
+    },
+    [book?.title]
   );
 
 
@@ -293,6 +299,9 @@ useEffect(() => {
             onUnavailable={
               onUnavailable
             }
+            onPlayVideo={
+              onPlayVideo
+            }
           />
 
           {!!book.catalog.length && (
@@ -350,18 +359,6 @@ useEffect(() => {
 
           )}
 
-          {/* Disabled temporarily - not currently in use */}
-          {/* <InfoPane
-            title="Bình luận và đánh giá"
-          >
-
-            <ReviewForm
-              key={book.slug}
-            />
-
-          </InfoPane> */}
-
-
         </PageLayout>
 
         {!!related.length && (
@@ -388,6 +385,13 @@ useEffect(() => {
         {notice}
 
       </Modal>
+
+      <VideoModal
+        open={videoModal !== null}
+        src={videoModal?.src || null}
+        title={videoModal?.title}
+        onClose={() => setVideoModal(null)}
+      />
 
     </>
   );
