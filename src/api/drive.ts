@@ -137,7 +137,6 @@ function fileToNode(
   parentId: string | null,
   options?: { trashed?: boolean },
 ): DriveNode {
-  const fileUrl = file.partFile ? toApiUrl(file.partFile) : `${API_BASE_URL}/files/download/${file.idFile}`;
   const deletedAt = file.deletedAt ?? null;
   const trashed = options?.trashed ?? Boolean(deletedAt);
 
@@ -153,7 +152,7 @@ function fileToNode(
     favourite: false,
     trashed,
     trashedAt: trashed ? deletedAt : null,
-    previewUrl: file.thumbnail ? toApiUrl(file.thumbnail) : fileUrl,
+    previewUrl: file.thumbnail ? toApiUrl(file.thumbnail) : null,
   };
 }
 
@@ -377,7 +376,7 @@ export const driveApi = {
     files.forEach((file) => {
       const lower = file.name.toLowerCase();
       let type = file.type;
-      if (lower.endsWith('.zip') && (!type || type === 'application/octet-stream')) {
+      if (lower.endsWith('.zip')) {
         type = 'application/zip';
       }
       formData.append('file', type && type !== file.type ? new File([file], file.name, { type }) : file);
@@ -477,7 +476,6 @@ export const driveApi = {
         const json = JSON.parse(text);
         message = json.message || json.Message || message;
       } catch {
-        /* ignore */
       }
       throw new Error(message);
     }

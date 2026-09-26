@@ -17,7 +17,7 @@ type Props = {
 };
 
 const SECTION_TITLE: Record<DriveSection, string> = {
-  cloud: 'Ổ Mây',
+  cloud: 'Lưu Trữ',
   recent: 'Gần Đây',
   favourite: 'Ưa Thích',
   trash: 'Thùng rác',
@@ -104,7 +104,7 @@ export default function DriveToolbar({
               className={`drive-crumb${breadcrumbs.length === 0 ? ' is-current' : ''}`}
               onClick={() => onNavigate(null)}
             >
-              Ổ Mây
+              Lưu Trữ
             </span>
             {breadcrumbs.map((crumb, idx) => (
               <span key={crumb.id ?? 'root'}>

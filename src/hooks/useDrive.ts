@@ -89,16 +89,25 @@ export function useDrive(initialFolderId?: string | null) {
   }, [nodes, currentFolderId, selectedIds, section]);
 
 function mergeTrashed(prev: DriveNode[], deleted: DriveNode[]): DriveNode[] {
-  const prevById = new Map(prev.map((n) => [n.id, n]));
-  const deletedIds = new Set(deleted.map((n) => n.id));
-  const live = prev.filter((n) => !n.trashed && !deletedIds.has(n.id));
+  const prevById = new Map(prev.map((node) => [node.id, node]));
+
+  const deletedIds = new Set(deleted.map((node) => node.id));
+  const live = prev.filter((node) => !node.trashed && !deletedIds.has(node.id));
+
   const trash = deleted.map((node) => {
     const previous = prevById.get(node.id);
+
     return {
+      ...previous,
       ...node,
       parentId: node.parentId ?? previous?.parentId ?? null,
+
+      // API thùng rác có thể trả một URL thumbnail đã bị xóa/hỏng.
+      // Ưu tiên URL đang hiển thị trước khi file bị chuyển vào thùng rác.
+      previewUrl: previous?.previewUrl ?? node.previewUrl ?? null,
     };
   });
+
   return [...live, ...trash];
 }
 
@@ -246,11 +255,23 @@ function errorMessage(err: unknown, fallback: string): string {
         }
 
         for (const child of children) {
+          const previous = next.get(child.id);
+          const trashNode = trashById.get(child.id);
+
           next.set(child.id, {
+            ...previous,
             ...child,
             trashed: false,
             trashedAt: null,
-            visibility: trashById.get(child.id)?.visibility ?? child.visibility,
+            visibility: trashNode?.visibility ?? previous?.visibility ?? child.visibility,
+
+            // Ưu tiên thumbnail đã có trước khi xóa; response khôi phục
+            // đôi khi vẫn chứa URL thumbnail cũ nhưng không còn tồn tại.
+            previewUrl:
+              trashNode?.previewUrl ??
+              previous?.previewUrl ??
+              child.previewUrl ??
+              null,
           });
         }
 
@@ -482,6 +503,10 @@ function errorMessage(err: unknown, fallback: string): string {
               : task,
           ),
         );
+
+        // Let DrivePage avoid showing a success toast when the API rejects
+        // the upload (for example because of server-side ZIP validation).
+        throw err;
       } finally {
         setTimeout(() => {
           setUploads((prev) =>
