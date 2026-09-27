@@ -99,7 +99,7 @@ const topicCounts: Record<string, number> = {
       }));
       setTopicsWithCount(topicsWithCounts);
     }
-  }, [allBooks, ebooksData, audiobooksData, videobooksData]);
+  }, [allBooks, dbCategories, ebooksData, audiobooksData, videobooksData]);
 
   if (loading) {
     return (

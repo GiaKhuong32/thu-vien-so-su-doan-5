@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/auth";
 import AuthHeroPanel from "../components/auth/AuthHeroPanel";
@@ -34,7 +34,6 @@ export default function LoginPage() {
       <div className="login-page__right">
         <LoginForm
           onSubmit={handleLogin}
-          onRegisterClick={() => navigate("/dang-ky")}
           error={error}
           loading={loading}
         />

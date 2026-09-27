@@ -16,15 +16,6 @@ import DrivePage from './pages/DrivePage';
 import ScrollToTop from './components/ScrollToTop';
 import LoadingScreen from './components/LoadingScreen';
 
-function RootRoute() {
-  return (
-    <>
-      <ScrollToTop />
-      <App />
-    </>
-  );
-}
-
 function LoadingRoute() {
   return (
     <>

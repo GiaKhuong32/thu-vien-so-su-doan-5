@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { drawCornerHint, drawCurl, easeFlip } from './curl';
 import type { CurlDirection } from './curl';
 import type { PageDrawable } from './types';
@@ -39,7 +39,7 @@ export default function FlipCanvas({
   const canvasW = (spread ? leafW * 2 : leafW) + pad * 2;
   const canvasH = leafH + pad * 2;
 
-  const prepare = (canvas: HTMLCanvasElement | null) => {
+  const prepare = useCallback((canvas: HTMLCanvasElement | null) => {
     if (!canvas || canvasW <= 0 || canvasH <= 0) return null;
 
     // Canvas động không cần mật độ cao như trang tĩnh. Giới hạn DPR giúp giảm
@@ -60,7 +60,7 @@ export default function FlipCanvas({
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'medium';
     return ctx;
-  };
+  }, [canvasW, canvasH]);
 
   useEffect(() => {
     if (!request || leafW <= 0) return;
@@ -111,14 +111,14 @@ export default function FlipCanvas({
         rafRef.current = null;
       }
     };
-  }, [request, leafW, leafH, spread, pad, canvasW, canvasH, onFlipEnd]);
+  }, [request, leafW, leafH, spread, pad, canvasW, canvasH, onFlipEnd, prepare]);
 
   useEffect(() => {
     const ctx = prepare(flipRef.current);
     if (!ctx) return;
 
     if (!request) ctx.clearRect(0, 0, canvasW, canvasH);
-  }, [request, leafW, leafH, spread, pad, canvasW, canvasH]);
+  }, [request, leafW, leafH, spread, pad, canvasW, canvasH, prepare]);
 
   useEffect(() => {
     const ctx = prepare(hintRef.current);
@@ -140,7 +140,7 @@ export default function FlipCanvas({
       side: hint.side,
       amount: hint.amount,
     });
-  }, [hint, request, leafW, leafH, spread, pad, canvasW, canvasH]);
+  }, [hint, request, leafW, leafH, spread, pad, canvasW, canvasH, prepare]);
 
   if (leafW <= 0 || leafH <= 0) return null;
 

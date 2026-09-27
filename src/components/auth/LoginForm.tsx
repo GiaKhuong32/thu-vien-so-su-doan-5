@@ -1,11 +1,9 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { User, Lock, Eye, EyeOff, UserPlus} from "lucide-react";
+import { User, Lock, Eye, EyeOff } from "lucide-react";
 import "./LoginForm.css";
 
 interface LoginFormProps {
   onSubmit?: (username: string, password: string) => void;
-  onRegisterClick?: () => void;
   onForgotPasswordClick?: () => void;
   error?: string | null;
   loading?: boolean;
@@ -13,11 +11,9 @@ interface LoginFormProps {
 
 export default function LoginForm({
   onSubmit,
-  onRegisterClick,
   error,
   loading,
 }: LoginFormProps) {
-  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -25,14 +21,6 @@ export default function LoginForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit?.(username, password);
-  };
-
-  const handleRegisterClick = () => {
-    if (onRegisterClick) {
-      onRegisterClick();
-    } else {
-      navigate("/dang-ky");
-    }
   };
 
   return (

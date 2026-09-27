@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { mainMenu, type MenuItem } from '../../data/navigation';
 import { isAuthenticated, logout } from '../../api/auth';
 import { useCategories } from '../../hooks/useCategories';
 import UserMenu from '../UserMenu/UserMenu';
+import { navigateWithLoading } from '../LoadingScreen/navigateWithLoading';
 import './Navbar.css';
 import logo from '../../assets/skin/logo.png';
 
@@ -96,7 +97,6 @@ export default function Navbar() {
   const [userName, setUserName] = useState('');
   const [userRole, setUserRole] = useState('Người dùng');
   const inputRef = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate();
  const categories = useCategories();
 
 const menuItems = useMemo(
@@ -140,7 +140,7 @@ const menuItems = useMemo(
     setIsAuthenticatedUser(false);
     setUserName('');
     setUserRole('Người dùng');
-    navigate('/');
+    navigateWithLoading('/');
   };
 
   useEffect(() => {
@@ -204,7 +204,7 @@ const menuItems = useMemo(
               onSubmit={(e) => {
                 e.preventDefault();
                 if (searchQuery.trim()) {
-                  navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                  navigateWithLoading(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
                   setSearchQuery('');
                   setSearchOpen(false);
                 }

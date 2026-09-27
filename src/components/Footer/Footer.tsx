@@ -76,7 +76,7 @@ export default function Footer() {
       </div>
 
       <div className="footer__bottom">
-        <div className="container">© 2026 Thư Viện Sư đoàn 5.</div>
+        <div className="container">© 2026 Thư Viện Sư đoàn 5</div>
       </div>
     </footer>
   );

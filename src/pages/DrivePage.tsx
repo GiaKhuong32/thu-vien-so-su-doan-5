@@ -44,9 +44,9 @@ export default function DrivePage() {
     if (toastTimer.current) clearTimeout(toastTimer.current);
   }, []);
 
-  const goToFolder = (id: string | null) => {
+  const goToFolder = useCallback((id: string | null) => {
     navigate(id ? `/quan-ly-tep/${id}` : '/quan-ly-tep');
-  };
+  }, [navigate]);
 
   /* ---------------- Tải lên ---------------- */
 
@@ -190,11 +190,6 @@ export default function DrivePage() {
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Tải file thất bại');
     }
-  };
-
-  const getPreviewUrl = (file: DriveNode | null) => {
-    if (!file) return null;
-    return file.id;
   };
 
   return (

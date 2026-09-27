@@ -16,6 +16,10 @@ export default function PageCanvas({
 }: PageCanvasProps) {
   const ref = useRef<HTMLCanvasElement>(null);
 
+  const pageEl = page?.el;
+  const pageW = page?.width;
+  const pageH = page?.height;
+
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas || width <= 0 || height <= 0) return;
@@ -36,23 +40,23 @@ export default function PageCanvas({
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, pxW, pxH);
 
-    if (!page) return;
+    if (!pageEl || !pageW || !pageH) return;
 
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
-    const scale = Math.min(pxW / page.width, pxH / page.height);
-    const drawW = page.width * scale;
-    const drawH = page.height * scale;
+    const scale = Math.min(pxW / pageW, pxH / pageH);
+    const drawW = pageW * scale;
+    const drawH = pageH * scale;
 
     ctx.drawImage(
-      page.el,
+      pageEl,
       (pxW - drawW) / 2,
       (pxH - drawH) / 2,
       drawW,
       drawH
     );
-  }, [page?.el, page?.width, page?.height, width, height]);
+  }, [pageEl, pageW, pageH, width, height]);
 
   return (
     <canvas

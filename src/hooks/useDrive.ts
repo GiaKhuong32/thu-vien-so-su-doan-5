@@ -300,7 +300,7 @@ function errorMessage(err: unknown, fallback: string): string {
     return () => {
       cancelled = true;
     };
-  }, [initialFolderId]);
+  }, [initialFolderId, navigateTo, loadRoots, loadTrash]);
 
   /* ---------------- Dữ liệu dẫn xuất ---------------- */
 
@@ -517,7 +517,7 @@ function errorMessage(err: unknown, fallback: string): string {
 
       if (section !== 'cloud') setSectionState('cloud');
     },
-    [section, currentFolderId],
+    [section, currentFolderId, resolveBackendParentId],
   );
 
   const toggleFavourite = useCallback((id: string) => {
@@ -572,7 +572,6 @@ function errorMessage(err: unknown, fallback: string): string {
   const moveToTrash = useCallback(
     async (idOrIds: string | string[]) => {
       const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
-      const affectedIds = collectDescendantIds(ids, nodes);
       const selectedNodes = nodes.filter((node) => ids.includes(node.id) && !node.trashed);
 
       if (selectedNodes.length === 0) return;

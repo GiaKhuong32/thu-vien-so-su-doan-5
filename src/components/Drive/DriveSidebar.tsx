@@ -18,9 +18,6 @@ const NAV_ITEMS: { key: DriveSection; label: string; icon: typeof Cloud }[] = [
 ];
 
 export default function DriveSidebar({ section, onSectionChange, counts, storage }: Props) {
-  const pct = storage.total > 0 ? Math.min(100, (storage.used / storage.total) * 100) : 0;
-  const pctLabel = pct > 0 && pct < 1 ? '<1' : String(Math.round(pct));
-
   return (
     <aside className="drive-sidebar">
       <div className="drive-brand">

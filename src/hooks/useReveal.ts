@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 
 export default function useReveal(deps: unknown[] = []) {
   const { pathname, search } = useLocation();
+  const extraKey = JSON.stringify(deps);
 
   useEffect(() => {
     let io: IntersectionObserver | null = null;
@@ -57,5 +58,5 @@ export default function useReveal(deps: unknown[] = []) {
       mutationObserver?.disconnect();
       io?.disconnect();
     };
-  }, [pathname, search, ...deps]);
+  }, [pathname, search, extraKey]);
 }

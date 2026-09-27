@@ -14,10 +14,6 @@ type Props = {
   onClose: () => void;
 };
 
-function officeViewerUrl(fileUrl: string) {
-  return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
-}
-
 export default function DriveFilePreviewModal({ open, file, onClose }: Props) {
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [html, setHtml] = useState<string | null>(null);
@@ -87,7 +83,7 @@ export default function DriveFilePreviewModal({ open, file, onClose }: Props) {
       revoked = true;
       if (createdUrl) URL.revokeObjectURL(createdUrl);
     };
-  }, [open, file]);
+  }, [open, file, kind]);
 
   useLayoutEffect(() => {
     if (loading || kind !== 'slide' || !pptxBuffer || !pptxRef.current) return;

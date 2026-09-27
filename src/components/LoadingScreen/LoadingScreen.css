@@ -12,10 +12,16 @@
   opacity: 1;
   transform: scale(1);
   visibility: visible;
-  transition:
-    transform 0.85s cubic-bezier(0.5, 0.01, 0.17, 0.97),
-    opacity 0.8s ease-in-out,
-    height 1s;
+}
+
+.loading-screen--enter,
+.loading-screen--visible {
+  height: 100dvh;
+  opacity: 1;
+  transform: scale(1);
+  visibility: visible;
+  pointer-events: auto;
+  transition: none;
 }
 
 .loading-screen--leaving {
@@ -23,6 +29,10 @@
   opacity: 0;
   pointer-events: none;
   transform: scale(3);
+  transition:
+    transform 0.85s cubic-bezier(0.5, 0.01, 0.17, 0.97),
+    opacity 0.8s ease-in-out,
+    height 1s;
 }
 
 .loading-screen--hidden {
@@ -31,6 +41,7 @@
   pointer-events: none;
   transform: scale(3);
   visibility: hidden;
+  transition: none;
 }
 
 .loading-screen__inner {
@@ -69,6 +80,11 @@
 
 body.is-route-loading {
   overflow: hidden;
+  pointer-events: none;
+}
+
+body.is-route-loading .loading-screen {
+  pointer-events: auto;
 }
 
 @keyframes loading-light-sweep {
@@ -100,7 +116,7 @@ body.is-route-loading {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .loading-screen {
+  .loading-screen--leaving {
     transition: opacity 0.2s ease;
   }
 

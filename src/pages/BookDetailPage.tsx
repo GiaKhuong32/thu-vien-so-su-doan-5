@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import BookBrief from '../components/BookBrief/BookBrief';
 import BookSection from '../components/BookSection';
@@ -8,7 +8,6 @@ import Modal from '../components/Modal/Modal';
 import VideoModal from '../components/VideoModal';
 import PageBanner from '../components/PageBanner/PageBanner';
 import PageLayout from '../components/PageLayout/PageLayout';
-import ReviewForm from '../components/ReviewForm/ReviewForm';
 import Sidebar from '../components/Sidebar/Sidebar';
 
 
@@ -28,6 +27,7 @@ import {
 import { useCategories } from '../hooks/useCategories';
 import { findCategoryPath } from '../api/categories';
 import useReveal from '../hooks/useReveal';
+import { navigateWithLoading } from '../components/LoadingScreen/navigateWithLoading';
 
 import {
   findPdfFile,
@@ -41,7 +41,6 @@ import {
 export default function BookDetailPage() {
 
   const { slug } = useParams();
-  const navigate = useNavigate();
 
   const {
     data: bookData,
@@ -210,13 +209,13 @@ useEffect(() => {
       }
 
       if (action.kind === 'pdf' && action.href) {
-        navigate(action.href);
+        navigateWithLoading(action.href);
         return;
       }
 
       setNotice('Dự án đang được triển khai');
     },
-    [navigate]
+    []
   );
 
   const onPlayVideo = useCallback(
