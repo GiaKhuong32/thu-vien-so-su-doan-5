@@ -45,7 +45,7 @@ export interface FileResponse {
   folder?: string | { idFolder?: string } | null;
   idFolder?: string;
 }
-
+//  
 export interface CreateFolderRequest {
   folderName: string;
   description?: string;
