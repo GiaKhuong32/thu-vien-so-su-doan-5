@@ -85,7 +85,8 @@ useEffect(() => {
     try {
       const files = await getDocumentFiles(idDocument);
 
-      setBookFormats(getReadableFormats(files));
+      const readableFormats = getReadableFormats(files);
+      setBookFormats(readableFormats.length ? readableFormats : bookData?.formats || []);
 
       const pdfFile = findPdfFile(files);
       const pdfUrl = getBookFileUrl(pdfFile);
@@ -115,11 +116,11 @@ useEffect(() => {
         });
       }
 
-      setBookActions(actions);
+      setBookActions(actions.length ? actions : bookData?.actions || []);
     } catch (error) {
       console.error('Lỗi lấy danh sách file của sách:', error);
-      setBookFormats([]);
-      setBookActions([]);
+      setBookFormats(bookData?.formats || []);
+      setBookActions(bookData?.actions || []);
     }
   };
 

@@ -8,6 +8,7 @@ import {
 } from 'react';
 
 import './FlipBook.css';
+import { getAuthHeaders } from '../../api/client';
 import { usePdfBook } from './usePdfBook';
 import PageThumbnail from './PageThumbnail';
 import PageCanvas from './PageCanvas';
@@ -65,6 +66,18 @@ const FLIP_MS = 820;
 const CURL_PAD = 90;
 const CORNER_ZONE = 130;
 const CLICK_MOVE_TOLERANCE = 12;
+
+async function fetchPdfBlob(url: string): Promise<Blob> {
+  const response = await fetch(url, {
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Không tải được tệp PDF (${response.status})`);
+  }
+
+  return response.blob();
+}
 
 export default function FlipBook({
   src,
@@ -513,42 +526,65 @@ export default function FlipBook({
   const zoomIn = useCallback(() => setZoom((z) => Math.min(z + 0.5, MAX_ZOOM)), []);
   const zoomOut = useCallback(() => setZoom((z) => Math.max(z - 0.5, MIN_ZOOM)), []);
 
-  const handlePrint = useCallback(() => {
+  const handlePrint = useCallback(async () => {
     const url = downloadUrl || src;
     if (!url) {
       setToast('Chưa có tệp để in');
       return;
     }
 
-    const win = window.open(url, '_blank', 'noopener,noreferrer');
-    if (!win) {
-      setToast('Trình duyệt đã chặn cửa sổ in');
-      return;
-    }
-    win.addEventListener('load', () => {
-      try {
-        win.print();
-      } catch {
-        /* trình duyệt chặn */
+    try {
+      const blob = await fetchPdfBlob(url);
+      const objectUrl = URL.createObjectURL(blob);
+      const win = window.open(objectUrl, '_blank', 'noopener,noreferrer');
+
+      if (!win) {
+        URL.revokeObjectURL(objectUrl);
+        setToast('Trình duyệt đã chặn cửa sổ in');
+        return;
       }
-    });
+
+      win.addEventListener('load', () => {
+        try {
+          win.print();
+        } catch {
+          /* trình duyệt chặn */
+        }
+      });
+
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : 'Không in được tệp PDF');
+    }
   }, [downloadUrl, src]);
 
-  const handleDownload = useCallback(() => {
+  const handleDownload = useCallback(async () => {
     const url = downloadUrl || src;
     if (!url) {
       setToast('Chưa có tệp để tải');
       return;
     }
 
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${(title || 'sach').replace(/[\\/:*?"<>|]+/g, '-')}.pdf`;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    let objectUrl: string | null = null;
+
+    try {
+      const blob = await fetchPdfBlob(url);
+      objectUrl = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = `${(title || 'sach').replace(/[\\/:*?"<>|]+/g, '-')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : 'Không tải được tệp PDF');
+    } finally {
+      if (objectUrl) {
+        const urlToRevoke = objectUrl;
+        window.setTimeout(() => URL.revokeObjectURL(urlToRevoke), 1000);
+      }
+    }
   }, [downloadUrl, src, title]);
 
   const isBookmarked = bookmarks.includes(page);

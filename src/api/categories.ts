@@ -84,12 +84,12 @@ function mapCategory(category: ApiCategory): CategoryMenuItem {
 
 export const categoriesApi = {
   getParents: async (): Promise<ApiCategory[]> => {
-    const categories = await api.get<ApiCategory[]>('/categories/tree');
+    const categories = await api.public.get<ApiCategory[]>('/categories/tree');
     return categories;
   },
 
   getChildren: async (idCategory: string): Promise<ApiCategory[]> => {
-    return api.get<ApiCategory[]>(`/categories/${idCategory}/children`);
+    return api.public.get<ApiCategory[]>(`/categories/${idCategory}/children`);
   },
 
   getTreeWithChildren: async (): Promise<CategoryMenuItem[]> => {

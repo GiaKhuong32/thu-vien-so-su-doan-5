@@ -55,9 +55,7 @@ export async function login(credentials: LoginRequest): Promise<LoginResponse> {
     password: credentials.password,
   };
 
-  const response = await api.post<LoginResponse>('/auth/login', payload, {
-    auth: false,
-  });
+  const response = await api.public.post<LoginResponse>('/auth/login', payload);
 
   if (response.token) {
     setToken(response.token);
@@ -78,7 +76,7 @@ export async function register(credentials: RegisterRequest): Promise<RegisterRe
     role: VIEWER_ROLE_ID,
   };
 
-  return api.post<RegisterResponse>('/accounts', payload);
+  return api.private.post<RegisterResponse>('/accounts', payload);
 }
 
 export function logout(): void {

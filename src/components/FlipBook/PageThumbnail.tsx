@@ -1,5 +1,5 @@
 import { usePdfThumbnail } from './usePdfThumbnail';
-import * as pdfjs from 'pdfjs-dist';
+import type * as pdfjs from 'pdfjs-dist/legacy/build/pdf';
 
 type PageThumbnailProps = {
   pdf: pdfjs.PDFDocumentProxy | null;

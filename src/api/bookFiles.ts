@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../config/api';
+import { toApiUrl } from '../config/api';
 import { api } from './client';
 
 export interface BookFile {
@@ -18,7 +18,7 @@ export interface BookFile {
 export async function getCategoryFiles(idCategory?: string): Promise<BookFile[]> {
   if (!idCategory) return [];
 
-  const response = await api.get<BookFile[]>(`/files/category/${idCategory}`);
+  const response = await api.public.get<BookFile[]>(`/files/category/${idCategory}`);
 
   return Array.isArray(response) ? response : [];
 }
@@ -26,20 +26,35 @@ export async function getCategoryFiles(idCategory?: string): Promise<BookFile[]>
 export async function getDocumentFiles(idDocument?: string): Promise<BookFile[]> {
   if (!idDocument) return [];
 
-  const response = await fetch(`${API_BASE_URL}/files/document/${idDocument}`, {
-    method: 'GET',
-    headers: { Accept: '*/*' },
+  const data = await api.public.get<unknown>(`/files/document/${idDocument}`, {
+    headers: { Accept: 'application/json' },
   });
 
-  if (!response.ok) return [];
+  return normalizeFileList(data);
+}
 
-  const data = await response.json();
+function normalizeFileList(data: unknown): BookFile[] {
+  if (Array.isArray(data)) return data as BookFile[];
 
-  return Array.isArray(data?.Result)
-    ? data.Result
-    : Array.isArray(data?.result)
-      ? data.result
-      : [];
+  if (!data || typeof data !== 'object') return [];
+
+  const record = data as Record<string, unknown>;
+  const candidates = [
+    record.Result,
+    record.result,
+    record.data,
+    record.Data,
+    record.items,
+    record.Items,
+    record.files,
+    record.Files,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate as BookFile[];
+  }
+
+  return [];
 }
 
 export function normalizeBookFile(value?: string): string {
@@ -130,12 +145,13 @@ export function findVideoFile(files: BookFile[]): BookFile | undefined {
 export function getBookFileUrl(file?: BookFile): string | null {
   if (!file) return null;
 
-  return (
+  const rawUrl =
     file.partFile ||
     file.fileUrl ||
     file.filePath ||
-    (file.idFile ? `${API_BASE_URL}/files/download/${file.idFile}` : null)
-  );
+    (file.idFile ? `/files/download/${file.idFile}` : null);
+
+  return rawUrl ? toApiUrl(rawUrl) : null;
 }
 
 export function getReadableFormats(files: BookFile[]): string[] {

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import logo from '../../assets/skin/logo.png';
 import { registerNavigateWithLoading } from './navigateWithLoading';
@@ -36,9 +35,7 @@ export default function LoadingScreen() {
     clearTimers();
     shownAt.current = performance.now();
     busy.current = true;
-    flushSync(() => {
-      setPhase('enter');
-    });
+    setPhase('enter');
   }, [clearTimers]);
 
   const hide = useCallback(() => {

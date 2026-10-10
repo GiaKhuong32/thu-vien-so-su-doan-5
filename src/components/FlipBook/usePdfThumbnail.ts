@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import * as pdfjs from 'pdfjs-dist';
+import type * as pdfjs from 'pdfjs-dist/legacy/build/pdf';
 
 const caches = new Map<number, Map<number, string>>();
 

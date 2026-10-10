@@ -235,17 +235,17 @@ async function getVideoDetailBySlug(slugParam: string): Promise<BookDetail | nul
 
 export const booksApi = {
   getAll: async (): Promise<Book[]> => {
-    const response = await api.get<ApiBook[]>('/books/getAll');
+    const response = await api.public.get<ApiBook[]>('/books/getAll');
     return response.map(mapApiBookToBook);
   },
 
   getById: async (id: string): Promise<BookDetail> => {
-    const response = await api.get<ApiBookDetail>(`/books/${id}`);
+    const response = await api.public.get<ApiBookDetail>(`/books/${id}`);
     return mapApiBookToBookDetail(response);
   },
 
   getBySlug: async (slugParam: string): Promise<BookDetail> => {
-    const response = await api.get<ApiBook[]>('/books/getAll');
+    const response = await api.public.get<ApiBook[]>('/books/getAll');
     const apiBook = response.find((book) => slugify(book.title) === slugParam);
 
     if (!apiBook) {
@@ -282,7 +282,7 @@ export const booksApi = {
       return getVideoBooks();
     }
 
-    const response = await api.get<ApiBook[]>(`/books/category/${idCategory}`);
+    const response = await api.public.get<ApiBook[]>(`/books/category/${idCategory}`);
     return (Array.isArray(response) ? response : []).map(mapApiBookToBook);
   },
 
@@ -345,7 +345,7 @@ export const booksApi = {
   },
 
   getNew: async (limit = 10): Promise<Book[]> => {
-    const newestBooks = await api.get<ApiBook[]>('/books/newest');
+    const newestBooks = await api.public.get<ApiBook[]>('/books/newest');
     return (Array.isArray(newestBooks) ? newestBooks : [])
       .map(mapApiBookToBook)
       .slice(0, limit);
@@ -359,7 +359,7 @@ export const booksApi = {
   getByType: async (
     type: 'ebooks' | 'paperbooks' | 'audiobooks' | 'videobooks'
   ): Promise<Book[]> => {
-    const allBooks = await api.get<ApiBook[]>('/books/getAll');
+    const allBooks = await api.public.get<ApiBook[]>('/books/getAll');
 
     const matchedBooks = await Promise.all(
       allBooks.map(async (book) => {

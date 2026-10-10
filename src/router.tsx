@@ -1,8 +1,8 @@
+import { lazy, Suspense } from 'react';
+import type { ReactNode } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App';
 import BookListPage from './pages/BookListPage';
-import BookAudioPage from './pages/BookAudioPage';
-import BookReadPage from './pages/BookReadPage';
 import BookDetailPage from './pages/BookDetailPage';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
@@ -12,9 +12,12 @@ import AboutHistoryPage from './pages/AboutHistoryPage';
 import LoginPage from './pages/LoginPage';
 // Disabled temporarily - only admin accounts for now
 // import RegisterPage from './pages/RegisterPage';
-import DrivePage from './pages/DrivePage';
 import ScrollToTop from './components/ScrollToTop';
 import LoadingScreen from './components/LoadingScreen';
+
+const BookAudioPage = lazy(() => import('./pages/BookAudioPage'));
+const BookReadPage = lazy(() => import('./pages/BookReadPage'));
+const DrivePage = lazy(() => import('./pages/DrivePage'));
 
 function LoadingRoute() {
   return (
@@ -26,15 +29,27 @@ function LoadingRoute() {
   );
 }
 
+function LazyPage({ children }: { children: ReactNode }) {
+  return <Suspense fallback={null}>{children}</Suspense>;
+}
+
 const router = createBrowserRouter([
 
   {
     path: '/sach/:slug/doc.html',
-    element: <BookReadPage />,
+    element: (
+      <LazyPage>
+        <BookReadPage />
+      </LazyPage>
+    ),
   },
   {
     path: '/doc-sach',
-    element: <BookReadPage />,
+    element: (
+      <LazyPage>
+        <BookReadPage />
+      </LazyPage>
+    ),
   },
   {
     path: '/dang-nhap',
@@ -60,7 +75,9 @@ const router = createBrowserRouter([
     element: (
       <>
         <ScrollToTop />
-        <DrivePage />
+        <LazyPage>
+          <DrivePage />
+        </LazyPage>
       </>
     ),
   },
@@ -85,7 +102,11 @@ const router = createBrowserRouter([
       },
       {
         path: '/sach/:slug/Audio.html',
-        element: <BookAudioPage />,
+        element: (
+          <LazyPage>
+            <BookAudioPage />
+          </LazyPage>
+        ),
       },
       {
         path: '/search',

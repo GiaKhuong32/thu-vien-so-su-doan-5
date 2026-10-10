@@ -1,21 +1,25 @@
 import { API_BASE_URL } from '../config/api';
 
 const TOKEN_KEY = 'auth_token';
+const AUTH_HEADER_PREFIX = import.meta.env.VITE_AUTH_HEADER_PREFIX ?? 'Bearer ';
 
 type ApiRequestOptions = RequestInit & {
   auth?: boolean;
 };
 
+type ApiRequestBodyOptions = Omit<ApiRequestOptions, 'body'>;
+
 export const getToken = (): string | null => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem(TOKEN_KEY);
+    const token = localStorage.getItem(TOKEN_KEY);
+    return token && token !== 'undefined' && token !== 'null' ? token : null;
   }
   return null;
 };
 
 export const setToken = (token: string): void => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(TOKEN_KEY, token.replace(/^Bearer\s+/i, '').trim());
   }
 };
 
@@ -25,17 +29,28 @@ export const removeToken = (): void => {
   }
 };
 
+export function getAuthHeaders(): Record<string, string> {
+  const token = getToken();
+  if (!token) return {};
+
+  const value = `${AUTH_HEADER_PREFIX}${token}`;
+
+  return {
+    Authorization: value,
+  };
+}
+
 export async function apiRequest<T>(
   endpoint: string,
   options: ApiRequestOptions = {}
 ): Promise<T> {
   const { auth = true, headers: optionHeaders, ...requestOptions } = options;
   const url = `${API_BASE_URL}${endpoint}`;
-  const token = auth ? getToken() : null;
+  const authHeaders = auth ? getAuthHeaders() : {};
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...authHeaders,
     ...(optionHeaders as Record<string, string>),
   };
 
@@ -99,4 +114,41 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
+
+  public: {
+    get: <T>(endpoint: string, options?: ApiRequestOptions): Promise<T> =>
+      apiRequest<T>(endpoint, { ...options, method: 'GET', auth: false }),
+
+    post: <T>(endpoint: string, data: unknown, options?: ApiRequestBodyOptions): Promise<T> =>
+      apiRequest<T>(endpoint, {
+        ...options,
+        method: 'POST',
+        auth: false,
+        body: JSON.stringify(data),
+      }),
+  },
+
+  private: {
+    get: <T>(endpoint: string, options?: ApiRequestOptions): Promise<T> =>
+      apiRequest<T>(endpoint, { ...options, method: 'GET', auth: true }),
+
+    post: <T>(endpoint: string, data: unknown, options?: ApiRequestBodyOptions): Promise<T> =>
+      apiRequest<T>(endpoint, {
+        ...options,
+        method: 'POST',
+        auth: true,
+        body: JSON.stringify(data),
+      }),
+
+    put: <T>(endpoint: string, data: unknown, options?: ApiRequestBodyOptions): Promise<T> =>
+      apiRequest<T>(endpoint, {
+        ...options,
+        method: 'PUT',
+        auth: true,
+        body: JSON.stringify(data),
+      }),
+
+    delete: <T>(endpoint: string, options?: ApiRequestOptions): Promise<T> =>
+      apiRequest<T>(endpoint, { ...options, method: 'DELETE', auth: true }),
+  },
 };

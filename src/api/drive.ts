@@ -169,29 +169,29 @@ export function mapFolderChildrenToNodes(folder: FolderResponse): DriveNode[] {
 
 export const driveApi = {
   getRootDirectory: async (): Promise<DriveNode> => {
-    const folder = await api.get<FolderResponseNoList>('/folder/rootDirectory');
+    const folder = await api.private.get<FolderResponseNoList>('/folder/rootDirectory');
     return folderToNode(folder, null);
   },
 
   getPublicRoots: async (): Promise<DriveNode[]> => {
-    const folders = await api.get<FolderResponseNoList[]>('/folder/public/roots');
+    const folders = await api.public.get<FolderResponseNoList[]>('/folder/public/roots');
 
     return folders.map((folder) => folderToNode(folder, null, 'public'));
   },
 
   getPrivateRoot: async (): Promise<DriveNode> => {
-    const folder = await api.get<FolderResponse>('/folder/private/my');
+    const folder = await api.private.get<FolderResponse>('/folder/private/my');
     return folderToNode(folder, null, 'private');
   },
 
   getPrivateRoots: async (): Promise<DriveNode[]> => {
-    const folder = await api.get<FolderResponse>('/folder/private/my');
+    const folder = await api.private.get<FolderResponse>('/folder/private/my');
     return [folderToNode(folder, null, 'private')];
   },
 
   getFolder: async (folderId: string): Promise<FolderResponse> => {
     const encoded = encodeURIComponent(folderId);
-    return api.get<FolderResponse>(`/folder/${encoded}`);
+    return api.private.get<FolderResponse>(`/folder/${encoded}`);
   },
 
   getFolderChain: async (folderId: string): Promise<DriveNode[]> => {
@@ -214,7 +214,7 @@ export const driveApi = {
     folderId: string,
   ): Promise<{ current: DriveNode | null; ancestors: DriveNode[]; children: DriveNode[] }> => {
     const encoded = encodeURIComponent(folderId);
-    const rawFolders = await api.get<FolderResponse | FolderResponseNoList[]>(
+    const rawFolders = await api.private.get<FolderResponse | FolderResponseNoList[]>(
       `/folder/getChildFolder/${encoded}`,
     );
 
@@ -239,7 +239,7 @@ export const driveApi = {
 
     let files: DriveNode[] = [];
     try {
-      const rawFiles = await api.get<FileResponse[] | FileResponse>(
+      const rawFiles = await api.private.get<FileResponse[] | FileResponse>(
         `/files/folder/${encoded}`,
       );
       files = asFileList(rawFiles).map((file) => fileToNode(file, folderId, { trashed: false }));
@@ -260,7 +260,7 @@ export const driveApi = {
     let files: DriveNode[] = [];
 
     try {
-      const rawFolders = await api.get<FolderResponse[] | FolderResponse>(
+      const rawFolders = await api.private.get<FolderResponse[] | FolderResponse>(
         '/folder/deleted',
       );
       folders = asDeletedFolderList(rawFolders).map((folder) =>
@@ -271,7 +271,7 @@ export const driveApi = {
     }
 
     try {
-      const rawFiles = await api.get<FileResponse[] | FileResponse>(
+      const rawFiles = await api.private.get<FileResponse[] | FileResponse>(
         '/files/deleted',
       );
       files = asFileList(rawFiles).map((file) =>
@@ -289,7 +289,7 @@ export const driveApi = {
     parentId: string | null,
     visibility: FolderVisibility,
   ): Promise<DriveNode> => {
-    const folder = await api.post<FolderResponse>('/folder', {
+    const folder = await api.private.post<FolderResponse>('/folder', {
       folderName: name,
       description: '',
       parentFolder: parentId,
@@ -301,7 +301,7 @@ export const driveApi = {
   },
 
   renameFolder: async (id: string, name: string): Promise<DriveNode> => {
-    const folder = await api.put<FolderResponse>(`/folder/${id}`, {
+    const folder = await api.private.put<FolderResponse>(`/folder/${id}`, {
       folderName: name,
     } satisfies UpdateFolderRequest);
 
@@ -310,7 +310,7 @@ export const driveApi = {
   },
 
   moveFolder: async (id: string, targetParentId: string | null): Promise<DriveNode> => {
-    const folder = await api.post<FolderResponse>(`/folder/${id}/move`, {
+    const folder = await api.private.post<FolderResponse>(`/folder/${id}/move`, {
       parentFolder: targetParentId,
     } satisfies CopyMoveFolderRequest);
 
@@ -319,7 +319,7 @@ export const driveApi = {
   },
 
   copyFolder: async (id: string, targetParentId: string | null): Promise<DriveNode> => {
-    const folder = await api.post<FolderResponse>(`/folder/${id}/copy`, {
+    const folder = await api.private.post<FolderResponse>(`/folder/${id}/copy`, {
       parentFolder: targetParentId,
     } satisfies CopyMoveFolderRequest);
 
@@ -327,17 +327,17 @@ export const driveApi = {
     return folderToNode(folder, nodeParentId);
   },
 
-  trashFolder: (id: string): Promise<void> => api.delete<void>(`/folder/${id}`),
-  restoreFolder: (id: string): Promise<DriveNode> => api.put<DriveNode>(`/folder/restore/${id}`, {}),
-  hardDeleteFolder: (id: string): Promise<void> => api.delete<void>(`/folder/hard/${id}`),
+  trashFolder: (id: string): Promise<void> => api.private.delete<void>(`/folder/${id}`),
+  restoreFolder: (id: string): Promise<DriveNode> => api.private.put<DriveNode>(`/folder/restore/${id}`, {}),
+  hardDeleteFolder: (id: string): Promise<void> => api.private.delete<void>(`/folder/hard/${id}`),
 
-  trashFile: (id: string): Promise<void> => api.delete<void>(`/files/${id}`),
-  restoreFile: (id: string): Promise<FileResponse> => api.put<FileResponse>(`/files/restore/${id}`, {}),
-  hardDeleteFile: (id: string): Promise<void> => api.delete<void>(`/files/hard/${id}`),
+  trashFile: (id: string): Promise<void> => api.private.delete<void>(`/files/${id}`),
+  restoreFile: (id: string): Promise<FileResponse> => api.private.put<FileResponse>(`/files/restore/${id}`, {}),
+  hardDeleteFile: (id: string): Promise<void> => api.private.delete<void>(`/files/hard/${id}`),
 
   moveFiles: async (ids: string[], targetParentId: string): Promise<FileResponse[]> => {
     const encoded = encodeURIComponent(targetParentId);
-    const raw = await api.post<FileResponse[] | FileResponse>(`/files/cut/${encoded}`, {
+    const raw = await api.private.post<FileResponse[] | FileResponse>(`/files/cut/${encoded}`, {
       files: ids,
     } satisfies CutCopyFilesRequest);
     return asFileList(raw);
@@ -345,7 +345,7 @@ export const driveApi = {
 
   copyFiles: async (ids: string[], targetParentId: string): Promise<FileResponse[]> => {
     const encoded = encodeURIComponent(targetParentId);
-    const raw = await api.post<FileResponse[] | FileResponse>(`/files/copy/${encoded}`, {
+    const raw = await api.private.post<FileResponse[] | FileResponse>(`/files/copy/${encoded}`, {
       files: ids,
     } satisfies CutCopyFilesRequest);
     return asFileList(raw);

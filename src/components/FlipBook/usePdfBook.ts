@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import * as pdfjs from 'pdfjs-dist';
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import * as pdfjs from 'pdfjs-dist/legacy/build/pdf';
+import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.js?url';
+import { getAuthHeaders } from '../../api/client';
 import type { OutlineItem, PageDrawable, SearchHit } from './types';
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
@@ -501,10 +502,10 @@ export function usePdfBook(src?: string, pages?: string[]): PdfBookState {
       try {
         task = pdfjs.getDocument({
           url: src,
-          cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/cmaps/',
+          cMapUrl: '/cmaps/',
           cMapPacked: true,
-          standardFontDataUrl:
-            'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/standard_fonts/',
+          standardFontDataUrl: '/standard_fonts/',
+          httpHeaders: getAuthHeaders(),
           withCredentials: false,
         });
 
