@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useAuthorizedUrl } from '../../hooks/useAuthorizedUrl';
 import './VideoModal.css';
 
 type Props = {
@@ -10,6 +11,7 @@ type Props = {
 
 export default function VideoModal({ open, src, title, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const resolvedSrc = useAuthorizedUrl(src);
 
   useEffect(() => {
     if (!open) return;
@@ -63,13 +65,13 @@ export default function VideoModal({ open, src, title, onClose }: Props) {
           <video
             ref={videoRef}
             className="video-modal__video"
-            src={src}
+            src={resolvedSrc ?? undefined}
             controls
             autoPlay
             playsInline
             controlsList="nodownload"
           >
-            <source src={src} type="video/mp4" />
+            <source src={resolvedSrc ?? undefined} type="video/mp4" />
             Trình duyệt của bạn không hỗ trợ phát video.
           </video>
         </div>

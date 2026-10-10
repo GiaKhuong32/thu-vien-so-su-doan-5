@@ -2,6 +2,7 @@ import { X } from 'lucide-react';
 import type { DriveNode } from '../../types/drive';
 import { DriveNodeIcon } from './driveIcons';
 import { formatBytes, formatDate } from './driveFormat';
+import AuthImg from '../AuthImg';
 import './DriveInfoPanel.css';
 
 type Props = {
@@ -28,7 +29,7 @@ export default function DriveInfoPanel({ open, node, nodes, folderSize, onClose 
           <>
             <div className="drive-info-thumb">
               {node.type === 'file' && node.previewUrl ? (
-                <img src={node.previewUrl} alt="" />
+                <AuthImg src={node.previewUrl} />
               ) : (
                 <DriveNodeIcon node={node} size={40} />
               )}

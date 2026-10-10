@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useAuthorizedUrl } from '../../hooks/useAuthorizedUrl';
 import './AudioPlayer.css';
 
 export type AudioTrack = {
@@ -53,7 +54,7 @@ export default function AudioPlayer({ title, img, tracks }: Props) {
   const [visible, setVisible] = useState(() => Math.min(PAGE_SIZE, tracks.length));
 
   const track = tracks[index];
-  const src = useMemo(() => (track ? audioUrl(track.url) : ''), [track]);
+  const src = useAuthorizedUrl(track ? audioUrl(track.url) : null) ?? '';
 
   const totalLabel = duration > 0 ? formatTime(duration) : track?.time || '00:00';
   const totalSeconds = duration > 0 ? duration : parseTime(track?.time || '');

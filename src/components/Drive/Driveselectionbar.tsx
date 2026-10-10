@@ -1,6 +1,6 @@
 import { CheckSquare, RotateCcw, Scissors, Trash2, X } from 'lucide-react';
 import type { DriveSection } from '../../types/drive';
-import './DriveSelectionBar.css';
+import './Driveselectionbar.css';
 
 type Props = {
   count: number;
