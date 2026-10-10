@@ -4,6 +4,7 @@ import type { DriveNode, DriveSection, DriveViewMode } from '../../types/drive';
 import { DriveNodeIcon } from './driveIcons';
 import { formatBytes, formatDate } from './driveFormat';
 import DriveEmptyState from './DriveEmptyState';
+import AuthImg from '../AuthImg';
 import './DriveItemsView.css';
 
 type Props = {
@@ -235,7 +236,7 @@ export default function DriveItemsView({
               )}
               <div className="drive-card__thumb">
                 {node.type === 'file' && node.previewUrl ? (
-                  <img src={node.previewUrl} alt="" />
+                  <AuthImg src={node.previewUrl} />
                 ) : (
                   <DriveNodeIcon node={node} size={30} />
                 )}

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import './ConfirmDialog.css';
+import './Confirmdialog.css';
 
 type Props = {
   open: boolean;

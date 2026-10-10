@@ -46,7 +46,9 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const { auth = true, headers: optionHeaders, ...requestOptions } = options;
   const url = `${API_BASE_URL}${endpoint}`;
-  const authHeaders = auth ? getAuthHeaders() : {};
+  // Always send the token when the user is logged in, even on endpoints
+  // flagged as public — the backend may still require authentication.
+  const authHeaders = getAuthHeaders();
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
