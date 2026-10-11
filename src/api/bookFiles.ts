@@ -146,6 +146,7 @@ export function getBookFileUrl(file?: BookFile): string | null {
   if (!file) return null;
 
   const rawUrl =
+    (file.idFile ? `/files/view/${encodeURIComponent(file.idFile)}` : null) ||
     file.partFile ||
     file.fileUrl ||
     file.filePath ||
