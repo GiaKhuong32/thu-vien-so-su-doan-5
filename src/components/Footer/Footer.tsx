@@ -31,7 +31,7 @@ export default function Footer() {
               <span className="picon" aria-hidden="true">
                 <PinIcon />
               </span>
-              <span>Sư đoàn 5 (Quân khu 7) , TP.Tây Ninh</span>
+              <span> Trạm Bdkt Sư đoàn 5 (Quân khu 7) , TP.Tây Ninh</span>
             </li>
             <li>
               <span className="picon" aria-hidden="true">
@@ -39,6 +39,7 @@ export default function Footer() {
               </span>
               <a href="">thuviensosd5@gmail.com</a>
             </li>
+          
             <li>
               <span className="picon" aria-hidden="true">
                 <GlobeIcon />
